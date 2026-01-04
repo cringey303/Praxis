@@ -14,7 +14,7 @@ async fn main() {
 
     // create empty web app and run 'root' if "/" homepage is visited
     let app = Router::new()
-        .route("/", get(root));
+        .route("/", get(root))
         .layer(cors);
 
     //define route
