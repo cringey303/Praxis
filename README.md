@@ -50,7 +50,7 @@ npm run dev
 Praxis should be ready and running.
 
 Navigate to
-[https://localhost:3000](https://localhost:3000)
+[http://localhost:3000](http://localhost:3000)
 and you should see the Praxis homepage.
 
 # Architecture
