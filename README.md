@@ -5,6 +5,9 @@ A students-first social network where students discover and collaborate on proje
 
 Created by Lucas Root and Luke Coffman.
 
+Here is the 
+[figma](https://www.figma.com/design/z9Tf6F6dxn4S84Cd3mWeif/Praxis-Flowchart?node-id=0-1&m=dev&t=drysAnHQDYuItSh1-1)
+
 ## Quickstart (Luke this for u)
 Get Praxis ready to develop and run locally.
 
@@ -95,7 +98,7 @@ Create Migration: `cd apps/api && sqlx migrate add name_of_change`
 ```
 
 # TO-DO
-Not comprehensive
+Not comprehensive.
 ```
 - Create flowchart (Figma)
 - Create mockup UI (Excalidraw)
