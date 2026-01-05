@@ -1,5 +1,3 @@
-use std::f32::consts::E;
-
 use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -32,7 +30,7 @@ pub async fn signup_handler(
 ) -> Result<impl IntoResponse, (StatusCode, String)> { 
 
     // check if email already exists
-    let email_exists = sqlx::query!("SELECT id FROM local_auths WHERE email = $1", payload.email)
+    let email_exists = sqlx::query!("SELECT user_id FROM local_auths WHERE email = $1", payload.email)
         .fetch_optional(&pool) // returns Some(row) if found, None if not
         .await
         // convert crashes/errors into an HTTP 500 error string
