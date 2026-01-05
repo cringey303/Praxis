@@ -95,6 +95,10 @@ Create Migration: `cd apps/api && sqlx migrate add name_of_change`
 ```
 
 # TO-DO
+Not comprehensive
 ```
-a lot 😢
+- Create flowchart (Figma)
+- Create mockup UI (Excalidraw)
+- Design home/landing page
+- GitHub/Google login support
 ```
