@@ -3,7 +3,7 @@
 
 A students-first social network where students discover and collaborate on projects; creating real work rather than focusing on connections.
 
-Created by Lucas Root and Luke Coffman
+Created by Lucas Root and Luke Coffman.
 
 ## Quickstart (Luke this for u)
 Get Praxis ready to develop and run locally.
