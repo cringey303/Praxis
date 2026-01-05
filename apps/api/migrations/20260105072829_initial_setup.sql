@@ -1,5 +1,3 @@
--- Add migration script here
-
 -- Sessions
 CREATE TABLE IF NOT EXISTS sessions (
     id CHAR(128) PRIMARY KEY,

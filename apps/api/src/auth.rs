@@ -56,7 +56,10 @@ pub async fn signup_handler(
 
     // start SQL transaction to insert `users` and `local_auths` tables
     // Transaction ensures everything or nothing is executed
-    let mut tx = pool.begin().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let user_id = sqlx::query!(
         // `RETURNING id` is a Postgres feature that returns the UUID it just generated
@@ -66,7 +69,8 @@ pub async fn signup_handler(
     )
     .fetch_one(&mut *tx)
     .await
-    .map_err(...)?.id;
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .id;
 
     sqlx::query!(
         "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
@@ -76,7 +80,7 @@ pub async fn signup_handler(
     )
     .execute(&mut *tx)
     .await
-    .map_err(...)?;
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     tx.commit().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
