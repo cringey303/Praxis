@@ -54,10 +54,7 @@ export default function SignupPage() {
 
                 {/* Header */}
                 <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">Join Praxis</h1>
-                    <p className="text-muted-foreground text-sm">
-                        Enter your details below to create your account
-                    </p>
+                    <h1 className="text-3xl tracking-tight">Join Praxis</h1>
                 </div>
 
                 {/* Status Message */}
@@ -126,7 +123,7 @@ export default function SignupPage() {
                 <div className="text-center text-sm text-muted-foreground">
                     Already have an account?{' '}
                     <a href="/login" className="underline underline-offset-4 hover:text-primary">
-                        Sign in
+                        Login
                     </a>
                 </div>
             </div>
