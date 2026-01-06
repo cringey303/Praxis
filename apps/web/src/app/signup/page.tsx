@@ -39,7 +39,7 @@ export default function SignupPage() {
             }
 
             setStatus({ error: false, msg: 'Account created! Redirecting...' });
-            setTimeout(() => router.push('/'), 2000);
+            setTimeout(() => router.push('/'), 1000);
         } catch (err: any) {
             setStatus({ error: true, msg: err.message });
         } finally {
