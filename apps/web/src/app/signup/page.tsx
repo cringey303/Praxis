@@ -30,7 +30,7 @@ export default function SignupPage() {
         setLoading(true); // disable the submit button
         setStatus(null); // clear any previous status messages and display "Creating Account..."
 
-        try { // handle API request
+        try { // send data to the backend
             const res = await fetch('http://localhost:8080/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
