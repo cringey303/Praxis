@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation'; // used for redirecting
 import { FloatingLabelInput } from "@/components/ui/FloatingLabelInput";
 
 export default function SignupPage() {
@@ -14,36 +14,40 @@ export default function SignupPage() {
         password: '',
     });
 
+    // status holds success/error messages
     const [status, setStatus] = useState<{ error: boolean; msg: string } | null>(null);
+    // loading disables the submit button
     const [loading, setLoading] = useState(false);
 
+    // helper function that updates the form e.target.name with e.target.value
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // called when the form is submitted
     const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setStatus(null);
+        e.preventDefault(); // prevent full-page refresh
+        setLoading(true); // disable the submit button
+        setStatus(null); // clear any previous status messages and display "Creating Account..."
 
-        try {
+        try { // handle API request
             const res = await fetch('http://localhost:8080/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(formData), // send form data as JSON
             });
 
-            if (!res.ok) {
-                const errorText = await res.text();
+            if (!res.ok) { // if the request failed
+                const errorText = await res.text(); // get error message
                 throw new Error(errorText || 'Signup failed');
             }
 
-            setStatus({ error: false, msg: 'Account created! Redirecting...' });
-            setTimeout(() => router.push('/'), 1000);
+            setStatus({ error: false, msg: 'Account created! Redirecting...' }); // display success message
+            setTimeout(() => router.push('/'), 1000); // redirect to home page in 1sec
         } catch (err: any) {
-            setStatus({ error: true, msg: err.message });
+            setStatus({ error: true, msg: err.message }); // display error message
         } finally {
-            setLoading(false);
+            setLoading(false); // enable the submit button
         }
     };
 
