@@ -35,11 +35,13 @@ async fn main() {
         .allow_methods(Any)
         .allow_headers(Any);
 
-    // create empty web app and run 'root' if "/" homepage is visited
+    // create empty web app and run mapped fns if routes are visited
     let app = Router::new()
         .route("/", get(root))
-        .route("/auth/signup", post(auth::signup_handler)) // map /auth/signup to fn signup_handler in auth module
-        .route("/auth/login", post(auth::login_handler)) // map /auth/login to fn login_handler in auth module
+        .route("/auth/signup", post(auth::signup)) // map /auth/signup to fn signup in auth module
+        .route("/auth/login", post(auth::login)) // map /auth/login to fn login in auth module
+        .route("/auth/google/login", get(auth::google_login)) // when user clicks login with google
+        .route("/auth/google/callback", get(auth::google_callback)) // where google redirects to after login
         .layer(cors)
         .with_state(pool); // injecting the DB pool
 
