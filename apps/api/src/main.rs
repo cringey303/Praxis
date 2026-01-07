@@ -1,11 +1,14 @@
-use axum::{routing::{get, post}, Router};
-use std::net::SocketAddr;
-use tower_http::cors::{CorsLayer, Any};
-use sqlx::postgres::PgPoolOptions;
+use axum::{
+    Router,
+    routing::{get, post},
+};
 use dotenvy::dotenv;
-use tower_sessions::{SessionManagerLayer, Expiry};
-use tower_sessions_sqlx_store::PostgresStore;
+use sqlx::postgres::PgPoolOptions;
+use std::net::SocketAddr;
 use time::Duration;
+use tower_http::cors::{Any, CorsLayer};
+use tower_sessions::{Expiry, SessionManagerLayer};
+use tower_sessions_sqlx_store::PostgresStore;
 
 mod auth;
 
@@ -18,8 +21,7 @@ async fn main() {
 
     // --- Connect to Database --- //
     // get database url saved in .env
-    let database_url = std::env::var("DATABASE_URL")
-    .expect("DATABASE_URL must be set");
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     // a pool is a group of open connections to the database
     let pool = PgPoolOptions::new()

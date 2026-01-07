@@ -1,10 +1,19 @@
-use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
+};
+use axum::{
+    Json,
+    extract::{Query, State},
+    http::StatusCode,
+    response::{IntoResponse, Redirect},
+};
+use oauth2::{
+    AuthUrl, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl,
+    basic::BasicClient,
+};
 use serde::Deserialize;
 use sqlx::PgPool;
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Argon2,
-};
 use tower_sessions::Session;
 
 // request structure we get from the frontend
@@ -22,13 +31,47 @@ pub struct LoginRequest {
     pub password: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct GoogleUser {
+    pub email: String,
+    pub name: String,
+    pub picture: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AuthRequest {
+    pub code: String,
+    pub state: String,
+}
+
+fn oauth_client() -> BasicClient {
+    // read from .env
+    let client_id = std::env::var("GOOGLE_CLIENT_ID").expect("GOOGLE_CLIENT_ID must be set");
+    let client_secret = std::env::var("GOOGLE_CLIENT_SECRET").expect("GOOGLE_CLIENT_SECRET must be set");
+    let redirect_url = std::env::var("GOOGLE_REDIRECT_URL").expect("Missing GOOGLE_REDIRECT_URL");
+
+    let auth_url = AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())
+    .expect("Missing GOOGLE_AUTH_URL");
+
+    let token_url = TokenUrl::new("https://oauth2.googleapis.com/token".to_string())
+    .expect("Missing GOOGLE_TOKEN_URL");
+
+    BasicClient::new(
+        ClientId::new(client_id),
+        Some(ClientSecret::new(client_secret)),
+        auth_url,
+        Some(token_url),
+    )
+    .set_redirect_uri(RedirectUrl::new(redirect_url).expect("Missing GOOGLE_REDIRECT_URL"))
+}
+
 /*
 * Function: signup_handler
 * Description: takes SignupRequest and stores in DB
-* Inputs: 
+* Inputs:
 * Gets .with_state from main.rs
 * parses request and stores in payload
-* 
+*
 * Returns:
 * success: Ok(impl IntoResponse
 * OR an error tuple: Err((StatusCode, String))
@@ -36,15 +79,17 @@ pub struct LoginRequest {
 pub async fn signup_handler(
     State(pool): State<PgPool>,
     Json(payload): Json<SignupRequest>,
-) -> Result<impl IntoResponse, (StatusCode, String)> { 
-
+) -> Result<impl IntoResponse, (StatusCode, String)> {
     // check if email already exists
-    let email_exists = sqlx::query!("SELECT user_id FROM local_auths WHERE email = $1", payload.email)
-        .fetch_optional(&pool) // returns Some(row) if found, None if not
-        .await
-        // convert crashes/errors into an HTTP 500 error string
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    
+    let email_exists = sqlx::query!(
+        "SELECT user_id FROM local_auths WHERE email = $1",
+        payload.email
+    )
+    .fetch_optional(&pool) // returns Some(row) if found, None if not
+    .await
+    // convert crashes/errors into an HTTP 500 error string
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
     // is_some(): if row found, email is taken and return HTTP 409 conflict error
     if email_exists.is_some() {
         return Err((StatusCode::CONFLICT, "Email already exists".to_string()));
@@ -89,7 +134,9 @@ pub async fn signup_handler(
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    tx.commit().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    tx.commit()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     Ok((StatusCode::CREATED, "User created successfully"))
 }
@@ -97,10 +144,10 @@ pub async fn signup_handler(
 /*
 * Function: login_handler
 * Description: takes LoginRequest and stores in DB
-* Inputs: 
+* Inputs:
 * Gets .with_state from main.rs
 * parses request and stores in payload
-* 
+*
 * Returns:
 * success: Ok(impl IntoResponse
 * OR an error tuple: Err((StatusCode, String))
@@ -122,24 +169,34 @@ pub async fn login_handler(
     // if user not found, return error
     let user = match user {
         Some(u) => u,
-        None => return Err((StatusCode::UNAUTHORIZED, "Invalid email or password".to_string())),
+        None => {
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                "Invalid email or password".to_string(),
+            ));
+        }
     };
 
     // parse hash from DB
     let parsed_hash = PasswordHash::new(&user.password_hash)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    
+
     // verify password
     Argon2::default()
         .verify_password(payload.password.as_bytes(), &parsed_hash)
-        .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid email or password".to_string()))?;
+        .map_err(|_| {
+            (
+                StatusCode::UNAUTHORIZED,
+                "Invalid email or password".to_string(),
+            )
+        })?;
 
     // Set Session
     session
         .insert("user_id", user.user_id)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    
+
     // return success
     Ok((StatusCode::OK, "Login successful"))
 }
