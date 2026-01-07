@@ -23,6 +23,8 @@ pub struct LoginRequest {
 }
 
 /*
+* Function: signup_handler
+* Description: takes SignupRequest and stores in DB
 * Inputs: 
 * Gets .with_state from main.rs
 * parses request and stores in payload
@@ -92,6 +94,17 @@ pub async fn signup_handler(
     Ok((StatusCode::CREATED, "User created successfully"))
 }
 
+/*
+* Function: login_handler
+* Description: takes LoginRequest and stores in DB
+* Inputs: 
+* Gets .with_state from main.rs
+* parses request and stores in payload
+* 
+* Returns:
+* success: Ok(impl IntoResponse
+* OR an error tuple: Err((StatusCode, String))
+*/
 pub async fn login_handler(
     State(pool): State<PgPool>,
     session: Session,
