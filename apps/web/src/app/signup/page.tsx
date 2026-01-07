@@ -30,10 +30,11 @@ export default function SignupPage() {
         setLoading(true); // disable the submit button
         setStatus(null); // clear any previous status messages and display "Creating Account..."
 
-        try { // send data to the backend
+        try { 
+            // send data to the backend
             const res = await fetch('http://localhost:8080/auth/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', // prepares the backend for new data
+                headers: { 'Content-Type': 'application/json' }, // prepares backend to accept JSON format
                 body: JSON.stringify(formData), // send form data as JSON
             });
 
@@ -118,7 +119,7 @@ export default function SignupPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+                        className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
                     >
                         {loading ? 'Creating Account...' : 'Sign Up'}
                     </button>
