@@ -83,20 +83,6 @@ Run Migrations: `cd apps/api && sqlx migrate run`
 
 Create Migration: `cd apps/api && sqlx migrate add name_of_change`
 
-
-# Current Status
-```
-[x] Database Running (Postgres)
-
-[x] Backend Hello World
-
-[x] Frontend Fetching Data
-
-[x] Backend Auth: POST /auth/signup is implemented.
-
-[ ] Frontend Auth: Need to build the Sign Up form in apps/web.
-```
-
 # TO-DO
 Not comprehensive.
 ```
