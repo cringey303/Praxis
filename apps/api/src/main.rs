@@ -30,6 +30,12 @@ async fn main() {
         .await
         .expect("Failed to connect to DB");
 
+    // --- Setup Session --- //
+    let session_store = PostgresStore::new(pool.clone());
+    session_store.migrate().await.expect("Failed to migrate session store");
+    let session_layer = SessionManagerLayer::new(session_store)
+        .with_secure(false) // set to true in production (requires https)
+        .with_expiry(Expiry::OnInactivity(Duration::days(1)));
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods(Any)
@@ -42,6 +48,7 @@ async fn main() {
         .route("/auth/login", post(auth::login)) // map /auth/login to fn login in auth module
         .route("/auth/google/login", get(auth::google_login)) // when user clicks login with google
         .route("/auth/google/callback", get(auth::google_callback)) // where google redirects to after login
+        .layer(session_layer)
         .layer(cors)
         .with_state(pool); // injecting the DB pool
 
