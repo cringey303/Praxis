@@ -23,10 +23,21 @@ export default function SignupPage() {
 
     // helper function that updates the form e.target.name with e.target.value
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-        // Clear error when user types
-        if (errors[e.target.name]) {
-            setErrors({ ...errors, [e.target.name]: '' });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+
+        // Password validation on change
+        if (name === 'password') {
+            if (value.length < 6) {
+                setErrors((prev) => ({ ...prev, password: 'Password must be at least 6 characters.' }));
+            } else {
+                setErrors((prev) => ({ ...prev, password: '' }));
+            }
+        } else {
+            // Clear error when user types for other fields
+            if (errors[name]) {
+                setErrors((prev) => ({ ...prev, [name]: '' }));
+            }
         }
     };
 

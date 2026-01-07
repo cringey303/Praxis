@@ -134,12 +134,12 @@ pub async fn login_handler(
         .verify_password(payload.password.as_bytes(), &parsed_hash)
         .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid email or password".to_string()))?;
 
-    // return success
     // Set Session
     session
         .insert("user_id", user.user_id)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
+    
+    // return success
     Ok((StatusCode::OK, "Login successful"))
 }
