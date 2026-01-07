@@ -59,22 +59,6 @@ Navigate to
 [http://localhost:3000](http://localhost:3000)
 and you should see the Praxis homepage.
 
-# Architecture
-
-This is a Monorepo containing:
-
-`apps/api`: Backend (Rust / Axum / SQLx).
-
-`src/main.rs`: Entry point & Router.
-
-`src/auth.rs`: User signup & login logic.
-
-`migrations/`: SQL files for the database schema.
-
-`apps/web`: The Frontend (Next.js / TypeScript / Tailwind).
-
-`src/app/`: The pages and routes.
-
 # Useful Commands
 
 Reset Database: `docker compose down -v` (Deletes all data)
