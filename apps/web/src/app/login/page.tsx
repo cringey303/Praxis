@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { FloatingLabelInput } from "@/components/ui/FloatingLabelInput";
 
+
 export default function LoginPage() {
     const router = useRouter();
 
@@ -14,9 +15,26 @@ export default function LoginPage() {
 
     const [status, setStatus] = useState<{ error: boolean; msg: string } | null>(null);
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (errors[e.target.name]) {
+            setErrors({ ...errors, [e.target.name]: '' });
+        }
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+
+        // Email Validation
+        if (name === 'email' && value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+                setErrors((prev) => ({ ...prev, email: 'Please enter a valid email address.' }));
+            }
+        }
     };
 
     const handleSubmit = async (e: FormEvent) => {
@@ -78,6 +96,8 @@ export default function LoginPage() {
                                 value={formData.email}
                                 required
                                 onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.email}
                             />
                             <FloatingLabelInput
                                 id="password"
@@ -87,6 +107,8 @@ export default function LoginPage() {
                                 value={formData.password}
                                 required
                                 onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.password}
                             />
                         </div>
                     </div>
@@ -100,7 +122,7 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                <div className="text-center text-sm text-muted-foreground">
+                <div className="text-center text-sm text-brand">
                     Don't have an account?{' '}
                     <a href="/signup" className="underline underline-offset-4 hover:text-primary">
                         Sign up

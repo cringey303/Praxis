@@ -18,19 +18,42 @@ export default function SignupPage() {
     const [status, setStatus] = useState<{ error: boolean; msg: string } | null>(null);
     // loading disables the submit button
     const [loading, setLoading] = useState(false);
+    // field-level errors
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     // helper function that updates the form e.target.name with e.target.value
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        // Clear error when user types
+        if (errors[e.target.name]) {
+            setErrors({ ...errors, [e.target.name]: '' });
+        }
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+
+        // Email Validation
+        if (name === 'email' && value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+                setErrors((prev) => ({ ...prev, email: 'Please enter a valid email address.' }));
+            }
+        }
     };
 
     // called when the form is submitted
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault(); // prevent full-page refresh
+
+        // Check for any existing errors before submitting
+        const hasErrors = Object.values(errors).some(err => err);
+        if (hasErrors) return;
+
         setLoading(true); // disable the submit button
         setStatus(null); // clear any previous status messages and display "Creating Account..."
 
-        try { 
+        try {
             // send data to the backend
             const res = await fetch('http://localhost:8080/auth/signup', {
                 method: 'POST', // prepares the backend for new data
@@ -85,6 +108,8 @@ export default function SignupPage() {
                                 value={formData.username}
                                 required
                                 onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.username}
                             />
                             <FloatingLabelInput
                                 id="display_name"
@@ -94,6 +119,8 @@ export default function SignupPage() {
                                 value={formData.display_name}
                                 required
                                 onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.display_name}
                             />
                             <FloatingLabelInput
                                 id="email"
@@ -103,6 +130,8 @@ export default function SignupPage() {
                                 value={formData.email}
                                 required
                                 onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.email}
                             />
                             <FloatingLabelInput
                                 id="password"
@@ -112,6 +141,8 @@ export default function SignupPage() {
                                 value={formData.password}
                                 required
                                 onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.password}
                             />
                         </div>
                     </div>
@@ -125,10 +156,10 @@ export default function SignupPage() {
                     </button>
                 </form>
 
-                <div className="text-center text-sm text-muted-foreground">
+                <div className="text-center text-sm text-brand">
                     Already have an account?{' '}
-                    <a href="/login" className="underline underline-offset-4 hover:text-primary">
-                        Login
+                    <a href="/login" className="underline underline-offset-4 hover:text-muted-foreground">
+                        Sign in
                     </a>
                 </div>
             </div>
