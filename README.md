@@ -105,3 +105,11 @@ Not comprehensive.
 - Design home/landing page
 - GitHub/Google login support
 ```
+
+# Possible Domains
+- joinpraxis.net
+- joinpraxis.xyz
+- joinpraxis.site
+- praxs.org
+- getpraxis.me
+[https://www.spaceship.com/domain-search/?query=praxis&beast=false&tab=domains](https://www.spaceship.com/domain-search/?query=praxis&beast=false&tab=domains)
