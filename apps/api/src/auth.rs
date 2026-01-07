@@ -2,9 +2,10 @@ use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use serde::Deserialize;
 use sqlx::PgPool;
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use tower_sessions::Session;
 
 // request structure we get from the frontend
 #[derive(Deserialize)]
@@ -13,6 +14,12 @@ pub struct SignupRequest {
     pub password: String,
     pub username: String,
     pub display_name: String,
+}
+
+#[derive(Deserialize)]
+pub struct LoginRequest {
+    pub email: String,
+    pub password: String,
 }
 
 /*
@@ -83,4 +90,43 @@ pub async fn signup_handler(
     tx.commit().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     Ok((StatusCode::CREATED, "User created successfully"))
+}
+
+pub async fn login_handler(
+    State(pool): State<PgPool>,
+    session: Session,
+    Json(payload): Json<LoginRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // find user by email
+    let user = sqlx::query!(
+        "SELECT user_id, password_hash FROM local_auths WHERE email = $1",
+        payload.email
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // if user not found, return error
+    let user = match user {
+        Some(u) => u,
+        None => return Err((StatusCode::UNAUTHORIZED, "Invalid email or password".to_string())),
+    };
+
+    // parse hash from DB
+    let parsed_hash = PasswordHash::new(&user.password_hash)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    
+    // verify password
+    Argon2::default()
+        .verify_password(payload.password.as_bytes(), &parsed_hash)
+        .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid email or password".to_string()))?;
+
+    // return success
+    // Set Session
+    session
+        .insert("user_id", user.user_id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok((StatusCode::OK, "Login successful"))
 }

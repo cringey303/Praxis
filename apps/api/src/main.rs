@@ -3,6 +3,9 @@ use std::net::SocketAddr;
 use tower_http::cors::{CorsLayer, Any};
 use sqlx::postgres::PgPoolOptions;
 use dotenvy::dotenv;
+use tower_sessions::{SessionManagerLayer, Expiry};
+use tower_sessions_sqlx_store::PostgresStore;
+use time::Duration;
 
 mod auth;
 
@@ -34,6 +37,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/auth/signup", post(auth::signup_handler)) // map /auth/signup to fn signup_handler in auth module
+        .route("/auth/login", post(auth::login_handler)) // map /auth/login to fn login_handler in auth module
         .layer(cors)
         .with_state(pool); // injecting the DB pool
 
