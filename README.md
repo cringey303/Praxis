@@ -24,6 +24,16 @@ In the root folder:
 docker compose up -d
 ```
 
+Run migrations
+```bash
+# Install sqlx-cli if you haven't (takes a minute)
+cargo install sqlx-cli
+
+# Run migrations
+cd apps/api
+sqlx migrate run
+```
+
 ### 3. Start Backend (API)
 The Rust server runs on port 8080.
 
@@ -34,7 +44,22 @@ cd apps/api
 
 create .env if missing
 ```bash
-echo "DATABASE_URL=postgres://postgres:password@localhost:5432/praxis_db" > .env
+echo "DATABASE_URL=postgres://postgres:password@localhost:5432/praxis_db\nGOOGLE_CLIENT_ID=your_client_id_here\nGOOGLE_CLIENT_SECRET=your_client_secret_here\nGOOGLE_REDIRECT_URL=http://localhost:8080/auth/google/callback\nFRONTEND_URL=http://localhost:3000" > .env
+```
+
+replace placeholders (get keys from Lucas or setup your own in Google Cloud Console)
+```bash
+DATABASE_URL=postgres://postgres:password@localhost:5432/praxis_db
+GOOGLE_CLIENT_ID=your_client_id_here
+GOOGLE_CLIENT_SECRET=your_client_secret_here
+GOOGLE_REDIRECT_URL=http://localhost:8080/auth/google/callback
+FRONTEND_URL=http://localhost:3000
+```
+
+create .env.local if missing
+```bash
+# In apps/web/
+echo "NEXT_PUBLIC_API_URL=http://localhost:8080" > .env.local
 ```
 
 run the server
@@ -75,7 +100,7 @@ Not comprehensive.
 - Create flowchart (Figma)
 - Create mockup UI (Excalidraw)
 - Design home/landing page
-- GitHub/Google login support
+- GitHub login support
 ```
 
 # Possible Domains
