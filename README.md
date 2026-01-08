@@ -49,6 +49,7 @@ echo "DATABASE_URL=postgres://postgres:password@localhost:5432/praxis_db\nGOOGLE
 
 replace placeholders (get keys from Lucas or setup your own in Google Cloud Console)
 ```bash
+# apps/api/.env
 DATABASE_URL=postgres://postgres:password@localhost:5432/praxis_db
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
