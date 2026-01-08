@@ -55,7 +55,7 @@ export default function LoginPage() {
             }
 
             setStatus({ error: false, msg: 'Login successful! Redirecting...' });
-            setTimeout(() => router.push('/'), 2000);
+            setTimeout(() => router.push('/dashboard'), 2000);
         } catch (err: any) {
             setStatus({ error: true, msg: err.message });
         } finally {

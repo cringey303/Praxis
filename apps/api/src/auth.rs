@@ -300,5 +300,10 @@ pub async fn google_callback(
 
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
-    Ok(Redirect::to(&frontend_url))
+    Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
+}
+
+pub async fn logout(session: Session) -> impl IntoResponse {
+    session.clear().await;
+    Ok::<_, (StatusCode, String)>((StatusCode::OK, "Logged out successfully".to_string()))
 }

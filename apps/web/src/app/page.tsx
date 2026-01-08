@@ -1,24 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 export default function Home() {
-  const [message, setMessage] = useState<string>('Loading...');
-
-  useEffect(() => {
-    // Fetch data from the Rust API (port 8080)
-    fetch('http://localhost:8080/')
-      .then((res) => res.text())
-      .then((data) => setMessage(data))
-      .catch((err) => setMessage('Error connecting to API: ' + err.message));
-  }, []);
-
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold mb-4">Praxis</h1>
-      <p className="text-xl">
-        Backend: <span className="font-mono bg-gray-100 p-1 rounded text-black">{message}</span>
-      </p>
+    <div className="flex min-h-screen flex-col items-center justify-center p-8 bg-background text-foreground relative overflow-hidden">
+
+      <div className="max-w-5xl w-full text-center space-y-8 z-10">
+        <h1 className="text-5xl tracking-tight sm:text-7xl">
+          Praxis
+        </h1>
+
+        <div className="flex flex-wrap items-top justify-center">
+          <Link
+            href="/login"
+            className="rounded-md bg-primary px-3.5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Sign In
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

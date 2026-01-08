@@ -78,7 +78,7 @@ export default function SignupPage() {
             }
 
             setStatus({ error: false, msg: 'Account created! Redirecting...' }); // display success message
-            setTimeout(() => router.push('/'), 1000); // redirect to home page in 1sec
+            setTimeout(() => router.push('/dashboard'), 1000); // redirect to home page in 1sec
         } catch (err: any) {
             setStatus({ error: true, msg: err.message }); // display error message
         } finally {

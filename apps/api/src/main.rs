@@ -11,6 +11,7 @@ use tower_sessions::{Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 
 mod auth;
+mod user;
 
 #[tokio::main]
 async fn main() {
@@ -32,7 +33,10 @@ async fn main() {
 
     // --- Setup Session --- //
     let session_store = PostgresStore::new(pool.clone());
-    session_store.migrate().await.expect("Failed to migrate session store");
+    session_store
+        .migrate()
+        .await
+        .expect("Failed to migrate session store");
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(false) // set to true in production (requires https)
         .with_expiry(Expiry::OnInactivity(Duration::days(1)));
@@ -48,6 +52,9 @@ async fn main() {
         .route("/auth/login", post(auth::login)) // map /auth/login to fn login in auth module
         .route("/auth/google/login", get(auth::google_login)) // when user clicks login with google
         .route("/auth/google/callback", get(auth::google_callback)) // where google redirects to after login
+        .route("/auth/logout", post(auth::logout))
+        .route("/user/me", get(user::get_me))
+        .route("/user/profile", post(user::update_profile))
         .layer(session_layer)
         .layer(cors)
         .with_state(pool); // injecting the DB pool
