@@ -44,8 +44,6 @@ pub struct AuthRequest {
     pub state: String,
 }
 
-
-
 /*
 * Function: signup
 * Description: takes SignupRequest and stores in DB
@@ -186,14 +184,15 @@ pub async fn login(
 fn oauth_client() -> BasicClient {
     // read from .env
     let client_id = std::env::var("GOOGLE_CLIENT_ID").expect("GOOGLE_CLIENT_ID must be set");
-    let client_secret = std::env::var("GOOGLE_CLIENT_SECRET").expect("GOOGLE_CLIENT_SECRET must be set");
+    let client_secret =
+        std::env::var("GOOGLE_CLIENT_SECRET").expect("GOOGLE_CLIENT_SECRET must be set");
     let redirect_url = std::env::var("GOOGLE_REDIRECT_URL").expect("Missing GOOGLE_REDIRECT_URL");
 
     let auth_url = AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())
-    .expect("Missing GOOGLE_AUTH_URL");
+        .expect("Missing GOOGLE_AUTH_URL");
 
     let token_url = TokenUrl::new("https://oauth2.googleapis.com/token".to_string())
-    .expect("Missing GOOGLE_TOKEN_URL");
+        .expect("Missing GOOGLE_TOKEN_URL");
 
     BasicClient::new(
         ClientId::new(client_id),
@@ -214,7 +213,7 @@ pub async fn google_login() -> impl IntoResponse {
         .add_scope(Scope::new("email".to_string()))
         .add_scope(Scope::new("profile".to_string()))
         .url();
-    
+
     Redirect::to(auth_url.as_str())
 }
 
@@ -259,7 +258,10 @@ pub async fn google_callback(
         u.user_id
     } else {
         // if user not found, create new user
-        let mut tx = pool.begin().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        let mut tx = pool
+            .begin()
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
         let new_user_id = sqlx::query!(
             "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
@@ -296,5 +298,7 @@ pub async fn google_callback(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    Ok(Redirect::to("/"))
+    let frontend_url =
+        std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+    Ok(Redirect::to(&frontend_url))
 }
