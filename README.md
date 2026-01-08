@@ -84,8 +84,6 @@ Go to
 [http://localhost:3000](http://localhost:3000)
 and you should see the Praxis homepage.
 
-Go to [http://localhost:3000/signup](http://localhost:3000/signup) or [http://localhost:3000/login](http://localhost:3000/login) to test out account creation and login.
-
 # Useful Commands
 
 Reset Database: `docker compose down -v` (Deletes all data)
