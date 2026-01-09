@@ -59,7 +59,7 @@ FRONTEND_URL=http://localhost:3000
 
 create .env.local if missing
 ```bash
-# In apps/web/
+# apps/web/
 echo "NEXT_PUBLIC_API_URL=http://localhost:8080" > .env.local
 ```
 
