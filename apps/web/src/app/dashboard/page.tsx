@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useState } from 'react';
 
 export default function Dashboard() {
@@ -30,10 +31,16 @@ export default function Dashboard() {
                 </h1>
 
                 <div className="mt-10 flex items-center justify-center gap-x-6">
+                    <Link
+                        href="/settings/profile"
+                        className="rounded-md bg-primary px-3.5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                        Edit Profile
+                    </Link>
                     <button
                         onClick={handleLogout}
                         disabled={loading}
-                        className="cursor-pointer rounded-md bg-destructive px-3.5 py-2.5 text-sm font-semibold text-destructive-foreground shadow-sm hover:bg-destructive/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive disabled:opacity-50"
+                        className="cursor-pointer rounded-md bg-destructive px-3.5 py-2.5 text-sm font-semibold text-destructive-foreground shadow-sm hover:bg-destructive/90 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-destructive disabled:opacity-50"
                     >
                         {loading ? 'Logging out...' : 'Log Out'}
                     </button>

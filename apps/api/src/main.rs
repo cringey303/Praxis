@@ -1,12 +1,13 @@
 use axum::{
     Router,
+    http::{Method, header},
     routing::{get, post},
 };
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 use time::Duration;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 use tower_sessions::{Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 
@@ -41,9 +42,14 @@ async fn main() {
         .with_secure(false) // set to true in production (requires https)
         .with_expiry(Expiry::OnInactivity(Duration::days(1)));
     let cors = CorsLayer::new()
-        .allow_origin(Any)
-        .allow_methods(Any)
-        .allow_headers(Any);
+        .allow_origin(
+            "http://localhost:3000"
+                .parse::<axum::http::HeaderValue>()
+                .unwrap(),
+        )
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION, header::ACCEPT])
+        .allow_credentials(true);
 
     // create empty web app and run mapped fns if routes are visited
     let app = Router::new()
