@@ -70,7 +70,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         onClick={() => startExit(toast.id)}
                         className={`
                             pointer-events-auto
-                            flex items-center gap-3 px-6 py-3 rounded-md shadow-2xl backdrop-blur-md border
+                            flex items-center gap-2 px-3 py-3 rounded-md shadow-2xl backdrop-blur-md border
                             transition-all duration-300 transform
                             ${toast.isExiting ? 'animate-toast-out' : 'animate-toast-in'}
                             ${toast.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-500' : ''}
