@@ -119,3 +119,32 @@ pub async fn update_profile(
 
     Ok((StatusCode::OK, "Profile updated successfully"))
 }
+
+pub async fn get_all(
+    State(pool): State<PgPool>,
+) -> Result<Json<Vec<UserProfile>>, (StatusCode, String)> {
+    let users = sqlx::query!(
+        r#"
+        SELECT u.id, u.username, u.display_name, u.avatar_url, l.email as "email?"
+        FROM users u
+        LEFT JOIN local_auths l ON u.id = l.user_id
+        ORDER BY u.created_at DESC
+        "#
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let profiles = users
+        .into_iter()
+        .map(|u| UserProfile {
+            id: u.id,
+            username: u.username,
+            display_name: u.display_name,
+            email: u.email,
+            avatar_url: u.avatar_url,
+        })
+        .collect();
+
+    Ok(Json(profiles))
+}

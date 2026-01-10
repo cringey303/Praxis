@@ -61,6 +61,7 @@ async fn main() {
         .route("/auth/logout", post(auth::logout))
         .route("/user/me", get(user::get_me))
         .route("/user/profile", post(user::update_profile))
+        .route("/user/all", get(user::get_all))
         .layer(session_layer)
         .layer(cors)
         .with_state(pool); // injecting the DB pool

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
+import { UserListWidget } from '../../components/dashboard/UserListWidget';
 
 export default function Dashboard() {
     const router = useRouter();
@@ -24,26 +25,40 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center p-8 bg-background text-foreground">
-            <div className="max-w-4xl w-full space-y-8 text-center">
-                <h1 className="text-4xl tracking-tight sm:text-6xl">
-                    Dashboard
-                </h1>
+        <div className="min-h-screen bg-background text-foreground p-8">
+            <div className="max-w-6xl mx-auto space-y-8">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                    <div className="flex items-center gap-4">
+                        <Link
+                            href="/settings/profile"
+                            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Edit Profile
+                        </Link>
+                        <button
+                            onClick={handleLogout}
+                            disabled={loading}
+                            className="rounded-md bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 disabled:opacity-50 transition-colors"
+                        >
+                            {loading ? 'Logging out...' : 'Log Out'}
+                        </button>
+                    </div>
+                </div>
 
-                <div className="mt-10 flex items-center justify-center gap-x-6">
-                    <Link
-                        href="/settings/profile"
-                        className="rounded-md bg-primary px-3.5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary"
-                    >
-                        Edit Profile
-                    </Link>
-                    <button
-                        onClick={handleLogout}
-                        disabled={loading}
-                        className="cursor-pointer rounded-md bg-destructive px-3.5 py-2.5 text-sm font-semibold text-destructive-foreground shadow-sm hover:bg-destructive/90 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-destructive disabled:opacity-50"
-                    >
-                        {loading ? 'Logging out...' : 'Log Out'}
-                    </button>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {/* Welcome Card */}
+                    <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm">
+                        <h2 className="text-xl mb-2">Welcome Back</h2>
+                        <p className="text-muted-foreground">
+                            This is the dashboard for Praxis. You will find different widgets here in the future.
+                        </p>
+                    </div>
+
+                    {/* User List Widget */}
+                    <div className="col-span-full md:col-span-1">
+                        <UserListWidget />
+                    </div>
                 </div>
             </div>
         </div>
