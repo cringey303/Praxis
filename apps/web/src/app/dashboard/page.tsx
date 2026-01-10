@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useState } from 'react';
 import { UserListWidget } from '../../components/dashboard/UserListWidget';
 
@@ -29,13 +28,14 @@ export default function Dashboard() {
             <div className="max-w-6xl mx-auto space-y-8">
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                    <div className="flex items-center gap-4">
-                        <Link
-                            href="/settings/profile"
-                            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    <div className="flex items-center">
+                        <button
+                            onClick={() => router.push('/settings/profile')}
+                            className="cursor-pointer rounded-md py-2 px-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                         >
                             Edit Profile
-                        </Link>
+                        </button>
+
                         <button
                             onClick={handleLogout}
                             disabled={loading}
