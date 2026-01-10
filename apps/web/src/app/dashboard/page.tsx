@@ -39,7 +39,7 @@ export default function Dashboard() {
                         <button
                             onClick={handleLogout}
                             disabled={loading}
-                            className="rounded-md bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 disabled:opacity-50 transition-colors"
+                            className="cursor-pointer rounded-md bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 disabled:opacity-50 transition-colors"
                         >
                             {loading ? 'Logging out...' : 'Log Out'}
                         </button>
