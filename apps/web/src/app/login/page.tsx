@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { FloatingLabelInput } from "@/components/ui/FloatingLabelInput";
+import { useToast } from "@/components/ui/Toast";
 
 
 export default function LoginPage() {
@@ -13,7 +14,7 @@ export default function LoginPage() {
         password: '',
     });
 
-    const [status, setStatus] = useState<{ error: boolean; msg: string } | null>(null);
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -40,7 +41,6 @@ export default function LoginPage() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setStatus(null);
 
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/login`, {
@@ -54,10 +54,10 @@ export default function LoginPage() {
                 throw new Error(errorText || 'Login failed');
             }
 
-            setStatus({ error: false, msg: 'Login successful! Redirecting...' });
+            showToast('Login successful! Redirecting...', 'success');
             setTimeout(() => router.push('/dashboard'), 2000);
         } catch (err: any) {
-            setStatus({ error: true, msg: err.message });
+            showToast(err.message, 'error');
         } finally {
             setLoading(false);
         }
@@ -72,17 +72,6 @@ export default function LoginPage() {
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl tracking-tight">Sign in to Praxis</h1>
                 </div>
-
-                {/* Status Message */}
-                {status && (
-                    <div className={`p-3 rounded-md text-sm font-medium border ${status.error
-                        ? 'bg-destructive/10 text-destructive border-destructive/20'
-                        : 'bg-green-500/10 text-green-500 border-green-500/20'
-                        }`}>
-                        {status.msg}
-                    </div>
-                )}
-
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-6">

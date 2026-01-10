@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
+import { useToast } from "@/components/ui/Toast";
 
 interface UserProfile {
     id: string;
@@ -19,7 +20,7 @@ export default function ProfilePage() {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
-    const [status, setStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+    const { showToast } = useToast();
 
     // Form state
     const [formData, setFormData] = useState({
@@ -49,7 +50,7 @@ export default function ProfilePage() {
                 });
             } catch (err) {
                 console.error(err);
-                setStatus({ type: 'error', msg: 'Could not load profile data.' });
+                showToast('Could not load profile data.', 'error');
             } finally {
                 setLoading(false);
             }
@@ -61,7 +62,6 @@ export default function ProfilePage() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setUpdating(true);
-        setStatus(null);
 
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/profile`, {
@@ -76,11 +76,11 @@ export default function ProfilePage() {
                 throw new Error(text || 'Update failed');
             }
 
-            setStatus({ type: 'success', msg: 'Profile updated successfully.' });
+            showToast('Profile updated successfully.', 'success');
             // Refresh local user data to reflect changes
             setUser((prev) => prev ? { ...prev, ...formData } : null);
         } catch (err: any) {
-            setStatus({ type: 'error', msg: err.message });
+            showToast(err.message, 'error');
         } finally {
             setUpdating(false);
         }
@@ -127,16 +127,6 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="border-t border-border my-6"></div>
-
-                        {/* Status Message */}
-                        {status && (
-                            <div className={`p-4 rounded-md text-sm border ${status.type === 'error'
-                                ? 'bg-destructive/10 text-destructive border-destructive/20'
-                                : 'bg-green-500/10 text-green-500 border-green-500/20'
-                                }`}>
-                                {status.msg}
-                            </div>
-                        )}
 
                         <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
 
