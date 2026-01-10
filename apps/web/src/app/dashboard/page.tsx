@@ -13,6 +13,7 @@ export default function Dashboard() {
         try {
             await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/logout`, {
                 method: 'POST',
+                credentials: 'include',
             });
             // Redirect to home page
             router.push('/');

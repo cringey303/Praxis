@@ -57,6 +57,7 @@ pub struct AuthRequest {
 */
 pub async fn signup(
     State(pool): State<PgPool>,
+    session: Session,
     Json(payload): Json<SignupRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // check if email already exists
@@ -114,6 +115,12 @@ pub async fn signup(
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     tx.commit()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Log the user in
+    session
+        .insert("user_id", user_id)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -304,6 +311,6 @@ pub async fn google_callback(
 }
 
 pub async fn logout(session: Session) -> impl IntoResponse {
-    session.clear().await;
+    let _ = session.delete().await;
     Ok::<_, (StatusCode, String)>((StatusCode::OK, "Logged out successfully".to_string()))
 }
