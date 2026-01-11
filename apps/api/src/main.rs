@@ -8,7 +8,7 @@ use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 use time::Duration;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
-use tower_sessions::{Expiry, SessionManagerLayer};
+use tower_sessions::{Expiry, SessionManagerLayer, cookie::SameSite};
 use tower_sessions_sqlx_store::PostgresStore;
 
 mod auth;
@@ -40,6 +40,7 @@ async fn main() {
         .expect("Failed to migrate session store");
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(false) // set to true in production (requires https)
+        .with_same_site(SameSite::Lax)
         .with_expiry(Expiry::OnInactivity(Duration::days(1)));
     let cors = CorsLayer::new()
         .allow_origin(
@@ -71,7 +72,18 @@ async fn main() {
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
 
     //start server
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    let listener = match tokio::net::TcpListener::bind(addr).await {
+        Ok(listener) => listener,
+        Err(e) => {
+            if e.kind() == std::io::ErrorKind::AddrInUse {
+                eprintln!("Error: Port 8080 is already in use.");
+                eprintln!("You can identify the conflicting process with: lsof -i :8080");
+                std::process::exit(1);
+            } else {
+                panic!("Failed to bind to address: {}", e);
+            }
+        }
+    };
     //get requests and send it to app
     axum::serve(listener, app).await.unwrap();
 }

@@ -25,8 +25,10 @@ pub struct UpdateProfileRequest {
 
 pub async fn get_me(
     State(pool): State<PgPool>,
+    headers: axum::http::HeaderMap,
     session: Session,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
+    tracing::info!("get_me: Headers: {:?}", headers);
     // 1. Get user_id from session
     let user_id: Uuid = match session.get("user_id").await {
         Ok(Some(id)) => id,
@@ -121,7 +123,7 @@ pub async fn update_profile(
 
     tracing::info!("Profile updated successfully for user_id: {}", user_id);
 
-    // Check if session ID persists
+    // Check if session ID persists (in memory)
     if let Ok(Some(check_id)) = session.get::<Uuid>("user_id").await {
         tracing::info!(
             "update_profile POST-UPDATE: Session still contains user_id: {}",

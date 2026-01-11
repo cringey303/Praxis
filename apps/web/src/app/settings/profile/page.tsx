@@ -130,7 +130,14 @@ export default function ProfilePage() {
 
                         <div className="border-t border-border my-6"></div>
 
-                        <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
+                        <div className="border-t border-border my-6"></div>
+
+                        <form
+                            onSubmit={handleSubmit}
+                            className="space-y-8 max-w-2xl"
+                            autoComplete="off"
+                            data-lpignore="true"
+                        >
 
                             {/* Profile Picture Section */}
                             <div className="space-y-4">
@@ -166,6 +173,8 @@ export default function ProfilePage() {
                                     label="Display Name"
                                     type="text"
                                     value={formData.display_name}
+                                    autoComplete="off"
+                                    data-lpignore="true"
                                     onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                                 />
                                 <p className="text-xs text-muted-foreground">Your real name or pen name.</p>
@@ -178,6 +187,8 @@ export default function ProfilePage() {
                                     label="Username"
                                     type="text"
                                     value={formData.username}
+                                    autoComplete="off"
+                                    data-lpignore="true"
                                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                                 />
                                 <p className="text-xs text-muted-foreground">
