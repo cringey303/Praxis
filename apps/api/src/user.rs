@@ -66,8 +66,10 @@ pub async fn get_me(
 pub async fn update_profile(
     State(pool): State<PgPool>,
     session: Session,
+    headers: axum::http::HeaderMap,
     Json(payload): Json<UpdateProfileRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
+    tracing::info!("update_profile: Headers: {:?}", headers);
     // 1. Get user_id from session
     let user_id: Uuid = match session.get("user_id").await {
         Ok(Some(id)) => id,
@@ -116,6 +118,18 @@ pub async fn update_profile(
     .execute(&pool)
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    tracing::info!("Profile updated successfully for user_id: {}", user_id);
+
+    // Check if session ID persists
+    if let Ok(Some(check_id)) = session.get::<Uuid>("user_id").await {
+        tracing::info!(
+            "update_profile POST-UPDATE: Session still contains user_id: {}",
+            check_id
+        );
+    } else {
+        tracing::warn!("update_profile POST-UPDATE: Session LOST user_id!");
+    }
 
     Ok((StatusCode::OK, "Profile updated successfully"))
 }

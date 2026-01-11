@@ -124,6 +124,8 @@ pub async fn signup(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    tracing::info!("Signup successful for user_id: {}", user_id);
+
     Ok((StatusCode::CREATED, "User created successfully"))
 }
 
@@ -182,6 +184,8 @@ pub async fn login(
         .insert("user_id", user.user_id)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    tracing::info!("Login successful for user_id: {}", user.user_id);
 
     // return success
     Ok((StatusCode::OK, "Login successful"))

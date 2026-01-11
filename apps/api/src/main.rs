@@ -7,7 +7,7 @@ use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 use time::Duration;
-use tower_http::cors::CorsLayer;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tower_sessions::{Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 
@@ -64,6 +64,7 @@ async fn main() {
         .route("/user/all", get(user::get_all))
         .layer(session_layer)
         .layer(cors)
+        .layer(TraceLayer::new_for_http())
         .with_state(pool); // injecting the DB pool
 
     //define route

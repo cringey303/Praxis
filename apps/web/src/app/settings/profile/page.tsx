@@ -61,6 +61,7 @@ export default function ProfilePage() {
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        console.log('UseProfile: Submitting update', formData);
         setUpdating(true);
 
         try {
@@ -80,6 +81,7 @@ export default function ProfilePage() {
             // Refresh local user data to reflect changes
             setUser((prev) => prev ? { ...prev, ...formData } : null);
         } catch (err: any) {
+            console.error('UseProfile: Update failed', err);
             showToast(err.message, 'error');
         } finally {
             setUpdating(false);
