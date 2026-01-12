@@ -50,9 +50,9 @@
     --destructive-foreground: var(--error-outline);
 
     /* Borders & Inputs */
-    --border: var(--brand);
-    --input: var(--brand);
-    --ring: var(--brand);
+    --border: color-mix(in srgb, var(--brand), transparent 70%);
+    --input: color-mix(in srgb, var(--brand), transparent 70%);
+    --ring: color-mix(in srgb, var(--brand), transparent 70%);
 
     --radius: 0.75rem;
 
