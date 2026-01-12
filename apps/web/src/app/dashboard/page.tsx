@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { UserListWidget } from '../../components/dashboard/UserListWidget';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 
 export default function Dashboard() {
     const router = useRouter();
@@ -45,45 +46,30 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground p-8">
-            <div className="max-w-6xl mx-auto space-y-8">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                    <div className="flex items-center">
-                        <button
-                            onClick={() => router.push('/settings/profile')}
-                            className="cursor-pointer rounded-md py-2 px-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                Edit Profile
-                            </button>
+        <div className="min-h-screen bg-background text-foreground">
+            <DashboardHeader user={user} onLogout={handleLogout} isLoggingOut={loading} />
 
-                            <button
-                                onClick={handleLogout}
-                                disabled={loading}
-                                className="cursor-pointer rounded-md bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 disabled:opacity-50 transition-colors"
-                            >
-                                {loading ? 'Logging out...' : 'Log Out'}
-                            </button>
+            <main className="p-8">
+                <div className="max-w-6xl mx-auto space-y-8">
+
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {/* Welcome Card */}
+                        <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm">
+                            <h2 className="text-xl mb-2">
+                                Welcome Back{user ? `, ${user.display_name}` : ''}
+                            </h2>
+                            <p className="text-muted-foreground">
+                                This is the dashboard for Praxis. You will find different widgets here in the future.
+                            </p>
+                        </div>
+
+                        {/* User List Widget */}
+                        <div className="col-span-full md:col-span-1">
+                            <UserListWidget />
                         </div>
                     </div>
-
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {/* Welcome Card */}
-                    <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm">
-                        <h2 className="text-xl mb-2">
-                            Welcome Back{user ? `, ${user.display_name}` : ''}
-                        </h2>
-                        <p className="text-muted-foreground">
-                            This is the dashboard for Praxis. You will find different widgets here in the future.
-                        </p>
-                    </div>
-
-                    {/* User List Widget */}
-                    <div className="col-span-full md:col-span-1">
-                        <UserListWidget />
-                    </div>
                 </div>
-            </div>
+            </main>
         </div>
     );
 }
