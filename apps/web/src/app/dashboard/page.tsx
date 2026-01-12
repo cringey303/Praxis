@@ -1,12 +1,32 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserListWidget } from '../../components/dashboard/UserListWidget';
 
 export default function Dashboard() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+
+    const [user, setUser] = useState<{ display_name: string; username: string } | null>(null);
+
+    // fetch user data
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/me`, {
+                    credentials: 'include',
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error('Failed to load user', err);
+            }
+        };
+        fetchUser();
+    }, []);
 
     const handleLogout = async () => {
         setLoading(true);
@@ -33,24 +53,26 @@ export default function Dashboard() {
                         <button
                             onClick={() => router.push('/settings/profile')}
                             className="cursor-pointer rounded-md py-2 px-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            Edit Profile
-                        </button>
+                            >
+                                Edit Profile
+                            </button>
 
-                        <button
-                            onClick={handleLogout}
-                            disabled={loading}
-                            className="cursor-pointer rounded-md bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 disabled:opacity-50 transition-colors"
-                        >
-                            {loading ? 'Logging out...' : 'Log Out'}
-                        </button>
+                            <button
+                                onClick={handleLogout}
+                                disabled={loading}
+                                className="cursor-pointer rounded-md bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 disabled:opacity-50 transition-colors"
+                            >
+                                {loading ? 'Logging out...' : 'Log Out'}
+                            </button>
+                        </div>
                     </div>
-                </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {/* Welcome Card */}
                     <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm">
-                        <h2 className="text-xl mb-2">Welcome Back</h2>
+                        <h2 className="text-xl mb-2">
+                            Welcome Back{user ? `, ${user.display_name}` : ''}
+                        </h2>
                         <p className="text-muted-foreground">
                             This is the dashboard for Praxis. You will find different widgets here in the future.
                         </p>
