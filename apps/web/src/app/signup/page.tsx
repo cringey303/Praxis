@@ -69,6 +69,7 @@ export default function SignupPage() {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/signup`, {
                 method: 'POST', // prepares the backend for new data
                 headers: { 'Content-Type': 'application/json' }, // prepares backend to accept JSON format
+                credentials: 'include',
                 body: JSON.stringify(formData), // send form data as JSON
             });
 

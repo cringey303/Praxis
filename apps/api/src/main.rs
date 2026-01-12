@@ -19,7 +19,14 @@ async fn main() {
     // load env variables
     dotenv().ok();
     // setup logging (view SQL queries or errors in terminal)
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                // Default filter if RUST_LOG is not set
+                "api=debug,tower_http=debug,tower_sessions=debug,sqlx=info".into()
+            }),
+        )
+        .init();
 
     // --- Connect to Database --- //
     // get database url saved in .env
