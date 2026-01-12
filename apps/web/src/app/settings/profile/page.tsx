@@ -130,8 +130,6 @@ export default function ProfilePage() {
 
                         <div className="border-t border-border my-6"></div>
 
-                        <div className="border-t border-border my-6"></div>
-
                         <form
                             onSubmit={handleSubmit}
                             className="space-y-8 max-w-2xl"
