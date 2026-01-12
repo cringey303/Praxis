@@ -60,6 +60,28 @@
     --brand-color: var(--brand);
     --outline: var(--brand);
   }
+
+  /* Dark theme overrides (same as root for now but structured for future changes) */
+  :root[class="dark"] {
+    /* User Palette */
+    --text: #FDEBD0;
+    --brand: #766D61;
+    --error-text: #FF6467;
+    --error-outline: #461112;
+    --background-base: #0a0a0a;
+  }
+
+  /* Light theme overrides */
+  :root[class="light"] {
+    --text: #0a0a0a;
+    /* Dark text for light mode */
+    --brand: #7d7770;
+    /* Light brand color */
+    --error-text: #D32F2F;
+    --error-outline: #FFCDD2;
+    --background-base: #ffffff;
+    /* White background */
+  }
 }
 
 @layer base {
