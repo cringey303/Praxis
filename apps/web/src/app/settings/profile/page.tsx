@@ -125,7 +125,6 @@ export default function ProfilePage() {
                     {/* Sidebar Navigation (Visual Only for now) */}
                     <aside className="md:col-span-3 space-y-2">
                         {/* 'Back to Dashboard' removed as Header handles it */}
-                        <div className="h-4"></div>
                         <nav className="space-y-1">
                             <Link href="/settings/profile" className="block px-3 py-2 rounded-md bg-secondary/50 text-foreground font-medium border-l-2 border-primary">
                                 Profile
