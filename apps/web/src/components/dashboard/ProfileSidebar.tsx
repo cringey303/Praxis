@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
 interface User {
     display_name: string;
@@ -18,40 +17,38 @@ interface ProfileSidebarProps {
 }
 
 export function ProfileSidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: ProfileSidebarProps) {
-    const [isVisible, setIsVisible] = useState(false);
-
-    // Handle animation sequencing
-    useEffect(() => {
-        if (isOpen) {
-            setIsVisible(true);
-        } else {
-            const timer = setTimeout(() => setIsVisible(false), 300); // match transition duration
-            return () => clearTimeout(timer);
-        }
-    }, [isOpen]);
-
-    if (!isVisible && !isOpen) return null;
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex justify-end">
             {/* Backdrop */}
             <div
-                className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'
-                    }`}
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]"
                 onClick={onClose}
-            />
-
-            {/* Sidebar Panel */}
-            <div
-                className={`relative h-full w-80 bg-card border-l border-border shadow-2xl transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
-                    }`}
             >
+                <style jsx>{`
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                `}</style>
+            </div>
+
+            <div
+                className="relative h-full w-64 bg-card border-l border-border shadow-2xl animate-[slideIn_0.1s_ease-out]"
+            >
+                <style jsx>{`
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); }
+                        to { transform: translateX(0); }
+                    }
+                `}</style>
                 <div className="flex flex-col h-full p-6">
                     {/* Header / Profile Section */}
                     <div className="flex items-center justify-between mb-6">
                         {user ? (
                             <div className="flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-lg font-bold text-muted-foreground">
+                                <div className="h-12 w-12 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-lg font-bold text-foreground">
                                     {user.avatar_url ? (
                                         <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
                                     ) : (

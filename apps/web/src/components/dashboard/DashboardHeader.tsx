@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 import { useState } from 'react';
 import { ProfileSidebar } from './ProfileSidebar';
@@ -24,12 +25,12 @@ export function DashboardHeader({ user, onLogout, isLoggingOut }: DashboardHeade
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         {/* Logo Area */}
-                        <div className="flex items-center gap-2">
+                        <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                             <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl shadow-sm">
                                 P
                             </div>
                             <span className="text-xl font-bold tracking-tight text-foreground/90">Praxis</span>
-                        </div>
+                        </Link>
 
                         {/* Right Area: User Profile */}
                         {user ? (
