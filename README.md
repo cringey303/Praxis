@@ -8,6 +8,8 @@ Created by Lucas Root and Luke Coffman.
 Here is the 
 [figma](https://www.figma.com/design/z9Tf6F6dxn4S84Cd3mWeif/Praxis-Flowchart?node-id=0-1&m=dev&t=drysAnHQDYuItSh1-1)
 
+[stitch](https://stitch.withgoogle.com/projects/2144734098224224255)
+
 ## Quickstart (Luke this for u)
 Get Praxis ready to develop and run locally.
 
