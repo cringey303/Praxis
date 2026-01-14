@@ -50,52 +50,35 @@ export function ProfileSidebar({ user, isOpen, onClose, onLogout, isLoggingOut }
                 `}</style>
                 <div className="flex flex-col h-full p-6">
                     {/* Header / Profile Section */}
-                    <div className="flex items-center justify-between mb-6">
-                        {user ? (
-                            <div className="flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-lg font-bold text-foreground">
-                                    {user.avatar_url ? (
-                                        <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
-                                    ) : (
-                                        <span>{user.display_name?.[0] || '?'}</span>
-                                    )}
-                                </div>
-                                <div className="overflow-hidden">
-                                    <p className="font-medium truncate">{user.display_name}</p>
-                                    <p className="text-sm text-muted-foreground truncate">@{user.username}</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="h-12" /> /* Spacer if no user yet */
-                        )}
+                    {/* Main Content Area */}
+                    <div className="flex-1 flex justify-between items-start">
+                        <nav className="space-y-2 w-full">
+                            <Link
+                                href="/dashboard"
+                                className="flex items-center gap-3 pb-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
+                                onClick={onClose}
+                            >
+                                <LayoutDashboard className="h-[18px] w-[18px]" />
+                                Dashboard
+                            </Link>
+
+                            <Link
+                                href="/settings/profile"
+                                className="flex items-center gap-3 py-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
+                                onClick={onClose}
+                            >
+                                <Settings className="h-[18px] w-[18px]" />
+                                Settings
+                            </Link>
+                        </nav>
 
                         <button
                             onClick={onClose}
-                            className="cursor-pointer flex align-center items-center justify-center p-2 -mr-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-secondary/50 transition-colors"
+                            className="relative cursor-pointer flex align-center items-center justify-center text-muted-foreground hover:text-foreground transition-colors after:absolute after:-inset-2 after:content-['']"
                         >
                             <X className="h-5 w-5" />
                         </button>
                     </div>
-
-                    <nav className="space-y-2 flex-1">
-                        <Link
-                            href="/dashboard"
-                            className="flex items-center gap-3 py-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
-                            onClick={onClose}
-                        >
-                            <LayoutDashboard className="h-[18px] w-[18px]" />
-                            Dashboard
-                        </Link>
-
-                        <Link
-                            href="/settings/profile"
-                            className="flex items-center gap-3 py-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
-                            onClick={onClose}
-                        >
-                            <Settings className="h-[18px] w-[18px]" />
-                            Settings
-                        </Link>
-                    </nav>
 
                     <div className="pt-6 border-t border-border mt-auto space-y-3">
                         {/* Theme Toggle */}

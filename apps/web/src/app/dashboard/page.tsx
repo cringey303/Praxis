@@ -49,10 +49,10 @@ export default function Dashboard() {
         <div className="min-h-screen bg-background text-foreground">
             <DashboardHeader user={user} onLogout={handleLogout} isLoggingOut={loading} />
 
-            <main className="p-8">
+            <main className="p-3">
                 <div className="w-full space-y-8">
 
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                         {/* Welcome Card */}
                         <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm">
                             <h2 className="text-xl mb-2">

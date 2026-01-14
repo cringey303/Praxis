@@ -22,7 +22,7 @@ export function DashboardHeader({ user, onLogout, isLoggingOut }: DashboardHeade
     return (
         <>
             <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
-                <div className="w-full px-8">
+                <div className="w-full px-3">
                     <div className="flex h-16 items-center justify-between">
                         {/* Logo Area */}
                         <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -34,7 +34,7 @@ export function DashboardHeader({ user, onLogout, isLoggingOut }: DashboardHeade
 
                         {/* Right Area: User Profile */}
                         {user ? (
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1">
                                 <div className="hidden sm:flex flex-col items-end mr-2">
                                     <span className="text-sm font-medium leading-none">{user.display_name}</span>
                                     <span className="text-xs text-muted-foreground mt-1">@{user.username}</span>
