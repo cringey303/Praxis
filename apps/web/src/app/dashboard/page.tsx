@@ -50,7 +50,7 @@ export default function Dashboard() {
             <DashboardHeader user={user} onLogout={handleLogout} isLoggingOut={loading} />
 
             <main className="p-8">
-                <div className="max-w-6xl mx-auto space-y-8">
+                <div className="w-full space-y-8">
 
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {/* Welcome Card */}

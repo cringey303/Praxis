@@ -158,7 +158,7 @@ export default function ProfilePage() {
                                 <div className="space-y-4">
                                     <label className="block text-sm font-medium">Profile picture</label>
                                     <div className="flex items-center gap-6">
-                                        <div className="relative h-24 w-24 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-muted-foreground">
+                                        <div className="relative h-24 w-24 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground">
                                             {user?.avatar_url ? (
                                                 <Image
                                                     src={user.avatar_url}

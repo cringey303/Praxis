@@ -22,7 +22,7 @@ export function DashboardHeader({ user, onLogout, isLoggingOut }: DashboardHeade
     return (
         <>
             <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="w-full px-8">
                     <div className="flex h-16 items-center justify-between">
                         {/* Logo Area */}
                         <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
