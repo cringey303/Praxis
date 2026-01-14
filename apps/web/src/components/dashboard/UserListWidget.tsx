@@ -67,7 +67,7 @@ export function UserListWidget() {
                 ) : (
                     users.map((user) => (
                         <div key={user.id} className="flex items-center gap-3 group p-2 rounded-lg hover:bg-secondary/50 transition-colors">
-                            <div className="relative h-10 w-10 flex-shrink-0 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-sm font-bold text-foreground">
+                            <div className="relative h-10 w-10 shrink-0 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-sm font-bold text-foreground">
                                 {user.avatar_url ? (
                                     <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
                                 ) : (
