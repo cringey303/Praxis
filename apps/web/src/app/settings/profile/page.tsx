@@ -119,8 +119,8 @@ export default function ProfilePage() {
         <div className="min-h-screen bg-background text-foreground">
             <DashboardHeader user={user} onLogout={handleLogout} isLoggingOut={loading} />
 
-            <div className="p-6 md:p-12">
-                <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div className="p-3">
+                <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-3">
 
                     {/* Sidebar Navigation (Visual Only for now) */}
                     <aside className="md:col-span-3 space-y-2">
@@ -139,7 +139,7 @@ export default function ProfilePage() {
                     </aside>
 
                     {/* Main Content */}
-                    <main className="md:col-span-9">
+                    <main className="md:col-span-9 rounded-xl border border-border p-6 shadow-sm bg-card">
                         <div className="space-y-6">
                             <div>
                                 <h1 className="text-3xl font-semibold tracking-tight">Profile</h1>

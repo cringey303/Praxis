@@ -1,0 +1,1545 @@
+Generating frontend context...
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/app/dashboard/page.tsx
+```
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { UserListWidget } from '../../components/dashboard/UserListWidget';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+
+export default function Dashboard() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+
+    const [user, setUser] = useState<{ display_name: string; username: string; role: string } | null>(null);
+
+    // fetch user data
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/me`, {
+                    credentials: 'include',
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error('Failed to load user', err);
+            }
+        };
+        fetchUser();
+    }, []);
+
+    const handleLogout = async () => {
+        setLoading(true);
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+            // Redirect to home page
+            router.push('/');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-background text-foreground">
+            <DashboardHeader user={user} onLogout={handleLogout} isLoggingOut={loading} />
+
+            <main className="p-3">
+                <div className="w-full space-y-8">
+
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                        {/* Welcome Card */}
+                        <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm">
+                            <h2 className="text-xl mb-2">
+                                Welcome Back{user ? `, ${user.display_name}` : ''}
+                            </h2>
+                            <p className="text-muted-foreground">
+                                This is the dashboard for Praxis. You will find different widgets here in the future.
+                            </p>
+                        </div>
+
+                        {/* User List Widget */}
+                        <div className="col-span-full md:col-span-1">
+                            <UserListWidget currentUser={user} />
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}
+```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/app/globals.css
+```
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-error: var(--error-text);
+  --color-error-outline: var(--error-outline);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  :root {
+    /* User Palette */
+    --text: #FDEBD0;
+    --brand: #766D61;
+    --error-text: #FF6467;
+    --error-outline: #461112;
+    --background-base: #0a0a0a;
+    /* Preserving dark canvas */
+
+    /* Core Layout */
+    --background: var(--background-base);
+    --foreground: var(--text);
+
+    /* Surfaces */
+    --card: var(--background-base);
+    --card-foreground: var(--text);
+    --popover: var(--background-base);
+    --popover-foreground: var(--text);
+
+    /* Brand / Primary */
+    --primary: var(--brand);
+    --primary-foreground: var(--text);
+
+    /* Secondary / Accents */
+    --secondary: var(--brand);
+    --secondary-foreground: var(--text);
+    --accent: var(--brand);
+    --accent-foreground: var(--text);
+
+    /* Muted */
+    --muted: var(--background-base);
+    --muted-foreground: var(--brand);
+
+    /* Error / Destructive */
+    --destructive: var(--error-text);
+    --destructive-foreground: var(--error-outline);
+
+    /* Borders & Inputs */
+    --border: color-mix(in srgb, var(--brand), transparent 70%);
+    --input: color-mix(in srgb, var(--brand), transparent 70%);
+    --ring: color-mix(in srgb, var(--brand), transparent 70%);
+
+    --radius: 0.75rem;
+
+    /* Legacy aliases for backwards compatibility if needed */
+    --brand-color: var(--brand);
+    --outline: var(--brand);
+  }
+
+  /* Dark theme overrides (same as root for now but structured for future changes) */
+  :root[class="dark"] {
+    /* User Palette */
+    --text: #FDEBD0;
+    --brand: #766D61;
+    --error-text: #FF6467;
+    --error-outline: #461112;
+    --background-base: #0a0a0a;
+  }
+
+  /* Light theme overrides */
+  :root[class="light"] {
+    --text: #0a0a0a;
+    /* Dark text for light mode */
+    --brand: #aea69d;
+    /* Light brand color */
+    --error-text: #D32F2F;
+    --error-outline: #FFCDD2;
+    --background-base: #ffffff;
+    /* White background */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .animate-toast-in {
+    animation: toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-toast-out {
+    animation: toast-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(-1rem) translateX(-50%);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) translateX(-50%);
+    }
+  }
+
+  @keyframes toast-out {
+    from {
+      opacity: 1;
+      transform: translateY(0) translateX(-50%);
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(-1rem) translateX(-50%);
+    }
+  }
+}```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/app/layout.tsx
+```
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { ToastProvider } from "@/components/ui/Toast";
+import { ThemeProvider } from "@/components/ThemeProvider";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Create Next App",
+  description: "Generated by create next app",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/app/login/page.tsx
+```
+'use client';
+
+import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { FloatingLabelInput } from "@/components/ui/FloatingLabelInput";
+import { useToast } from "@/components/ui/Toast";
+
+
+export default function LoginPage() {
+    const router = useRouter();
+
+    const [formData, setFormData] = useState({
+        email: '',
+        password: '',
+    });
+
+    const { showToast } = useToast();
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (errors[e.target.name]) {
+            setErrors({ ...errors, [e.target.name]: '' });
+        }
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+
+        // Email Validation
+        if (name === 'email' && value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+                setErrors((prev) => ({ ...prev, email: 'Please enter a valid email address.' }));
+            }
+        }
+    };
+
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(formData),
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || 'Login failed');
+            }
+
+            showToast('Login successful! Redirecting...', 'success');
+            setTimeout(() => router.push('/dashboard'), 2000);
+        } catch (err: any) {
+            showToast(err.message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background text-foreground transition-colors duration-300">
+            {/* Main Card Container */}
+            <div className="w-full max-w-md space-y-8 bg-card p-8 rounded-xl border border-border shadow-lg">
+
+                {/* Header */}
+                <div className="text-center space-y-2">
+                    <h1 className="text-3xl tracking-tight">Sign in to Praxis</h1>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-4">
+
+                        <div className="space-y-4">
+                            <FloatingLabelInput
+                                id="email"
+                                name="email"
+                                type="email"
+                                label="Email"
+                                value={formData.email}
+                                required
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.email}
+                            />
+                            <FloatingLabelInput
+                                id="password"
+                                name="password"
+                                type="password"
+                                label="Password"
+                                value={formData.password}
+                                required
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.password}
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+                    >
+                        {loading ? 'Signing in...' : 'Sign In'}
+                    </button>
+                </form>
+
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">
+                            OR
+                        </span>
+                    </div>
+                </div>
+
+                {/* Google Login Button */}
+                <a
+                    href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/google/login`}
+                    className="flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                    <svg className="h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                        <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+                    </svg>
+                    Continue with Google
+                </a>
+
+                <div className="text-center text-sm text-brand">
+                    Don't have an account?{' '}
+                    <a href="/signup" className="underline underline-offset-4 hover:text-primary/90">
+                        Sign up
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+}```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/app/page.tsx
+```
+'use client';
+
+import Link from 'next/link';
+
+export default function Home() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center p-8 bg-background text-foreground relative overflow-hidden">
+
+      <div className="max-w-5xl w-full text-center space-y-8 z-10">
+        <h1 className="text-5xl tracking-tight sm:text-7xl">
+          Praxis
+        </h1>
+
+        <div className="flex flex-wrap items-top justify-center">
+          <Link
+            href="/login"
+            className="rounded-md bg-primary px-3.5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Sign In
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/app/settings/profile/page.tsx
+```
+'use client';
+
+import { useEffect, useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
+import { useToast } from "@/components/ui/Toast";
+
+interface UserProfile {
+    id: string;
+    username: string;
+    display_name: string;
+    email?: string;
+    avatar_url?: string;
+}
+
+export default function ProfilePage() {
+    const router = useRouter();
+    const [user, setUser] = useState<UserProfile | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(false);
+    const { showToast } = useToast();
+
+    // Form state
+    const [formData, setFormData] = useState({
+        username: '',
+        display_name: '',
+    });
+
+    // Fetch user data on mount
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/me`, {
+                    credentials: 'include',
+                });
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        router.push('/login');
+                        return;
+                    }
+                    throw new Error('Failed to load profile');
+                }
+                const data = await res.json();
+                setUser(data);
+                setFormData({
+                    username: data.username || '',
+                    display_name: data.display_name || '',
+                });
+            } catch (err) {
+                console.error(err);
+                showToast('Could not load profile data.', 'error');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUser();
+    }, [router]);
+
+    const handleLogout = async () => {
+        setLoading(true);
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+            // Redirect to home page
+            router.push('/');
+        } catch (error) {
+            console.error('Logout failed:', error);
+            setLoading(false);
+        }
+    };
+
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        console.log('UseProfile: Submitting update', formData);
+        setUpdating(true);
+
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/profile`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(formData),
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text || 'Update failed');
+            }
+
+            showToast('Profile updated successfully.', 'success');
+            // Refresh local user data to reflect changes
+            setUser((prev) => prev ? { ...prev, ...formData } : null);
+        } catch (err: any) {
+            console.error('UseProfile: Update failed', err);
+            showToast(err.message, 'error');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+                <div className="animate-pulse flex flex-col items-center">
+                    <div className="h-12 w-12 rounded-full bg-muted mb-4"></div>
+                    <div className="h-4 w-32 bg-muted rounded"></div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-background text-foreground">
+            <DashboardHeader user={user} onLogout={handleLogout} isLoggingOut={loading} />
+
+            <div className="p-3">
+                <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-3">
+
+                    {/* Sidebar Navigation (Visual Only for now) */}
+                    <aside className="md:col-span-3 space-y-2">
+                        {/* 'Back to Dashboard' removed as Header handles it */}
+                        <nav className="space-y-1">
+                            <Link href="/settings/profile" className="block px-3 py-2 rounded-md bg-secondary/50 text-foreground font-medium border-l-2 border-primary">
+                                Profile
+                            </Link>
+                            <div className="block px-3 py-2 rounded-md text-muted-foreground hover:bg-secondary/30 cursor-not-allowed opacity-50">
+                                Security
+                            </div>
+                            <div className="block px-3 py-2 rounded-md text-muted-foreground hover:bg-secondary/30 cursor-not-allowed opacity-50">
+                                Notifications
+                            </div>
+                        </nav>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="md:col-span-9 rounded-xl border border-border p-6 shadow-sm bg-card">
+                        <div className="space-y-6">
+                            <div>
+                                <h1 className="text-3xl font-semibold tracking-tight">Profile</h1>
+                            </div>
+
+                            <div className="border-t border-border my-6"></div>
+
+                            <form
+                                onSubmit={handleSubmit}
+                                className="space-y-8 max-w-2xl"
+                                autoComplete="off"
+                                data-lpignore="true"
+                            >
+
+                                {/* Profile Picture Section */}
+                                <div className="space-y-4">
+                                    <label className="block text-sm font-medium">Profile picture</label>
+                                    <div className="flex items-center gap-6">
+                                        <div className="relative h-24 w-24 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground">
+                                            {user?.avatar_url ? (
+                                                <Image
+                                                    src={user.avatar_url}
+                                                    alt={user.username}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            ) : (
+                                                <span>{user?.display_name?.[0] || user?.username?.[0] || '?'}</span>
+                                            )}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50"
+                                            disabled
+                                        >
+                                            Upload new picture
+                                            <span className="block text-xs font-normal text-muted-foreground mt-0.5">Coming soon</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Name Input */}
+                                <div className="space-y-2">
+                                    <FloatingLabelInput
+                                        id="display_name"
+                                        label="Display Name"
+                                        type="text"
+                                        value={formData.display_name}
+                                        autoComplete="off"
+                                        data-lpignore="true"
+                                        onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                                    />
+                                    <p className="text-xs text-muted-foreground">Your real name or pen name.</p>
+                                </div>
+
+                                {/* Username Input */}
+                                <div className="space-y-2">
+                                    <FloatingLabelInput
+                                        id="username"
+                                        label="Username"
+                                        type="text"
+                                        value={formData.username}
+                                        autoComplete="off"
+                                        data-lpignore="true"
+                                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        URL: praxis.com/<b>{formData.username || 'username'}</b>
+                                    </p>
+                                </div>
+
+                                {/* Email Input (Read Only) */}
+                                <div className="space-y-2">
+                                    <FloatingLabelInput
+                                        id="email"
+                                        label="Email"
+                                        type="text"
+                                        disabled
+                                        className="cursor-not-allowed bg-secondary/50 text-muted-foreground"
+                                        value={user?.email || 'No email visible'}
+                                    />
+                                    <p className="text-xs text-muted-foreground">To change your email, please contact support.</p>
+                                </div>
+
+                                <div className="pt-4">
+                                    <button
+                                        type="submit"
+                                        disabled={updating}
+                                        className="cursor-pointer rounded-md bg-green-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus-visible:outlinefocus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:opacity-50 transition-colors"
+                                    >
+                                        {updating ? 'Saving...' : 'Update profile'}
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        </div>
+    );
+}
+```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/app/signup/page.tsx
+```
+'use client';
+
+import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation'; // used for redirecting
+import { FloatingLabelInput } from "@/components/ui/FloatingLabelInput";
+
+export default function SignupPage() {
+    const router = useRouter();
+
+    const [formData, setFormData] = useState({
+        username: '',
+        display_name: '',
+        email: '',
+        password: '',
+    });
+
+    // status holds success/error messages
+    const [status, setStatus] = useState<{ error: boolean; msg: string } | null>(null);
+    // loading disables the submit button
+    const [loading, setLoading] = useState(false);
+    // field-level errors
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+    // helper function that updates the form e.target.name with e.target.value
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+
+        // Password validation on change
+        if (name === 'password') {
+            if (value.length < 6) {
+                setErrors((prev) => ({ ...prev, password: 'Password must be at least 6 characters.' }));
+            } else {
+                setErrors((prev) => ({ ...prev, password: '' }));
+            }
+        } else {
+            // Clear error when user types for other fields
+            if (errors[name]) {
+                setErrors((prev) => ({ ...prev, [name]: '' }));
+            }
+        }
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+
+        // Email Validation
+        if (name === 'email' && value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+                setErrors((prev) => ({ ...prev, email: 'Please enter a valid email address.' }));
+            }
+        }
+    };
+
+    // called when the form is submitted
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault(); // prevent full-page refresh
+
+        // Check for any existing errors before submitting
+        const hasErrors = Object.values(errors).some(err => err);
+        if (hasErrors) return;
+
+        setLoading(true); // disable the submit button
+        setStatus(null); // clear any previous status messages and display "Creating Account..."
+
+        try {
+            // send data to the backend
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/signup`, {
+                method: 'POST', // prepares the backend for new data
+                headers: { 'Content-Type': 'application/json' }, // prepares backend to accept JSON format
+                credentials: 'include',
+                body: JSON.stringify(formData), // send form data as JSON
+            });
+
+            if (!res.ok) { // if the request failed
+                const errorText = await res.text(); // get error message
+                throw new Error(errorText || 'Signup failed');
+            }
+
+            setStatus({ error: false, msg: 'Account created! Redirecting...' }); // display success message
+            setTimeout(() => router.push('/dashboard'), 1000); // redirect to home page in 1sec
+        } catch (err: any) {
+            setStatus({ error: true, msg: err.message }); // display error message
+        } finally {
+            setLoading(false); // enable the submit button
+        }
+    };
+
+    return (
+        <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background text-foreground transition-colors duration-300">
+            {/* Main Card Container */}
+            <div className="w-full max-w-md space-y-8 bg-card p-8 rounded-xl border border-border shadow-lg">
+
+                {/* Header */}
+                <div className="text-center space-y-2">
+                    <h1 className="text-3xl tracking-tight">Join Praxis</h1>
+                </div>
+
+                {/* Status Message */}
+                {status && (
+                    <div className={`p-3 rounded-md text-sm font-medium border ${status.error
+                        ? 'bg-destructive/10 text-destructive border-destructive/20'
+                        : 'bg-green-500/10 text-green-500 border-green-500/20'
+                        }`}>
+                        {status.msg}
+                    </div>
+                )}
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-4">
+
+                        <div className="space-y-4">
+                            <FloatingLabelInput
+                                id="username"
+                                name="username"
+                                type="text"
+                                label="Username"
+                                value={formData.username}
+                                required
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.username}
+                            />
+                            <FloatingLabelInput
+                                id="display_name"
+                                name="display_name"
+                                type="text"
+                                label="Display Name"
+                                value={formData.display_name}
+                                required
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.display_name}
+                            />
+                            <FloatingLabelInput
+                                id="email"
+                                name="email"
+                                type="email"
+                                label="Email"
+                                value={formData.email}
+                                required
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.email}
+                            />
+                            <FloatingLabelInput
+                                id="password"
+                                name="password"
+                                type="password"
+                                label="Password"
+                                value={formData.password}
+                                required
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                error={errors.password}
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+                    >
+                        {loading ? 'Creating Account...' : 'Sign Up'}
+                    </button>
+                </form>
+
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">
+                            OR
+                        </span>
+                    </div>
+                </div>
+
+                {/* Google Login Button */}
+                <a
+                    href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/google/login`}
+                    className="flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                    <svg className="h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                        <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+                    </svg>
+                    Continue with Google
+                </a>
+
+                <div className="text-center text-sm text-brand">
+                    Already have an account?{' '}
+                    <a href="/login" className="underline underline-offset-4 hover:text-primary/90">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+}```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/components/ThemeProvider.tsx
+```
+"use client"
+
+import * as React from "react"
+import { ThemeProvider as NextThemesProvider } from "next-themes"
+
+// We need to define types because next-themes doesn't export them nicely sometimes, 
+// but actually we can just use React.ComponentProps
+type ThemeProviderProps = React.ComponentProps<typeof NextThemesProvider>
+
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+    return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+}
+```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/components/dashboard/DashboardHeader.tsx
+```
+'use client';
+import Link from 'next/link';
+
+import { useState } from 'react';
+import { ProfileSidebar } from './ProfileSidebar';
+
+interface User {
+    display_name: string;
+    username: string;
+    avatar_url?: string;
+}
+
+interface DashboardHeaderProps {
+    user: User | null;
+    onLogout: () => void;
+    isLoggingOut: boolean;
+}
+
+export function DashboardHeader({ user, onLogout, isLoggingOut }: DashboardHeaderProps) {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    return (
+        <>
+            <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
+                <div className="w-full px-3">
+                    <div className="flex h-16 items-center justify-between">
+                        {/* Logo Area */}
+                        <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                            <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl shadow-sm">
+                                P
+                            </div>
+                            <span className="text-xl font-bold tracking-tight text-foreground/90">Praxis</span>
+                        </Link>
+
+                        {/* Right Area: User Profile */}
+                        {user ? (
+                            <div className="flex items-center gap-1">
+                                <div className="hidden sm:flex flex-col items-end mr-2">
+                                    <span className="text-sm font-medium leading-none">{user.display_name}</span>
+                                    <span className="text-xs text-muted-foreground mt-1">@{user.username}</span>
+                                </div>
+                                <button
+                                    onClick={() => setSidebarOpen(true)}
+                                    className="relative h-10 w-10 rounded-full border border-border bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-ring hover:ring-offset-2 transition-all cursor-pointer"
+                                    aria-label="Open profile menu"
+                                >
+                                    {user.avatar_url ? (
+                                        <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
+                                    ) : (
+                                        <span className="font-semibold text-foreground">{user.display_name?.[0]?.toUpperCase() || '?'}</span>
+                                    )}
+                                </button>
+                            </div>
+                        ) : (
+                            // Loading state skeleton
+                            <div className="flex items-center gap-4 animate-pulse">
+                                <div className="hidden sm:block space-y-2">
+                                    <div className="h-3 w-20 bg-muted rounded"></div>
+                                    <div className="h-2 w-16 bg-muted rounded ml-auto"></div>
+                                </div>
+                                <div className="h-10 w-10 rounded-full bg-muted"></div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </header>
+
+            <ProfileSidebar
+                user={user}
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+                onLogout={onLogout}
+                isLoggingOut={isLoggingOut}
+            />
+        </>
+    );
+}
+```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/components/dashboard/ProfileSidebar.tsx
+```
+'use client';
+
+import Link from 'next/link';
+import { X, LayoutDashboard, Settings, Sun, Moon, LogOut } from 'lucide-react';
+
+import { useTheme } from 'next-themes';
+
+interface User {
+    display_name: string;
+    username: string;
+    avatar_url?: string;
+}
+
+interface ProfileSidebarProps {
+    user: User | null;
+    isOpen: boolean;
+    onClose: () => void;
+    onLogout: () => void;
+    isLoggingOut: boolean;
+}
+
+export function ProfileSidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: ProfileSidebarProps) {
+    const { theme, setTheme } = useTheme();
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex justify-end">
+            {/* Backdrop */}
+            <div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]"
+                onClick={onClose}
+            >
+                <style jsx>{`
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                `}</style>
+            </div>
+
+            <div
+                className="relative h-full w-64 bg-card border-l border-border shadow-2xl animate-[slideIn_0.1s_ease-out]"
+            >
+                <style jsx>{`
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); }
+                        to { transform: translateX(0); }
+                    }
+                `}</style>
+                <div className="flex flex-col h-full p-6">
+                    {/* Header / Profile Section */}
+                    {/* Main Content Area */}
+                    <div className="flex-1 flex justify-between items-start">
+                        <nav className="space-y-2 w-full">
+                            <Link
+                                href="/dashboard"
+                                className="flex items-center gap-3 pb-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
+                                onClick={onClose}
+                            >
+                                <LayoutDashboard className="h-[18px] w-[18px]" />
+                                Dashboard
+                            </Link>
+
+                            <Link
+                                href="/settings/profile"
+                                className="flex items-center gap-3 py-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
+                                onClick={onClose}
+                            >
+                                <Settings className="h-[18px] w-[18px]" />
+                                Settings
+                            </Link>
+                        </nav>
+
+                        <button
+                            onClick={onClose}
+                            className="relative cursor-pointer flex align-center items-center justify-center text-muted-foreground hover:text-foreground transition-colors after:absolute after:-inset-2 after:content-['']"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
+
+                    <div className="pt-6 border-t border-border mt-auto space-y-3">
+                        {/* Theme Toggle */}
+                        <button
+                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                            className="cursor-pointer w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+                        >
+                            {theme === 'dark' ? (
+                                <>
+                                    <Sun className="h-4 w-4" />
+                                    Light Mode
+                                </>
+                            ) : (
+                                <>
+                                    <Moon className="h-4 w-4" />
+                                    Dark Mode
+                                </>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={onLogout}
+                            disabled={isLoggingOut}
+                            className="cursor-pointer w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-50"
+                        >
+                            {isLoggingOut ? (
+                                'Logging out...'
+                            ) : (
+                                <>
+                                    <LogOut className="h-4 w-4" />
+                                    Log Out
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/components/dashboard/UserListWidget.tsx
+```
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useToast } from '../ui/Toast';
+
+interface User {
+    id: string;
+    username: string;
+    display_name: string;
+    email?: string;
+    avatar_url?: string;
+    role?: string;
+}
+
+interface UserListWidgetProps {
+    currentUser: { role: string } | null;
+}
+
+export function UserListWidget({ currentUser }: UserListWidgetProps) {
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { showToast } = useToast();
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/all`, {
+                    credentials: 'include',
+                });
+
+                if (!res.ok) throw new Error('Failed to fetch users');
+
+                const data = await res.json();
+                setUsers(data);
+            } catch (err) {
+                console.error(err);
+                showToast('Could not load user list', 'error');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUsers();
+    }, [showToast]);
+
+    const handleDelete = async (userId: string) => {
+        if (!confirm('Are you sure you want to delete this user?')) return;
+
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/${userId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+
+            if (!res.ok) throw new Error('Failed to delete user');
+
+            setUsers(users.filter(u => u.id !== userId));
+            showToast('User deleted successfully', 'success');
+        } catch (error) {
+            console.error(error);
+            showToast('Failed to delete user', 'error');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="rounded-xl border border-border bg-card shadow-sm h-96 animate-pulse">
+                <div className="h-6 w-32 bg-muted rounded mb-4"></div>
+                <div className="space-y-3">
+                    {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-muted"></div>
+                            <div className="space-y-2">
+                                <div className="h-4 w-24 bg-muted rounded"></div>
+                                <div className="h-3 w-32 bg-muted rounded opacity-50"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-96">
+            <h2 className="text-lg tracking-tight p-6">Users</h2>
+
+            <div className="overflow-y-auto space-y-4 flex-1">
+                {users.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No users found.</p>
+                ) : (
+                    users.map((user) => (
+                        <div key={user.id} className="flex items-center gap-3 group pl-6 pr-4 py-2 hover:bg-secondary/50 transition-colors">
+                            <div className="relative h-10 w-10 shrink-0 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-sm font-bold text-foreground">
+                                {user.avatar_url ? (
+                                    <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
+                                ) : (
+                                    <span>{user.display_name?.[0] || user.username?.[0] || '?'}</span>
+                                )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-foreground truncate">
+                                    {user.display_name || user.username}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                    @{user.username}
+                                </p>
+                            </div>
+                            {currentUser?.role === 'admin' && (
+                                <button
+                                    onClick={() => handleDelete(user.id)}
+                                    className="cursor-pointer p-2 text-muted-foreground hover:text-destructive transition-colors"
+                                    title="Delete User"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M3 6h18"></path>
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+}
+```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/components/ui/FloatingLabelInput.tsx
+```
+import React, { InputHTMLAttributes, useState } from 'react';
+
+interface FloatingLabelInputProps extends InputHTMLAttributes<HTMLInputElement> {
+    label: string;
+    error?: string;
+}
+
+export const FloatingLabelInput = React.forwardRef<HTMLInputElement, FloatingLabelInputProps>(
+    ({ label, className, type, error, ...props }, ref) => {
+        const [showPassword, setShowPassword] = useState(false);
+        const isPassword = type === 'password';
+
+        return (
+            <div className="w-full">
+                <div className="relative">
+                    <input
+                        type={isPassword ? (showPassword ? 'text' : 'password') : type}
+                        {...props}
+                        ref={ref}
+                        placeholder=" " // Important for :placeholder-shown to work, but we want it invisible
+                        className={`peer block w-full rounded-md border bg-transparent px-3 py-2 text-sm 
+            text-foreground placeholder-transparent
+            ${error
+                                ? 'border-destructive-foreground focus:border-destructive-foreground focus:ring-destructive-foreground'
+                                : 'border-input focus:border-primary focus:ring-primary'
+                            } 
+            focus:outline-none focus:ring-1 
+            disabled:cursor-not-allowed disabled:opacity-50
+            ${isPassword ? 'pr-10' : ''}
+            ${className}`}
+                    />
+                    <label
+                        htmlFor={props.id}
+                        className={`absolute left-2 top-2 z-10 origin-left -translate-y-5 scale-75 transform bg-background px-2 text-sm duration-300 
+            peer-placeholder-shown:top-2 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 
+            peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:px-2 
+            ${error
+                                ? 'text-destructive peer-focus:text-destructive'
+                                : 'text-muted-foreground peer-focus:text-primary'
+                            }
+            cursor-text`}
+                    >
+                        {label}
+                    </label>
+                    {isPassword && (
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground focus:outline-none"
+                        >
+                            {showPassword ? (
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="h-4 w-4"
+                                >
+                                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                                    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                                    <line x1="2" x2="22" y1="2" y2="22" />
+                                </svg>
+                            ) : (
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="h-4 w-4"
+                                >
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            )}
+                        </button>
+                    )}
+                </div>
+                {error && (
+                    <p className="mt-1 text-xs text-destructive">{error}</p>
+                )}
+            </div>
+        );
+    }
+);
+
+FloatingLabelInput.displayName = 'FloatingLabelInput';
+```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/src/components/ui/Toast.tsx
+```
+'use client';
+
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+
+type ToastType = 'success' | 'error' | 'info';
+
+interface Toast {
+    id: number;
+    message: string;
+    type: ToastType;
+    isExiting: boolean;
+}
+
+interface ToastContextType {
+    showToast: (message: string, type?: ToastType) => void;
+}
+
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
+
+export function useToast() {
+    const context = useContext(ToastContext);
+    if (!context) {
+        throw new Error('useToast must be used within a ToastProvider');
+    }
+    return context;
+}
+
+export function ToastProvider({ children }: { children: ReactNode }) {
+    const [toasts, setToasts] = useState<Toast[]>([]);
+
+    const removeToast = useCallback((id: number) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, []);
+
+    const startExit = useCallback((id: number) => {
+        setToasts((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, isExiting: true } : t))
+        );
+        // Wait for animation to finish before actual removal
+        setTimeout(() => removeToast(id), 300);
+    }, [removeToast]);
+
+    const showToast = useCallback((message: string, type: ToastType = 'success') => {
+        setToasts((prev) => {
+            // Prevent duplicates: Check if same message exists and isn't already exiting
+            const isDuplicate = prev.some(
+                (t) => t.message === message && t.type === type && !t.isExiting
+            );
+
+            if (isDuplicate) return prev;
+
+            const id = Date.now();
+
+            // Auto-dismiss after 2 seconds
+            setTimeout(() => {
+                startExit(id);
+            }, 2000);
+
+            return [...prev, { id, message, type, isExiting: false }];
+        });
+    }, [startExit]);
+
+    return (
+        <ToastContext.Provider value={{ showToast }}>
+            {children}
+            <div className="fixed top-6 left-1/2 z-50 flex flex-col gap-2 pointer-events-none">
+                {toasts.map((toast) => (
+                    <div
+                        key={toast.id}
+                        onClick={() => startExit(toast.id)}
+                        className={`
+                            pointer-events-auto
+                            flex items-center gap-2 px-3 py-3 rounded-md shadow-2xl backdrop-blur-md border
+                            transition-all duration-300 transform
+                            ${toast.isExiting ? 'animate-toast-out' : 'animate-toast-in'}
+                            ${toast.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-500' : ''}
+                            ${toast.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-500' : ''}
+                            ${toast.type === 'info' ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' : ''}
+                            cursor-pointer hover:bg-opacity-20
+                        `}
+                        style={{ transform: 'translateX(-50%)' }}
+                    >
+                        {toast.type === 'success' && (
+                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                        )}
+                        {toast.type === 'error' && (
+                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        )}
+                        {toast.type === 'info' && (
+                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        )}
+                        <span className="text-sm font-medium whitespace-nowrap">{toast.message}</span>
+                    </div>
+                ))}
+            </div>
+        </ToastContext.Provider>
+    );
+}
+```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/tailwind.config.ts
+```
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: [
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    extend: {
+      colors: {
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        primary: {
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
+        },
+        secondary: {
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
+        },
+        destructive: {
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
+        },
+        muted: {
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
+        },
+        accent: {
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
+        },
+        popover: {
+          DEFAULT: "var(--popover)",
+          foreground: "var(--popover-foreground)",
+        },
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+    },
+  },
+  plugins: [],
+};
+export default config;```
+
+DO_NOT_IGNORE_THIS_FILE_PATH: apps/web/package.json
+```
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbo",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "lucide-react": "^0.562.0",
+    "next": "16.1.1",
+    "next-themes": "^0.4.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+```
+
