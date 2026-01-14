@@ -9,7 +9,7 @@ export default function Dashboard() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
 
-    const [user, setUser] = useState<{ display_name: string; username: string } | null>(null);
+    const [user, setUser] = useState<{ display_name: string; username: string; role: string } | null>(null);
 
     // fetch user data
     useEffect(() => {
@@ -65,7 +65,7 @@ export default function Dashboard() {
 
                         {/* User List Widget */}
                         <div className="col-span-full md:col-span-1">
-                            <UserListWidget />
+                            <UserListWidget currentUser={user} />
                         </div>
                     </div>
                 </div>

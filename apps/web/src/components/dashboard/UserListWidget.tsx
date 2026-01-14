@@ -9,9 +9,14 @@ interface User {
     display_name: string;
     email?: string;
     avatar_url?: string;
+    role?: string;
 }
 
-export function UserListWidget() {
+interface UserListWidgetProps {
+    currentUser: { role: string } | null;
+}
+
+export function UserListWidget({ currentUser }: UserListWidgetProps) {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const { showToast } = useToast();
@@ -38,9 +43,28 @@ export function UserListWidget() {
         fetchUsers();
     }, [showToast]);
 
+    const handleDelete = async (userId: string) => {
+        if (!confirm('Are you sure you want to delete this user?')) return;
+
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/${userId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+
+            if (!res.ok) throw new Error('Failed to delete user');
+
+            setUsers(users.filter(u => u.id !== userId));
+            showToast('User deleted successfully', 'success');
+        } catch (error) {
+            console.error(error);
+            showToast('Failed to delete user', 'error');
+        }
+    };
+
     if (loading) {
         return (
-            <div className="rounded-xl border border-border bg-card p-6 shadow-sm h-96 animate-pulse">
+            <div className="rounded-xl border border-border bg-card shadow-sm h-96 animate-pulse">
                 <div className="h-6 w-32 bg-muted rounded mb-4"></div>
                 <div className="space-y-3">
                     {[...Array(5)].map((_, i) => (
@@ -58,15 +82,15 @@ export function UserListWidget() {
     }
 
     return (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm overflow-hidden flex flex-col h-96">
-            <h2 className="text-lg tracking-tight mb-4">Users</h2>
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-96">
+            <h2 className="text-lg tracking-tight p-6">Users</h2>
 
-            <div className="overflow-y-auto pr-2 space-y-4 flex-1">
+            <div className="overflow-y-auto space-y-4 flex-1">
                 {users.length === 0 ? (
                     <p className="text-muted-foreground text-sm">No users found.</p>
                 ) : (
                     users.map((user) => (
-                        <div key={user.id} className="flex items-center gap-3 group p-2 rounded-lg hover:bg-secondary/50 transition-colors">
+                        <div key={user.id} className="flex items-center gap-3 group pl-6 pr-4 py-2 hover:bg-secondary/50 transition-colors">
                             <div className="relative h-10 w-10 shrink-0 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-sm font-bold text-foreground">
                                 {user.avatar_url ? (
                                     <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
@@ -82,6 +106,19 @@ export function UserListWidget() {
                                     @{user.username}
                                 </p>
                             </div>
+                            {currentUser?.role === 'admin' && (
+                                <button
+                                    onClick={() => handleDelete(user.id)}
+                                    className="cursor-pointer p-2 text-muted-foreground hover:text-destructive transition-colors"
+                                    title="Delete User"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M3 6h18"></path>
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            )}
                         </div>
                     ))
                 )}
