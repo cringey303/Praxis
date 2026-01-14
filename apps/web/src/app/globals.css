@@ -75,7 +75,7 @@
   :root[class="light"] {
     --text: #0a0a0a;
     /* Dark text for light mode */
-    --brand: #7d7770;
+    --brand: #aea69d;
     /* Light brand color */
     --error-text: #D32F2F;
     --error-outline: #FFCDD2;
