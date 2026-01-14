@@ -47,7 +47,7 @@ export function DashboardHeader({ user, onLogout, isLoggingOut }: DashboardHeade
                                     {user.avatar_url ? (
                                         <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
                                     ) : (
-                                        <span className="font-semibold text-muted-foreground">{user.display_name?.[0]?.toUpperCase() || '?'}</span>
+                                        <span className="font-semibold text-foreground">{user.display_name?.[0]?.toUpperCase() || '?'}</span>
                                     )}
                                 </button>
                             </div>
