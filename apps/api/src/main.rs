@@ -70,6 +70,7 @@ async fn main() {
         .route("/user/me", get(user::get_me))
         .route("/user/profile", post(user::update_profile))
         .route("/user/all", get(user::get_all))
+        .route("/user/:id", axum::routing::delete(user::delete_user))
         .layer(session_layer)
         .layer(cors)
         .layer(TraceLayer::new_for_http())

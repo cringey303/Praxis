@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Json, State},
+    extract::{Json, Path, State},
     http::StatusCode,
     response::IntoResponse,
 };
@@ -15,6 +15,7 @@ pub struct UserProfile {
     pub display_name: String,
     pub email: Option<String>,
     pub avatar_url: Option<String>,
+    pub role: String,
 }
 
 #[derive(Deserialize)]
@@ -42,7 +43,7 @@ pub async fn get_me(
 
     let user = sqlx::query!(
         r#"
-        SELECT u.id, u.username, u.display_name, u.avatar_url, l.email as "email?"
+        SELECT u.id, u.username, u.display_name, u.avatar_url, u.role, l.email as "email?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
         WHERE u.id = $1
@@ -60,6 +61,7 @@ pub async fn get_me(
             display_name: u.display_name,
             email: u.email,
             avatar_url: u.avatar_url,
+            role: u.role,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
@@ -141,7 +143,7 @@ pub async fn get_all(
 ) -> Result<Json<Vec<UserProfile>>, (StatusCode, String)> {
     let users = sqlx::query!(
         r#"
-        SELECT u.id, u.username, u.display_name, u.avatar_url, l.email as "email?"
+        SELECT u.id, u.username, u.display_name, u.avatar_url, u.role, l.email as "email?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
         ORDER BY u.created_at DESC
@@ -159,8 +161,43 @@ pub async fn get_all(
             display_name: u.display_name,
             email: u.email,
             avatar_url: u.avatar_url,
+            role: u.role,
         })
         .collect();
 
     Ok(Json(profiles))
+}
+
+pub async fn delete_user(
+    State(pool): State<PgPool>,
+    session: Session,
+    Path(target_user_id): Path<Uuid>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // 1. Check if logged in
+    let user_id: Uuid = match session.get("user_id").await {
+        Ok(Some(id)) => id,
+        Ok(None) => return Err((StatusCode::UNAUTHORIZED, "Not logged in".to_string())),
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    };
+
+    // 2. Check if admin
+    let requester = sqlx::query!("SELECT role FROM users WHERE id = $1", user_id)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    match requester {
+        Some(u) if u.role == "admin" => {
+            // Proceed to delete
+        }
+        _ => return Err((StatusCode::FORBIDDEN, "Admins only".to_string())),
+    }
+
+    // 3. Delete user
+    sqlx::query!("DELETE FROM users WHERE id = $1", target_user_id)
+        .execute(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(StatusCode::NO_CONTENT)
 }
