@@ -39,6 +39,14 @@ pub struct GoogleUser {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct GithubUser {
+    pub email: Option<String>,
+    pub name: Option<String>,
+    pub login: String,
+    pub avatar_url: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct AuthRequest {
     pub code: String,
     pub state: String,
@@ -290,6 +298,169 @@ pub async fn google_callback(
             "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
             new_user_id,
             google_user.email,
+            "$argon2id$v=19$m=19456,t=2,p=1$dummy$dummy"
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        tx.commit()
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        new_user_id
+    };
+
+    // Set Session
+    session
+        .insert("user_id", user_id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let frontend_url =
+        std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+    Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
+}
+
+// github oauth handling
+fn github_oauth_client() -> BasicClient {
+    // read from .env
+    let client_id = std::env::var("GITHUB_CLIENT_ID").expect("GITHUB_CLIENT_ID must be set");
+    let client_secret =
+        std::env::var("GITHUB_CLIENT_SECRET").expect("GITHUB_CLIENT_SECRET must be set");
+    let redirect_url = std::env::var("GITHUB_REDIRECT_URL").expect("Missing GITHUB_REDIRECT_URL");
+
+    let auth_url = AuthUrl::new("https://github.com/login/oauth/authorize".to_string())
+        .expect("Invalid GITHUB_AUTH_URL");
+
+    let token_url = TokenUrl::new("https://github.com/login/oauth/access_token".to_string())
+        .expect("Invalid GITHUB_TOKEN_URL");
+
+    BasicClient::new(
+        ClientId::new(client_id),
+        Some(ClientSecret::new(client_secret)),
+        auth_url,
+        Some(token_url),
+    )
+    .set_redirect_uri(RedirectUrl::new(redirect_url).expect("Invalid GITHUB_REDIRECT_URL"))
+}
+
+pub async fn github_login() -> impl IntoResponse {
+    let client = github_oauth_client();
+
+    // generate random csrf token and create auth URL
+    let (auth_url, _csrf_token) = client
+        .authorize_url(CsrfToken::new_random)
+        // Request user:email scope to ensure we get the email
+        .add_scope(Scope::new("user:email".to_string()))
+        .url();
+
+    Redirect::to(auth_url.as_str())
+}
+
+pub async fn github_callback(
+    State(pool): State<PgPool>,
+    session: Session,
+    Query(query): Query<AuthRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let client = github_oauth_client();
+
+    // exchange code for token
+    let token = client
+        .exchange_code(oauth2::AuthorizationCode::new(query.code))
+        .request_async(oauth2::reqwest::async_http_client)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // get user info from GitHub
+    let http_client = reqwest::Client::new();
+    let github_user: GithubUser = http_client
+        .get("https://api.github.com/user")
+        .header("User-Agent", "praxis-app") // GitHub requires User-Agent
+        .bearer_auth(token.access_token().secret())
+        .send()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .json()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // GitHub doesn't always return the email in the public profile, we might need to fetch it separately
+    // But since we asked for user:email scope, let's try to get it from the user endpoint or a separate emails endpoint if needed.
+    // Assume if it's not null it's there.
+    // If it is null, call /user/emails.
+    // For this implementation, let's add a quick fetch for emails if null.
+
+    let email = if let Some(e) = github_user.email {
+        e
+    } else {
+        #[derive(Deserialize)]
+        struct GithubEmail {
+            email: String,
+            primary: bool,
+            verified: bool,
+        }
+
+        let emails: Vec<GithubEmail> = http_client
+            .get("https://api.github.com/user/emails")
+            .header("User-Agent", "praxis-app")
+            .bearer_auth(token.access_token().secret())
+            .send()
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+            .json()
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        // find primary verified email, or just first one
+        emails
+            .iter()
+            .find(|e| e.primary && e.verified)
+            .or_else(|| emails.first()) // fallback to any email?
+            .map(|e| e.email.clone())
+            .ok_or((
+                StatusCode::BAD_REQUEST,
+                "No email found for GitHub user".to_string(),
+            ))?
+    };
+
+    // find user by email to see if they already exist
+    let user = sqlx::query!(
+        "SELECT user_id, password_hash FROM local_auths WHERE email = $1",
+        email
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let user_id = if let Some(u) = user {
+        // user exists, log them in
+        u.user_id
+    } else {
+        // if user not found, create new user
+        let mut tx = pool
+            .begin()
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        let display_name = github_user
+            .name
+            .unwrap_or_else(|| github_user.login.clone());
+
+        let new_user_id = sqlx::query!(
+            "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
+            github_user.login, // use github username
+            display_name
+        )
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .id;
+
+        sqlx::query!(
+            "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
+            new_user_id,
+            email,
             "$argon2id$v=19$m=19456,t=2,p=1$dummy$dummy"
         )
         .execute(&mut *tx)

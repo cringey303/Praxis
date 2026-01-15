@@ -66,6 +66,8 @@ async fn main() {
         .route("/auth/login", post(auth::login)) // map /auth/login to fn login in auth module
         .route("/auth/google/login", get(auth::google_login)) // when user clicks login with google
         .route("/auth/google/callback", get(auth::google_callback)) // where google redirects to after login
+        .route("/auth/github/login", get(auth::github_login))
+        .route("/auth/github/callback", get(auth::github_callback))
         .route("/auth/logout", post(auth::logout))
         .route("/user/me", get(user::get_me))
         .route("/user/profile", post(user::update_profile))
