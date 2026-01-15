@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { UserListWidget } from '../../components/dashboard/UserListWidget';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { NavBar } from '@/components/dashboard/NavBar';
 
 export default function Dashboard() {
     const router = useRouter();
@@ -47,7 +47,7 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-background text-foreground">
-            <DashboardHeader user={user} onLogout={handleLogout} isLoggingOut={loading} />
+            <NavBar user={user} onLogout={handleLogout} isLoggingOut={loading} />
 
             <main className="p-3">
                 <div className="w-full space-y-8">

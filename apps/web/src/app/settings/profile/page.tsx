@@ -4,7 +4,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { useToast } from "@/components/ui/Toast";
 
@@ -117,7 +117,7 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-background text-foreground">
-            <DashboardHeader user={user} onLogout={handleLogout} isLoggingOut={loading} />
+            <NavBar user={user} onLogout={handleLogout} isLoggingOut={loading} />
 
             <div className="p-3">
                 <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-3">

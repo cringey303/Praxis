@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ProfileSidebar } from './ProfileSidebar';
+import { Sidebar } from './Sidebar';
 
 interface User {
     display_name: string;
@@ -10,13 +10,13 @@ interface User {
     avatar_url?: string;
 }
 
-interface DashboardHeaderProps {
+interface NavBarProps {
     user: User | null;
     onLogout: () => void;
     isLoggingOut: boolean;
 }
 
-export function DashboardHeader({ user, onLogout, isLoggingOut }: DashboardHeaderProps) {
+export function NavBar({ user, onLogout, isLoggingOut }: NavBarProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const pathname = usePathname();
 
@@ -71,7 +71,7 @@ export function DashboardHeader({ user, onLogout, isLoggingOut }: DashboardHeade
                 </div>
             </header>
 
-            <ProfileSidebar
+            <Sidebar
                 user={user}
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}

@@ -12,7 +12,7 @@ interface User {
     avatar_url?: string;
 }
 
-interface ProfileSidebarProps {
+interface SidebarProps {
     user: User | null;
     isOpen: boolean;
     onClose: () => void;
@@ -20,7 +20,7 @@ interface ProfileSidebarProps {
     isLoggingOut: boolean;
 }
 
-export function ProfileSidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: ProfileSidebarProps) {
+export function Sidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: SidebarProps) {
     const { theme, setTheme } = useTheme();
     const pathname = usePathname();
 
