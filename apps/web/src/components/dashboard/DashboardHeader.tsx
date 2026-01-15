@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
-
-import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { ProfileSidebar } from './ProfileSidebar';
 
 interface User {
@@ -18,6 +18,12 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ user, onLogout, isLoggingOut }: DashboardHeaderProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const pathname = usePathname();
+
+    // close sidebar when pathname changes
+    useEffect(() => {
+        setSidebarOpen(false);
+    }, [pathname]);
 
     return (
         <>

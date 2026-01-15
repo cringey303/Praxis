@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { X, LayoutDashboard, Settings, Sun, Moon, LogOut } from 'lucide-react';
 
 import { useTheme } from 'next-themes';
@@ -21,6 +22,14 @@ interface ProfileSidebarProps {
 
 export function ProfileSidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: ProfileSidebarProps) {
     const { theme, setTheme } = useTheme();
+    const pathname = usePathname();
+
+    // close sidebar when pathname changes
+    const handleLinkClick = (href: string) => {
+        if (pathname === href) {
+            onClose();
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -56,7 +65,7 @@ export function ProfileSidebar({ user, isOpen, onClose, onLogout, isLoggingOut }
                             <Link
                                 href="/dashboard"
                                 className="flex items-center gap-3 pb-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
-                                onClick={onClose}
+                                onClick={() => handleLinkClick('/dashboard')}
                             >
                                 <LayoutDashboard className="h-[18px] w-[18px]" />
                                 Dashboard
@@ -65,7 +74,7 @@ export function ProfileSidebar({ user, isOpen, onClose, onLogout, isLoggingOut }
                             <Link
                                 href="/settings/profile"
                                 className="flex items-center gap-3 py-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
-                                onClick={onClose}
+                                onClick={() => handleLinkClick('/settings/profile')}
                             >
                                 <Settings className="h-[18px] w-[18px]" />
                                 Settings
