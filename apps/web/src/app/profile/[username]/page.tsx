@@ -190,7 +190,7 @@ export default function PublicProfilePage() {
                 <div className="mt-8 flex flex-col md:flex-row gap-8 items-start">
                     {/* Left Column: Metadata */}
                     <div className="flex flex-col gap-6 shrink-0 w-full md:w-auto">
-                        <div className="space-y-3 pt-1 whitespace-nowrap">
+                        <div className="space-y-4 pt-1 whitespace-nowrap">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Calendar className="h-4 w-4" />
                                 <span>Joined recently</span>
