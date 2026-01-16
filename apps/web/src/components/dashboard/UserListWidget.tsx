@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useToast } from '../ui/Toast';
 
 interface User {
@@ -90,26 +91,33 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
                     <p className="text-muted-foreground text-sm">No users found.</p>
                 ) : (
                     users.map((user) => (
-                        <div key={user.id} className="flex items-center gap-3 group pl-6 pr-4 py-2 hover:bg-secondary/50 transition-colors">
-                            <div className="relative h-10 w-10 shrink-0 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-sm font-bold text-foreground">
-                                {user.avatar_url ? (
-                                    <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
-                                ) : (
-                                    <span>{user.display_name?.[0] || user.username?.[0] || '?'}</span>
-                                )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-foreground truncate">
-                                    {user.display_name || user.username}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                    @{user.username}
-                                </p>
-                            </div>
+                        <div key={user.id} className="group relative flex items-center justify-between pl-6 pr-4 py-2 hover:bg-secondary/50 transition-colors">
+                            <Link href={`/profile/${user.username}`} className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="relative h-10 w-10 shrink-0 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-sm font-bold text-foreground">
+                                    {user.avatar_url ? (
+                                        <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
+                                    ) : (
+                                        <span>{user.display_name?.[0] || user.username?.[0] || '?'}</span>
+                                    )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-medium text-foreground truncate">
+                                        {user.display_name || user.username}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                        @{user.username}
+                                    </p>
+                                </div>
+                            </Link>
+
                             {currentUser?.role === 'admin' && (
                                 <button
-                                    onClick={() => handleDelete(user.id)}
-                                    className="cursor-pointer p-2 text-muted-foreground hover:text-destructive transition-colors"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleDelete(user.id);
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-2 text-muted-foreground hover:text-destructive cursor-pointer"
                                     title="Delete User"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

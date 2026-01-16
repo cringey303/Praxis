@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
+import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTextarea';
 import { useToast } from "@/components/ui/Toast";
 
 interface UserProfile {
@@ -14,6 +15,9 @@ interface UserProfile {
     display_name: string;
     email?: string;
     avatar_url?: string;
+    bio?: string;
+    location?: string;
+    website?: string;
 }
 
 export default function ProfilePage() {
@@ -27,6 +31,9 @@ export default function ProfilePage() {
     const [formData, setFormData] = useState({
         username: '',
         display_name: '',
+        bio: '',
+        location: '',
+        website: '',
     });
 
     // Fetch user data on mount
@@ -48,6 +55,9 @@ export default function ProfilePage() {
                 setFormData({
                     username: data.username || '',
                     display_name: data.display_name || '',
+                    bio: data.bio || '',
+                    location: data.location || '',
+                    website: data.website || '',
                 });
             } catch (err) {
                 console.error(err);
@@ -193,6 +203,44 @@ export default function ProfilePage() {
                                         onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                                     />
                                     <p className="text-xs text-muted-foreground">Your real name or pen name.</p>
+                                </div>
+
+                                {/* Location Input */}
+                                <div className="space-y-2">
+                                    <FloatingLabelInput
+                                        id="location"
+                                        label="Location"
+                                        type="text"
+                                        value={formData.location}
+                                        autoComplete="off"
+                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                        maxLength={100}
+                                    />
+                                </div>
+
+                                {/* Website Input */}
+                                <div className="space-y-2">
+                                    <FloatingLabelInput
+                                        id="website"
+                                        label="Website"
+                                        type="url"
+                                        value={formData.website}
+                                        autoComplete="off"
+                                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                        maxLength={100}
+                                    />
+                                </div>
+
+                                {/* Bio Input */}
+                                <div className="space-y-2">
+                                    <FloatingLabelTextarea
+                                        id="bio"
+                                        label="Bio"
+                                        rows={4}
+                                        value={formData.bio}
+                                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                                        maxLength={500}
+                                    />
                                 </div>
 
                                 {/* Username Input */}

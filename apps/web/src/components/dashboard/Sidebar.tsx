@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X, LayoutDashboard, Settings, Sun, Moon, LogOut } from 'lucide-react';
+import { X, LayoutDashboard, Settings, User, Sun, Moon, LogOut } from 'lucide-react';
 
 import { useTheme } from 'next-themes';
 
@@ -70,6 +70,17 @@ export function Sidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: Sideb
                                 <LayoutDashboard className="h-[18px] w-[18px]" />
                                 Dashboard
                             </Link>
+
+                            {user && (
+                                <Link
+                                    href={`/profile/${user.username}`}
+                                    className="flex items-center gap-3 py-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
+                                    onClick={() => handleLinkClick(`/profile/${user.username}`)}
+                                >
+                                    <User className="h-[18px] w-[18px]" />
+                                    Profile
+                                </Link>
+                            )}
 
                             <Link
                                 href="/settings/profile"

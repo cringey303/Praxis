@@ -8,6 +8,7 @@ import { NavBar } from '@/components/dashboard/NavBar';
 export default function Dashboard() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [userLoading, setUserLoading] = useState(true);
 
     const [user, setUser] = useState<{ display_name: string; username: string; role: string } | null>(null);
 
@@ -24,6 +25,8 @@ export default function Dashboard() {
                 }
             } catch (err) {
                 console.error('Failed to load user', err);
+            } finally {
+                setUserLoading(false);
             }
         };
         fetchUser();
@@ -47,7 +50,7 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-background text-foreground">
-            <NavBar user={user} onLogout={handleLogout} isLoggingOut={loading} />
+            <NavBar user={user} isLoading={userLoading} onLogout={handleLogout} isLoggingOut={loading} />
 
             <main className="p-3">
                 <div className="w-full space-y-8">

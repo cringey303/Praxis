@@ -12,11 +12,12 @@ interface User {
 
 interface NavBarProps {
     user: User | null;
+    isLoading?: boolean;
     onLogout: () => void;
     isLoggingOut: boolean;
 }
 
-export function NavBar({ user, onLogout, isLoggingOut }: NavBarProps) {
+export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavBarProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const pathname = usePathname();
 
@@ -39,7 +40,16 @@ export function NavBar({ user, onLogout, isLoggingOut }: NavBarProps) {
                         </Link>
 
                         {/* Right Area: User Profile */}
-                        {user ? (
+                        {isLoading ? (
+                            // Loading state skeleton
+                            <div className="flex items-center gap-4 animate-pulse">
+                                <div className="hidden sm:block space-y-2">
+                                    <div className="h-3 w-20 bg-muted rounded"></div>
+                                    <div className="h-2 w-16 bg-muted rounded ml-auto"></div>
+                                </div>
+                                <div className="h-10 w-10 rounded-full bg-muted"></div>
+                            </div>
+                        ) : user ? (
                             <div className="flex items-center gap-1">
                                 <div className="hidden sm:flex flex-col items-end mr-2">
                                     <span className="text-sm font-medium leading-none">{user.display_name}</span>
@@ -58,13 +68,20 @@ export function NavBar({ user, onLogout, isLoggingOut }: NavBarProps) {
                                 </button>
                             </div>
                         ) : (
-                            // Loading state skeleton
-                            <div className="flex items-center gap-4 animate-pulse">
-                                <div className="hidden sm:block space-y-2">
-                                    <div className="h-3 w-20 bg-muted rounded"></div>
-                                    <div className="h-2 w-16 bg-muted rounded ml-auto"></div>
-                                </div>
-                                <div className="h-10 w-10 rounded-full bg-muted"></div>
+                            // Guest state
+                            <div className="flex items-center gap-4">
+                                <Link
+                                    href="/login"
+                                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    Log in
+                                </Link>
+                                <Link
+                                    href="/signup"
+                                    className="hidden sm:flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+                                >
+                                    Sign up
+                                </Link>
                             </div>
                         )}
                     </div>

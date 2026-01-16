@@ -16,12 +16,28 @@ pub struct UserProfile {
     pub email: Option<String>,
     pub avatar_url: Option<String>,
     pub role: String,
+    pub bio: Option<String>,
+    pub location: Option<String>,
+    pub website: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct PublicUserProfile {
+    pub username: String,
+    pub display_name: String,
+    pub avatar_url: Option<String>,
+    pub bio: Option<String>,
+    pub location: Option<String>,
+    pub website: Option<String>,
 }
 
 #[derive(Deserialize)]
 pub struct UpdateProfileRequest {
     pub username: Option<String>,
     pub display_name: Option<String>,
+    pub bio: Option<String>,
+    pub location: Option<String>,
+    pub website: Option<String>,
 }
 
 pub async fn get_me(
@@ -43,7 +59,7 @@ pub async fn get_me(
 
     let user = sqlx::query!(
         r#"
-        SELECT u.id, u.username, u.display_name, u.avatar_url, u.role, l.email as "email?"
+        SELECT u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, l.email as "email?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
         WHERE u.id = $1
@@ -62,6 +78,9 @@ pub async fn get_me(
             email: u.email,
             avatar_url: u.avatar_url,
             role: u.role,
+            bio: u.bio,
+            location: u.location,
+            website: u.website,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
@@ -112,11 +131,17 @@ pub async fn update_profile(
         UPDATE users
         SET 
             username = COALESCE($1, username),
-            display_name = COALESCE($2, display_name)
-        WHERE id = $3
+            display_name = COALESCE($2, display_name),
+            bio = COALESCE($3, bio),
+            location = COALESCE($4, location),
+            website = COALESCE($5, website)
+        WHERE id = $6
         "#,
         payload.username,
         payload.display_name,
+        payload.bio,
+        payload.location,
+        payload.website,
         user_id
     )
     .execute(&pool)
@@ -143,7 +168,7 @@ pub async fn get_all(
 ) -> Result<Json<Vec<UserProfile>>, (StatusCode, String)> {
     let users = sqlx::query!(
         r#"
-        SELECT u.id, u.username, u.display_name, u.avatar_url, u.role, l.email as "email?"
+        SELECT u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, l.email as "email?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
         ORDER BY u.created_at DESC
@@ -162,6 +187,9 @@ pub async fn get_all(
             email: u.email,
             avatar_url: u.avatar_url,
             role: u.role,
+            bio: u.bio,
+            location: u.location,
+            website: u.website,
         })
         .collect();
 
@@ -200,4 +228,33 @@ pub async fn delete_user(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn get_public_profile(
+    Path(username): Path<String>,
+    State(pool): State<PgPool>,
+) -> Result<Json<PublicUserProfile>, (StatusCode, String)> {
+    let user = sqlx::query!(
+        r#"
+        SELECT username, display_name, avatar_url, bio, location, website
+        FROM users
+        WHERE username = $1
+        "#,
+        username
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    match user {
+        Some(u) => Ok(Json(PublicUserProfile {
+            username: u.username,
+            display_name: u.display_name,
+            avatar_url: u.avatar_url,
+            bio: u.bio,
+            location: u.location,
+            website: u.website,
+        })),
+        None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
+    }
 }
