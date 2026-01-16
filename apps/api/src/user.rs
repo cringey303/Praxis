@@ -258,3 +258,75 @@ pub async fn get_public_profile(
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
 }
+
+pub async fn create_test_user(
+    State(pool): State<PgPool>,
+    session: Session,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // 1. Check if logged in
+    let user_id: Uuid = match session.get("user_id").await {
+        Ok(Some(id)) => id,
+        Ok(None) => return Err((StatusCode::UNAUTHORIZED, "Not logged in".to_string())),
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    };
+
+    // 2. Check if admin
+    let requester = sqlx::query!("SELECT role FROM users WHERE id = $1", user_id)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    match requester {
+        Some(u) if u.role == "admin" => {
+            // Proceed
+        }
+        _ => return Err((StatusCode::FORBIDDEN, "Admins only".to_string())),
+    }
+
+    // 3. Create Test User
+    let random_id = Uuid::new_v4();
+    let username = format!("test_user_{}", &random_id.to_string()[..8]);
+    let display_name = format!("Test User {}", &random_id.to_string()[..4]);
+    let email = format!("{}@example.com", username);
+
+    // Insert into users
+    let new_user_id = sqlx::query!(
+        r#"
+        INSERT INTO users (username, display_name, role)
+        VALUES ($1, $2, 'user')
+        RETURNING id
+        "#,
+        username,
+        display_name
+    )
+    .fetch_one(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .id;
+
+    // Insert into local_auths (with dummy password hash)
+    sqlx::query!(
+        r#"
+        INSERT INTO local_auths (user_id, email, password_hash)
+        VALUES ($1, $2, $3)
+        "#,
+        new_user_id,
+        email,
+        "dummy_hash_for_test_user"
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(UserProfile {
+        id: new_user_id,
+        username,
+        display_name,
+        email: Some(email),
+        avatar_url: None,
+        role: "user".to_string(),
+        bio: None,
+        location: None,
+        website: None,
+    }))
+}

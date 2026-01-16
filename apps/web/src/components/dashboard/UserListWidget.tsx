@@ -63,6 +63,24 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
         }
     };
 
+    const handleAddTestUser = async () => {
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/test`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            if (!res.ok) throw new Error('Failed to create test user');
+
+            const newUser = await res.json();
+            setUsers([newUser, ...users]);
+            showToast('Test user added', 'success');
+        } catch (error) {
+            console.error(error);
+            showToast('Failed to add test user', 'error');
+        }
+    };
+
     if (loading) {
         return (
             <div className="rounded-xl border border-border bg-card shadow-sm h-96 animate-pulse">
@@ -84,7 +102,17 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
 
     return (
         <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-96">
-            <h2 className="text-lg tracking-tight p-6">Users</h2>
+            <div className="flex items-center justify-between p-6">
+                <h2 className="text-lg tracking-tight">Users</h2>
+                {currentUser?.role === 'admin' && (
+                    <button
+                        onClick={handleAddTestUser}
+                        className="cursor-pointer text-xs px-2 py-1 bg-primary/10 text-primary hover:bg-primary/20 rounded-md transition-colors"
+                    >
+                        + Add Test User
+                    </button>
+                )}
+            </div>
 
             <div className="overflow-y-auto space-y-4 flex-1">
                 {users.length === 0 ? (
@@ -92,7 +120,11 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
                 ) : (
                     users.map((user) => (
                         <div key={user.id} className="group relative flex items-center justify-between pl-6 pr-4 py-2 hover:bg-secondary/50 transition-colors">
-                            <Link href={`/profile/${user.username}`} className="flex items-center gap-3 flex-1 min-w-0">
+                            {/* Overlay Link */}
+                            <Link href={`/profile/${user.username}`} className="absolute inset-0 z-0" aria-label={`View profile of ${user.display_name || user.username}`} />
+
+                            {/* Content */}
+                            <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none z-10 relative">
                                 <div className="relative h-10 w-10 shrink-0 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-sm font-bold text-foreground">
                                     {user.avatar_url ? (
                                         <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
@@ -108,7 +140,7 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
                                         @{user.username}
                                     </p>
                                 </div>
-                            </Link>
+                            </div>
 
                             {currentUser?.role === 'admin' && (
                                 <button
@@ -117,7 +149,7 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
                                         e.stopPropagation();
                                         handleDelete(user.id);
                                     }}
-                                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-2 text-muted-foreground hover:text-destructive cursor-pointer"
+                                    className="relative z-20 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-2 text-muted-foreground hover:text-destructive cursor-pointer"
                                     title="Delete User"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
