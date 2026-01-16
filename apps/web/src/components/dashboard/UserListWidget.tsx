@@ -107,9 +107,9 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
                 {currentUser?.role === 'admin' && (
                     <button
                         onClick={handleAddTestUser}
-                        className="cursor-pointer text-xs px-2 py-1 bg-primary/10 text-primary hover:bg-primary/20 rounded-md transition-colors"
+                        className="cursor-pointer text-xs px-2 py-1 flex items-center gap-2 rounded-full border border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors font-medium"
                     >
-                        + Add Test User
+                        + Test User
                     </button>
                 )}
             </div>
