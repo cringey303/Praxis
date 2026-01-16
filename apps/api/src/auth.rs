@@ -101,11 +101,15 @@ pub async fn signup(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    // Sanitize inputs
+    let safe_username = ammonia::clean(&payload.username);
+    let safe_display_name = ammonia::clean(&payload.display_name);
+
     let user_id = sqlx::query!(
         // `RETURNING id` is a Postgres feature that returns the UUID it just generated
         "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
-        payload.username,
-        payload.display_name
+        safe_username,
+        safe_display_name
     )
     .fetch_one(&mut *tx)
     .await

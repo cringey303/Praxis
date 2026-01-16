@@ -121,10 +121,11 @@ pub async fn update_profile(
     }
 
     // 3. Update User
-    // We use COALESCE to keep existing value if the new one is NULL (though our input is Option, SQL expects values)
-    // Actually simpler logic: retrieve current, merge in Rust, update. OR use dynamic query.
-    // Let's use a simple UPDATE that updates non-null fields.
-    // But since SQLx query! macros desire static SQL, common trick is `COALESCE($1, username)` where $1 is the Option.
+    // Sanitize inputs
+    let safe_bio = payload.bio.as_ref().map(|s| ammonia::clean(s));
+    let safe_display_name = payload.display_name.as_ref().map(|s| ammonia::clean(s));
+    let safe_location = payload.location.as_ref().map(|s| ammonia::clean(s));
+    let safe_website = payload.website.as_ref().map(|s| ammonia::clean(s));
 
     sqlx::query!(
         r#"
@@ -137,11 +138,11 @@ pub async fn update_profile(
             website = COALESCE($5, website)
         WHERE id = $6
         "#,
-        payload.username,
-        payload.display_name,
-        payload.bio,
-        payload.location,
-        payload.website,
+        payload.username, // Username usually strict validation, but assuming alphanumeric elsewhere
+        safe_display_name,
+        safe_bio,
+        safe_location,
+        safe_website,
         user_id
     )
     .execute(&pool)
