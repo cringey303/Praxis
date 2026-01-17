@@ -20,6 +20,7 @@ pub struct UserProfile {
     pub bio: Option<String>,
     pub location: Option<String>,
     pub website: Option<String>,
+    pub verified: Option<bool>,
 }
 
 #[derive(Serialize)]
@@ -60,7 +61,9 @@ pub async fn get_me(
 
     let user = sqlx::query!(
         r#"
-        SELECT u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, l.email as "email?"
+        SELECT 
+            u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website,
+            l.email as "email?", l.verified as "verified?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
         WHERE u.id = $1
@@ -82,6 +85,7 @@ pub async fn get_me(
             bio: u.bio,
             location: u.location,
             website: u.website,
+            verified: u.verified,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
@@ -108,7 +112,6 @@ pub async fn update_profile(
     let safe_username = payload.username.as_ref().map(|s| ammonia::clean(s));
 
     if let Some(new_username) = &safe_username {
-
         // check if username is reserved
         if RESERVED_USERNAMES.contains(&new_username.as_str()) {
             return Err((StatusCode::BAD_REQUEST, "Username is reserved".to_string()));
@@ -178,7 +181,9 @@ pub async fn get_all(
 ) -> Result<Json<Vec<UserProfile>>, (StatusCode, String)> {
     let users = sqlx::query!(
         r#"
-        SELECT u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, l.email as "email?"
+        SELECT 
+            u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website,
+            l.email as "email?", l.verified as "verified?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
         ORDER BY u.created_at DESC
@@ -200,6 +205,7 @@ pub async fn get_all(
             bio: u.bio,
             location: u.location,
             website: u.website,
+            verified: u.verified,
         })
         .collect();
 
@@ -338,5 +344,6 @@ pub async fn create_test_user(
         bio: None,
         location: None,
         website: None,
+        verified: Some(false),
     }))
 }

@@ -8,6 +8,8 @@ interface User {
     display_name: string;
     username: string;
     avatar_url?: string;
+    verified?: boolean;
+    email?: string;
 }
 
 interface NavBarProps {
@@ -19,6 +21,7 @@ interface NavBarProps {
 
 export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavBarProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
     const pathname = usePathname();
 
     // close sidebar when pathname changes
@@ -26,8 +29,45 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
         setSidebarOpen(false);
     }, [pathname]);
 
+    const handleResendEmail = async () => {
+        if (!user?.email) return;
+        setResendStatus('sending');
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/resend-verification`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: user.email }),
+            });
+            if (res.ok) {
+                setResendStatus('sent');
+                setTimeout(() => setResendStatus('idle'), 5000);
+            } else {
+                setResendStatus('error');
+            }
+        } catch (error) {
+            setResendStatus('error');
+        }
+    };
+
     return (
         <>
+            {user && user.verified === false && (
+                <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400">
+                    <div className="flex items-center justify-center gap-2">
+                        <span>Please verify your email address to access all features.</span>
+                        <button
+                            onClick={handleResendEmail}
+                            disabled={resendStatus === 'sending' || resendStatus === 'sent'}
+                            className="cursor-pointer underline hover:no-underline font-medium disabled:opacity-50"
+                        >
+                            {resendStatus === 'sending' ? 'Sending...' :
+                                resendStatus === 'sent' ? 'Email Sent!' :
+                                    resendStatus === 'error' ? 'Error (Try Again)' :
+                                        'Resend Email'}
+                        </button>
+                    </div>
+                </div>
+            )}
             <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
                 <div className="w-full px-3">
                     <div className="flex h-16 items-center justify-between">

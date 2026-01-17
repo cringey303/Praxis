@@ -15,6 +15,7 @@ use oauth2::{
 use serde::Deserialize;
 use sqlx::PgPool;
 use tower_sessions::Session;
+use uuid::Uuid;
 
 // request structure we get from the frontend
 #[derive(Deserialize)]
@@ -117,13 +118,15 @@ pub async fn signup(
     // create random salt string
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
-
     let password_hash = argon2
         // combine password + salt and run math
         .hash_password(payload.password.as_bytes(), &salt)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         // convert to string to save in DB
         .to_string();
+
+    // Generate Verification Token
+    let verification_token = Uuid::new_v4().to_string();
 
     // start SQL transaction to insert `users` and `local_auths` tables
     // Transaction ensures everything or nothing is executed
@@ -132,10 +135,7 @@ pub async fn signup(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // Sanitize inputs
-    let safe_username = ammonia::clean(&payload.username);
-    let safe_display_name = ammonia::clean(&payload.display_name);
-
+    // Create User
     let user_id = sqlx::query!(
         // `RETURNING id` is a Postgres feature that returns the UUID it just generated
         "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
@@ -147,11 +147,13 @@ pub async fn signup(
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
     .id;
 
+    // Create Local Auth
     sqlx::query!(
-        "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
+        "INSERT INTO local_auths (user_id, email, password_hash, verification_token) VALUES ($1, $2, $3, $4)",
         user_id,
         payload.email,
-        password_hash
+        password_hash,
+        verification_token
     )
     .execute(&mut *tx)
     .await
@@ -161,28 +163,120 @@ pub async fn signup(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    // Mock Email Sending
+    println!("--------------------------------------------------");
+    println!("EMAIL SENT TO: {}", payload.email);
+    println!("SUBJECT: Verify your email");
+    println!("BODY: Please click this link to verify your email:");
+    println!(
+        "http://localhost:3000/verify-email?token={}",
+        verification_token
+    );
+    println!("--------------------------------------------------");
+
     // Log the user in
-    session
-        .insert("user_id", user_id)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    // The user is not logged in immediately, they need to verify their email first.
+    // session
+    //     .insert("user_id", user_id)
+    //     .await
+    //     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     tracing::info!("Signup successful for user_id: {}", user_id);
 
-    Ok((StatusCode::CREATED, "User created successfully"))
+    Ok((
+        StatusCode::CREATED,
+        "User created successfully. Please verify your email.".to_string(),
+    ))
 }
 
-/*
-* Function: login
-* Description: takes LoginRequest and stores in DB
-* Inputs:
-* Gets .with_state from main.rs
-* parses request and stores in payload
-*
-* Returns:
-* success: Ok(impl IntoResponse
-* OR an error tuple: Err((StatusCode, String))
-*/
+#[derive(Deserialize)]
+pub struct VerifyEmailRequest {
+    pub token: String,
+}
+
+pub async fn verify_email(
+    State(pool): State<PgPool>,
+    Json(payload): Json<VerifyEmailRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let result = sqlx::query!(
+        "UPDATE local_auths SET verified = TRUE, verification_token = NULL WHERE verification_token = $1 RETURNING user_id",
+        payload.token
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    match result {
+        Some(_) => Ok((StatusCode::OK, "Email verified successfully".to_string())),
+        None => Err((
+            StatusCode::BAD_REQUEST,
+            "Invalid or expired verification token".to_string(),
+        )),
+    }
+}
+
+#[derive(Deserialize)]
+pub struct ResendVerificationRequest {
+    pub email: String,
+}
+
+pub async fn resend_verification(
+    State(pool): State<PgPool>,
+    Json(payload): Json<ResendVerificationRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // Check if user exists and is not verified
+    let row = sqlx::query!(
+        "SELECT verified FROM local_auths WHERE email = $1",
+        payload.email
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if let Some(record) = row {
+        if record.verified.unwrap_or(false) {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "Email already verified".to_string(),
+            ));
+        }
+
+        // Generate new token
+        let verification_token = Uuid::new_v4().to_string();
+
+        // Update DB
+        sqlx::query!(
+            "UPDATE local_auths SET verification_token = $1 WHERE email = $2",
+            verification_token,
+            payload.email
+        )
+        .execute(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        // Mock Email Sending
+        println!("--------------------------------------------------");
+        println!(
+            "RESPECT: Resending verification email to: {}",
+            payload.email
+        );
+        println!(
+            "http://localhost:3000/verify-email?token={}",
+            verification_token
+        );
+        println!("--------------------------------------------------");
+
+        Ok((StatusCode::OK, "Verification email sent".to_string()))
+    } else {
+        // Return OK even if email not found to prevent enumeration, or Bad Request?
+        // For now, let's be honest for UX (or Bad Request if typical auth)
+        // Better security practice: "If that email exists, we sent a link."
+        Ok((
+            StatusCode::OK,
+            "If that email exists, we sent a verification link.".to_string(),
+        ))
+    }
+}
 pub async fn login(
     State(pool): State<PgPool>,
     session: Session,

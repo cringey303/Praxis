@@ -68,6 +68,8 @@ async fn main() {
         .route("/auth/google/callback", get(auth::google_callback)) // where google redirects to after login
         .route("/auth/github/login", get(auth::github_login))
         .route("/auth/github/callback", get(auth::github_callback))
+        .route("/auth/verify", post(auth::verify_email))
+        .route("/auth/resend-verification", post(auth::resend_verification))
         .route("/auth/logout", post(auth::logout))
         .route("/user/me", get(user::get_me))
         .route("/user/profile", post(user::update_profile))
