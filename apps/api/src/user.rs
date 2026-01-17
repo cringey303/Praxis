@@ -1,3 +1,4 @@
+use crate::auth::RESERVED_USERNAMES;
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,
@@ -104,7 +105,15 @@ pub async fn update_profile(
     // For simplicity, we can do separate updates or a COALESCE.
     // However, if username is changing, we must check uniqueness.
 
-    if let Some(new_username) = &payload.username {
+    let safe_username = payload.username.as_ref().map(|s| ammonia::clean(s));
+
+    if let Some(new_username) = &safe_username {
+
+        // check if username is reserved
+        if RESERVED_USERNAMES.contains(&new_username.as_str()) {
+            return Err((StatusCode::BAD_REQUEST, "Username is reserved".to_string()));
+        }
+
         // Check if username is taken by ANOTHER user
         let exists = sqlx::query!(
             "SELECT id FROM users WHERE username = $1 AND id != $2",
@@ -138,7 +147,7 @@ pub async fn update_profile(
             website = COALESCE($5, website)
         WHERE id = $6
         "#,
-        payload.username, // Username usually strict validation, but assuming alphanumeric elsewhere
+        safe_username, // Username usually strict validation, but assuming alphanumeric elsewhere
         safe_display_name,
         safe_bio,
         safe_location,

@@ -25,6 +25,29 @@ pub struct SignupRequest {
     pub display_name: String,
 }
 
+pub const RESERVED_USERNAMES: &[&str] = &[
+    "login",
+    "signup",
+    "dashboard",
+    "settings",
+    "api",
+    "profile",
+    "logout",
+    "manifest.json",
+    "robots.txt",
+    "sitemap.xml",
+    "admin",
+    "user",
+    "static",
+    "public",
+    "assets",
+    "help",
+    "about",
+    "contact",
+    "terms",
+    "privacy",
+];
+
 #[derive(Deserialize)]
 pub struct LoginRequest {
     pub email: String,
@@ -81,6 +104,14 @@ pub async fn signup(
     // is_some(): if row found, email is taken and return HTTP 409 conflict error
     if email_exists.is_some() {
         return Err((StatusCode::CONFLICT, "Email already exists".to_string()));
+    }
+
+    // Sanitize inputs
+    let safe_username = ammonia::clean(&payload.username);
+    let safe_display_name = ammonia::clean(&payload.display_name);
+
+    if RESERVED_USERNAMES.contains(&safe_username.as_str()) {
+        return Err((StatusCode::BAD_REQUEST, "Username is reserved".to_string()));
     }
 
     // create random salt string

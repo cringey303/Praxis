@@ -121,7 +121,7 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
                     users.map((user) => (
                         <div key={user.id} className="group relative flex items-center justify-between pl-6 pr-4 py-2 hover:bg-secondary/50 transition-colors">
                             {/* Overlay Link */}
-                            <Link href={`/profile/${user.username}`} className="absolute inset-0 z-0" aria-label={`View profile of ${user.display_name || user.username}`} />
+                            <Link href={`/${user.username}`} className="absolute inset-0 z-0" aria-label={`View profile of ${user.display_name || user.username}`} />
 
                             {/* Content */}
                             <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none z-10 relative">

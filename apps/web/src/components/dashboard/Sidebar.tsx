@@ -73,9 +73,9 @@ export function Sidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: Sideb
 
                             {user && (
                                 <Link
-                                    href={`/profile/${user.username}`}
+                                    href={`/${user.username}`}
                                     className="flex items-center gap-3 py-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
-                                    onClick={() => handleLinkClick(`/profile/${user.username}`)}
+                                    onClick={() => handleLinkClick(`/${user.username}`)}
                                 >
                                     <User className="h-[18px] w-[18px]" />
                                     Profile
