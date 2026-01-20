@@ -109,7 +109,7 @@ pub async fn update_profile(
     // For simplicity, we can do separate updates or a COALESCE.
     // However, if username is changing, we must check uniqueness.
 
-    let safe_username = payload.username.as_ref().map(|s| ammonia::clean(s));
+    let safe_username = payload.username.clone();
 
     if let Some(new_username) = &safe_username {
         // check if username is reserved
@@ -134,10 +134,15 @@ pub async fn update_profile(
 
     // 3. Update User
     // Sanitize inputs
-    let safe_bio = payload.bio.as_ref().map(|s| ammonia::clean(s));
-    let safe_display_name = payload.display_name.as_ref().map(|s| ammonia::clean(s));
-    let safe_location = payload.location.as_ref().map(|s| ammonia::clean(s));
-    let safe_website = payload.website.as_ref().map(|s| ammonia::clean(s));
+    // We do NOT use ammonia::clean here because it HTML-encodes entities (e.g. & -> &amp;),
+    // which causes double-encoding issues when displayed in the frontend.
+    // React handles XSS protection by default when rendering.
+    // If we wanted to strip HTML tags, we should use a different approach,
+    // but for now we trust the frontend/DB to handle plain text.
+    let safe_bio = payload.bio.as_ref();
+    let safe_display_name = payload.display_name.as_ref();
+    let safe_location = payload.location.as_ref();
+    let safe_website = payload.website.as_ref();
 
     sqlx::query!(
         r#"

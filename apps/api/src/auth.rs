@@ -108,8 +108,11 @@ pub async fn signup(
     }
 
     // Sanitize inputs
-    let safe_username = ammonia::clean(&payload.username);
-    let safe_display_name = ammonia::clean(&payload.display_name);
+    // Sanitize inputs
+    // We do NOT use ammonia::clean here because it HTML-encodes entities (e.g. & -> &amp;),
+    // which leads to double encoding issues. React keeps us safe.
+    let safe_username = &payload.username;
+    let safe_display_name = &payload.display_name;
 
     if RESERVED_USERNAMES.contains(&safe_username.as_str()) {
         return Err((StatusCode::BAD_REQUEST, "Username is reserved".to_string()));

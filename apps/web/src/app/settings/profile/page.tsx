@@ -239,7 +239,7 @@ export default function ProfilePage() {
                                         rows={4}
                                         value={formData.bio}
                                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                        maxLength={500}
+                                        maxLength={200}
                                     />
                                 </div>
 
