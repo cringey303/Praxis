@@ -36,6 +36,12 @@ export default function ProfilePage() {
         website: '',
     });
 
+    const [errors, setErrors] = useState({
+        username: '',
+        display_name: '',
+        website: '',
+    });
+
     // Fetch user data on mount
     useEffect(() => {
         const fetchUser = async () => {
@@ -85,8 +91,39 @@ export default function ProfilePage() {
         }
     };
 
+    const validateForm = () => {
+        const newErrors = {
+            username: '',
+            display_name: '',
+            website: '',
+        };
+        let isValid = true;
+
+        if (!formData.username.trim()) {
+            newErrors.username = 'Username is required';
+            isValid = false;
+        }
+
+        if (formData.website) {
+            // Simple validation: must have a dot and no spaces
+            if (!formData.website.includes('.') || formData.website.includes(' ')) {
+                newErrors.website = 'Please enter a valid website (e.g., example.com)';
+                isValid = false;
+            }
+        }
+
+        setErrors(newErrors);
+        return isValid;
+    };
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+
+        if (!validateForm()) {
+            showToast('Please fix the errors in the form.', 'error');
+            return;
+        }
+
         console.log('UseProfile: Submitting update', formData);
         setUpdating(true);
 
@@ -106,6 +143,7 @@ export default function ProfilePage() {
             showToast('Profile updated successfully.', 'success');
             // Refresh local user data to reflect changes
             setUser((prev) => prev ? { ...prev, ...formData } : null);
+            setErrors({ username: '', display_name: '', website: '' });
         } catch (err: any) {
             console.error('UseProfile: Update failed', err);
             showToast(err.message, 'error');
@@ -200,6 +238,7 @@ export default function ProfilePage() {
                                         value={formData.display_name}
                                         autoComplete="off"
                                         data-lpignore="true"
+                                        error={errors.display_name}
                                         onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                                     />
                                     <p className="text-xs text-muted-foreground">Your real name or pen name.</p>
@@ -223,9 +262,10 @@ export default function ProfilePage() {
                                     <FloatingLabelInput
                                         id="website"
                                         label="Website"
-                                        type="url"
+                                        type="text"
                                         value={formData.website}
                                         autoComplete="off"
+                                        error={errors.website}
                                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                                         maxLength={100}
                                     />
@@ -252,6 +292,7 @@ export default function ProfilePage() {
                                         value={formData.username}
                                         autoComplete="off"
                                         data-lpignore="true"
+                                        error={errors.username}
                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                                     />
                                     <p className="text-xs text-muted-foreground">
