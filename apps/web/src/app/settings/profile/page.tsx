@@ -19,6 +19,7 @@ interface UserProfile {
     bio?: string;
     location?: string;
     website?: string;
+    banner_url?: string;
 }
 
 export default function ProfilePage() {
@@ -35,6 +36,8 @@ export default function ProfilePage() {
         bio: '',
         location: '',
         website: '',
+        avatar_url: '',
+        banner_url: '',
     });
 
     const [errors, setErrors] = useState({
@@ -65,6 +68,8 @@ export default function ProfilePage() {
                     bio: data.bio || '',
                     location: data.location || '',
                     website: data.website || '',
+                    avatar_url: data.avatar_url || '',
+                    banner_url: data.banner_url || '',
                 });
             } catch (err) {
                 console.error(err);
@@ -143,6 +148,63 @@ export default function ProfilePage() {
             } else {
                 showToast(err.message, 'error');
             }
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar_url' | 'banner_url') => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Basic validation
+        if (!file.type.startsWith('image/')) {
+            showToast('Please upload an image file', 'error');
+            return;
+        }
+
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', file);
+
+        setUpdating(true);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/upload`, {
+                method: 'POST',
+                credentials: 'include',
+                body: uploadFormData,
+            });
+
+            if (!res.ok) throw new Error('Upload failed');
+
+            const data = await res.json();
+            const fullUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${data.url}`;
+
+            // Update form data and trigger save
+            setFormData(prev => {
+                const updated = { ...prev, [type]: fullUrl };
+                // We need to trigger save with this new data immediately
+                // However, saveChanges reads from 'formData' state which might be stale in this closure
+                // So we'll pass the updated data directly to a modified logic or just call a save function that accepts data
+                return updated;
+            });
+
+            // Manual save trigger with explicit payload
+            const resSave = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/profile`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ ...formData, [type]: fullUrl }),
+            });
+
+            if (!resSave.ok) throw new Error('Failed to save profile with new image');
+
+            // Update local user state to reflect change immediately
+            setUser(prev => prev ? { ...prev, [type]: fullUrl } : null);
+            showToast('Image uploaded successfully', 'success');
+
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to upload image', 'error');
         } finally {
             setUpdating(false);
         }
@@ -251,10 +313,10 @@ export default function ProfilePage() {
                                     <label className="block text-sm font-medium">Profile picture</label>
                                     <div className="flex items-center gap-6">
                                         <div className="relative h-24 w-24 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground">
-                                            {user?.avatar_url ? (
+                                            {formData.avatar_url ? (
                                                 <Image
-                                                    src={user.avatar_url}
-                                                    alt={user.username}
+                                                    src={formData.avatar_url}
+                                                    alt={formData.username}
                                                     fill
                                                     className="object-cover"
                                                 />
@@ -262,15 +324,72 @@ export default function ProfilePage() {
                                                 <span>{user?.display_name?.[0] || user?.username?.[0] || '?'}</span>
                                             )}
                                         </div>
-                                        <button
-                                            type="button"
-                                            className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50"
-                                            disabled
-                                        >
-                                            Upload new picture
-                                            <span className="block text-xs font-normal text-muted-foreground mt-0.5">Coming soon</span>
-                                        </button>
+                                        <div>
+                                            <input
+                                                type="file"
+                                                id="avatar_upload"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => handleImageUpload(e, 'avatar_url')}
+                                            />
+                                            <label
+                                                htmlFor="avatar_upload"
+                                                className="cursor-pointer px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors inline-block"
+                                            >
+                                                Upload new picture
+                                            </label>
+                                            <p className="text-xs text-muted-foreground mt-2">JPG, GIF or PNG. 1MB max.</p>
+                                        </div>
                                     </div>
+                                </div>
+
+                                {/* Banner Section */}
+                                <div className="space-y-4">
+                                    <label className="block text-sm font-medium">Banner</label>
+                                    <div className="relative h-32 w-full rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center">
+                                        {formData.banner_url ? (
+                                            <Image
+                                                src={formData.banner_url}
+                                                alt="Profile Banner"
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-muted-foreground text-sm">No banner uploaded</span>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <input
+                                                type="file"
+                                                id="banner_upload"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => handleImageUpload(e, 'banner_url')}
+                                            />
+                                            <label
+                                                htmlFor="banner_upload"
+                                                className="cursor-pointer px-4 py-2 bg-background/80 hover:bg-background text-foreground rounded-md text-sm font-medium transition-colors"
+                                            >
+                                                Change Banner
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {!formData.banner_url && (
+                                        <div>
+                                            <input
+                                                type="file"
+                                                id="banner_upload_btn"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => handleImageUpload(e, 'banner_url')}
+                                            />
+                                            <label
+                                                htmlFor="banner_upload_btn"
+                                                className="cursor-pointer px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors inline-block"
+                                            >
+                                                Upload banner
+                                            </label>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Name Input */}

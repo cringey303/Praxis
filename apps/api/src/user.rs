@@ -20,6 +20,7 @@ pub struct UserProfile {
     pub bio: Option<String>,
     pub location: Option<String>,
     pub website: Option<String>,
+    pub banner_url: Option<String>,
     pub verified: Option<bool>,
 }
 
@@ -31,6 +32,7 @@ pub struct PublicUserProfile {
     pub bio: Option<String>,
     pub location: Option<String>,
     pub website: Option<String>,
+    pub banner_url: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -40,6 +42,8 @@ pub struct UpdateProfileRequest {
     pub bio: Option<String>,
     pub location: Option<String>,
     pub website: Option<String>,
+    pub avatar_url: Option<String>,
+    pub banner_url: Option<String>,
 }
 
 pub async fn get_me(
@@ -62,7 +66,7 @@ pub async fn get_me(
     let user = sqlx::query!(
         r#"
         SELECT 
-            u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website,
+            u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, u.banner_url,
             l.email as "email?", l.verified as "verified?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
@@ -85,6 +89,7 @@ pub async fn get_me(
             bio: u.bio,
             location: u.location,
             website: u.website,
+            banner_url: u.banner_url,
             verified: u.verified,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
@@ -202,14 +207,18 @@ pub async fn update_profile(
             display_name = COALESCE($2, display_name),
             bio = COALESCE($3, bio),
             location = COALESCE($4, location),
-            website = COALESCE($5, website)
-        WHERE id = $6
+            website = COALESCE($5, website),
+            avatar_url = COALESCE($6, avatar_url),
+            banner_url = COALESCE($7, banner_url)
+        WHERE id = $8
         "#,
         safe_username, // Username usually strict validation, but assuming alphanumeric elsewhere
         safe_display_name,
         safe_bio,
         safe_location,
         safe_website,
+        payload.avatar_url,
+        payload.banner_url,
         user_id
     )
     .execute(&pool)
@@ -237,7 +246,7 @@ pub async fn get_all(
     let users = sqlx::query!(
         r#"
         SELECT 
-            u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website,
+            u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, u.banner_url,
             l.email as "email?", l.verified as "verified?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
@@ -260,6 +269,7 @@ pub async fn get_all(
             bio: u.bio,
             location: u.location,
             website: u.website,
+            banner_url: u.banner_url,
             verified: u.verified,
         })
         .collect();
@@ -307,7 +317,7 @@ pub async fn get_public_profile(
 ) -> Result<Json<PublicUserProfile>, (StatusCode, String)> {
     let user = sqlx::query!(
         r#"
-        SELECT username, display_name, avatar_url, bio, location, website
+        SELECT username, display_name, avatar_url, bio, location, website, banner_url
         FROM users
         WHERE username = $1
         "#,
@@ -325,6 +335,7 @@ pub async fn get_public_profile(
             bio: u.bio,
             location: u.location,
             website: u.website,
+            banner_url: u.banner_url,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
@@ -399,6 +410,7 @@ pub async fn create_test_user(
         bio: None,
         location: None,
         website: None,
+        banner_url: None,
         verified: Some(false),
     }))
 }

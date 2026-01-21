@@ -12,6 +12,7 @@ use tower_sessions::{Expiry, SessionManagerLayer, cookie::SameSite};
 use tower_sessions_sqlx_store::PostgresStore;
 
 mod auth;
+mod upload;
 mod user;
 
 #[tokio::main]
@@ -27,6 +28,9 @@ async fn main() {
             }),
         )
         .init();
+
+    // Ensure uploads directory exists
+    std::fs::create_dir_all("uploads").expect("Failed to create uploads directory");
 
     // --- Connect to Database --- //
     // get database url saved in .env
@@ -77,8 +81,13 @@ async fn main() {
         .route("/user/all", get(user::get_all))
         .route("/user/test", post(user::create_test_user))
         .route("/user/:id", axum::routing::delete(user::delete_user))
+        .route("/upload", post(upload::upload_image))
+        .nest_service("/uploads", tower_http::services::ServeDir::new("uploads"))
         .layer(session_layer)
         .layer(cors)
+        .layer(tower_http::limit::RequestBodyLimitLayer::new(
+            10 * 1024 * 1024,
+        )) // 10MB limit
         .layer(TraceLayer::new_for_http())
         .with_state(pool); // injecting the DB pool
 

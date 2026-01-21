@@ -14,6 +14,7 @@ interface PublicUserProfile {
     bio?: string;
     location?: string;
     website?: string;
+    banner_url?: string;
     // created_at?: string; // Not yet in API response
 }
 
@@ -123,8 +124,16 @@ export default function PublicProfilePage() {
             <NavBar user={currentUser} onLogout={handleLogout} isLoggingOut={isLoggingOut} />
 
             {/* Banner Area */}
-            <div className="relative h-32 md:h-48 bg-secondary/30">
-                <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
+            <div className="relative h-32 md:h-48 bg-secondary/30 overflow-hidden">
+                {profile.banner_url ? (
+                    <img
+                        src={profile.banner_url}
+                        alt="Profile Banner"
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
+                )}
             </div>
 
             <main className="container mx-auto px-4 max-w-5xl relative z-10 -mt-12">

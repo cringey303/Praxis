@@ -81,7 +81,7 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
 
                         {/* Desktop Navigation */}
                         {user && (
-                            <nav className="hidden md:flex items-center gap-8 h-full">
+                            <nav className="hidden md:flex items-center gap-6 h-full">
                                 <Link
                                     href="/dashboard"
                                     className={`flex items-end pb-3 h-full px-1 text-sm font-medium border-b-2 transition-colors ${pathname === '/dashboard'
