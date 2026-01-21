@@ -128,7 +128,7 @@ export default function PublicProfilePage() {
             </div>
 
             <main className="container mx-auto px-4 max-w-5xl relative z-10 -mt-12">
-                <div className="flex flex-col md:flex-row gap-6 md:items-end">
+                <div className="flex flex-col md:flex-row gap-6 md:items-start">
                     {/* Avatar */}
                     <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-background bg-secondary shadow-xl flex items-center justify-center overflow-hidden shrink-0">
                         {profile.avatar_url ? (
