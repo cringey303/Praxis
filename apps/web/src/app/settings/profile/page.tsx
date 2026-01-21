@@ -106,35 +106,8 @@ export default function ProfilePage() {
         return '';
     };
 
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { id, value } = e.target;
-        // Only validate fields tracked in errors state
-        if (Object.keys(errors).includes(id)) {
-            const error = validateField(id, value);
-            setErrors((prev) => ({ ...prev, [id]: error }));
-        }
-    };
-
-    const validateForm = () => {
-        const newErrors = {
-            username: validateField('username', formData.username),
-            display_name: '',
-            website: validateField('website', formData.website),
-        };
-
-        setErrors(newErrors);
-        return !Object.values(newErrors).some(Boolean);
-    };
-
-    const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-
-        if (!validateForm()) {
-            showToast('Please fix the errors in the form.', 'error');
-            return;
-        }
-
-        console.log('UseProfile: Submitting update', formData);
+    const saveChanges = async () => {
+        console.log('UseProfile: Saving changes', formData);
         setUpdating(true);
 
         try {
@@ -150,17 +123,52 @@ export default function ProfilePage() {
                 throw new Error(text || 'Update failed');
             }
 
-            showToast('Profile updated successfully.', 'success');
-            // Refresh local user data to reflect changes
+            // Success - silently update local state
+            // Refresh local user data to reflect changes so next strict comparison works
             setUser((prev) => prev ? { ...prev, ...formData } : null);
-            setErrors({ username: '', display_name: '', website: '' });
+
+            // Clear backend errors if they resolve
+            setErrors(prev => ({ ...prev, website: '', username: '' }));
+
         } catch (err: any) {
             console.error('UseProfile: Update failed', err);
-            showToast(err.message, 'error');
+
+            if (err.message === 'Website could not be reached') {
+                setErrors((prev) => ({ ...prev, website: 'Website could not be reached' }));
+                // Optional: show toast if you want attention, but field error is good
+                showToast('Website validation failed.', 'error');
+            } else if (err.message.includes("Username already taken")) {
+                setErrors((prev) => ({ ...prev, username: 'Username already taken' }));
+            } else {
+                showToast(err.message, 'error');
+            }
         } finally {
             setUpdating(false);
         }
     };
+
+    const handleBlur = async (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+
+        // 1. Validate
+        let error = '';
+        if (Object.keys(errors).includes(id)) {
+            error = validateField(id, value);
+            setErrors((prev) => ({ ...prev, [id]: error }));
+        }
+
+        if (error) return;
+
+        // 2. Check for changes against original user data
+        // Helper to safely get property from user object or empty string
+        const originalValue = user ? (user[id as keyof UserProfile] as string || '') : '';
+        const currentValue = formData[id as keyof typeof formData];
+
+        if (currentValue !== originalValue) {
+            await saveChanges();
+        }
+    };
+
 
     if (loading) {
         return (
@@ -206,10 +214,10 @@ export default function ProfilePage() {
                             <div className="border-t border-border my-6"></div>
 
                             <form
-                                onSubmit={handleSubmit}
                                 className="space-y-8 max-w-2xl"
                                 autoComplete="off"
                                 data-lpignore="true"
+                                onSubmit={(e) => e.preventDefault()}
                             >
 
                                 {/* Profile Picture Section */}
@@ -250,6 +258,7 @@ export default function ProfilePage() {
                                         data-lpignore="true"
                                         error={errors.display_name}
                                         onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                                        onBlur={handleBlur}
                                     />
 
                                 </div>
@@ -263,6 +272,7 @@ export default function ProfilePage() {
                                         value={formData.location}
                                         autoComplete="off"
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                        onBlur={handleBlur}
                                         maxLength={100}
                                     />
                                 </div>
@@ -290,6 +300,7 @@ export default function ProfilePage() {
                                         rows={4}
                                         value={formData.bio}
                                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                                        onBlur={handleBlur}
                                         maxLength={200}
                                     />
                                 </div>
@@ -325,15 +336,7 @@ export default function ProfilePage() {
                                     <p className="text-xs text-muted-foreground">To change your email, please contact support.</p>
                                 </div>
 
-                                <div className="pt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={updating}
-                                        className="cursor-pointer rounded-md bg-green-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus-visible:outlinefocus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:opacity-50 transition-colors"
-                                    >
-                                        {updating ? 'Saving...' : 'Update profile'}
-                                    </button>
-                                </div>
+
 
                             </form>
                         </div>
