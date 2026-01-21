@@ -2,6 +2,8 @@ use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 
+// run with 'cargo run --bin make_admin'
+
 #[tokio::main]
 async fn main() {
     dotenv().ok();
@@ -12,7 +14,7 @@ async fn main() {
         .await
         .expect("Failed to connect to DB");
 
-    // Change 'lucas' to your actual username if different
+    // Change to your actual username different
     let username = "lucas";
 
     let result = sqlx::query("UPDATE users SET role = 'admin' WHERE username = $1")
