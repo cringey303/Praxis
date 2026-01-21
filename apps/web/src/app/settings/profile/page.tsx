@@ -191,7 +191,6 @@ export default function ProfilePage() {
 
                     {/* Sidebar Navigation */}
                     <aside className="md:col-span-3 space-y-4">
-                        <h2 className="text-xs font-bold uppercase tracking-wider opacity-70 px-2">Settings</h2>
                         <nav className="flex flex-col gap-1">
                             <Link
                                 href="/settings/profile"
