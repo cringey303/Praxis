@@ -139,7 +139,11 @@ pub async fn update_profile(
     // React handles XSS protection by default when rendering.
     // If we wanted to strip HTML tags, we should use a different approach,
     // but for now we trust the frontend/DB to handle plain text.
-    let safe_bio = payload.bio.as_ref();
+    let safe_bio = payload
+        .bio
+        .as_ref()
+        // remove newlines in bio
+        .map(|s| s.replace('\n', " ").replace('\r', " "));
     let safe_display_name = payload.display_name.as_ref();
     let safe_location = payload.location.as_ref();
 
