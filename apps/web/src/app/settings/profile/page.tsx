@@ -189,19 +189,41 @@ export default function ProfilePage() {
             <div className="p-3">
                 <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-3">
 
-                    {/* Sidebar Navigation (Visual Only for now) */}
-                    <aside className="md:col-span-3 space-y-2">
-                        {/* 'Back to Dashboard' removed as Header handles it */}
-                        <nav className="space-y-1">
-                            <Link href="/settings/profile" className="block px-3 py-2 rounded-md bg-secondary/50 text-foreground font-medium border-l-2 border-primary">
-                                Profile
+                    {/* Sidebar Navigation */}
+                    <aside className="md:col-span-3 space-y-4">
+                        <h2 className="text-xs font-bold uppercase tracking-wider opacity-70 px-2">Settings</h2>
+                        <nav className="flex flex-col gap-1">
+                            <Link
+                                href="/settings/profile"
+                                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 border border-primary/20 text-primary transition-all group"
+                            >
+                                <div className="h-5 w-5 flex items-center justify-center">
+                                    {/* User Icon */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                </div>
+                                <span className="text-sm font-medium">Profile</span>
                             </Link>
-                            <div className="block px-3 py-2 rounded-md text-muted-foreground hover:bg-secondary/30 cursor-not-allowed opacity-50">
-                                Security
-                            </div>
-                            <div className="block px-3 py-2 rounded-md text-muted-foreground hover:bg-secondary/30 cursor-not-allowed opacity-50">
-                                Notifications
-                            </div>
+
+                            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent transition-all group cursor-not-allowed opacity-60">
+                                <div className="h-5 w-5 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                                </div>
+                                <span className="text-sm font-medium">Security</span>
+                            </button>
+
+                            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent transition-all group cursor-not-allowed opacity-60">
+                                <div className="h-5 w-5 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                </div>
+                                <span className="text-sm font-medium">Collaborators</span>
+                            </button>
+
+                            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent transition-all group cursor-not-allowed opacity-60">
+                                <div className="h-5 w-5 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                                </div>
+                                <span className="text-sm font-medium">Visibility</span>
+                            </button>
                         </nav>
                     </aside>
 
