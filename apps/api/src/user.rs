@@ -142,7 +142,53 @@ pub async fn update_profile(
     let safe_bio = payload.bio.as_ref();
     let safe_display_name = payload.display_name.as_ref();
     let safe_location = payload.location.as_ref();
-    let safe_website = payload.website.as_ref();
+
+    let safe_website = if let Some(website) = &payload.website {
+        if !website.trim().is_empty() {
+            // Check if website is reachable
+            let url_string = if website.starts_with("http") {
+                website.clone()
+            } else {
+                format!("https://{}", website)
+            };
+
+            let client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(3))
+                .build()
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            // Try HEAD request first, fall back to GET? no, just HEAD for now to be fast
+            // Actually many sites block HEAD, so maybe GET with range or just accept that "some exist but fail"
+            // Let's try HEAD.
+            let resp = client.head(&url_string).send().await;
+
+            // If HEAD fails, try GET (some servers block HEAD)
+            let exists = if resp.is_ok() {
+                true
+            } else {
+                client.get(&url_string).send().await.is_ok()
+            };
+
+            if !exists {
+                return Err((
+                    StatusCode::BAD_REQUEST,
+                    "Website could not be reached".to_string(),
+                ));
+            }
+            Some(website.clone())
+        } else {
+            Some(website.clone())
+        }
+    } else {
+        None
+    };
+    // We just verified reachability above in `safe_website`, so we don't need to do it again.
+    // However, `safe_website` right now holds the result.
+    // The previous code block was a bit messy with duplication.
+    // Let's just use `safe_website` which is Option<String>.
+
+    // Convert Option<String> to Option<&str> for the query
+    let safe_website = safe_website.as_deref();
 
     sqlx::query!(
         r#"

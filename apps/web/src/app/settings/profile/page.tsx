@@ -91,29 +91,39 @@ export default function ProfilePage() {
         }
     };
 
-    const validateForm = () => {
-        const newErrors = {
-            username: '',
-            display_name: '',
-            website: '',
-        };
-        let isValid = true;
-
-        if (!formData.username.trim()) {
-            newErrors.username = 'Username is required';
-            isValid = false;
+    const validateField = (name: string, value: string) => {
+        if (name === 'username') {
+            if (!value.trim()) return 'Username is required';
         }
+        if (name === 'website' && value) {
+            // site validation
+            const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}$/;
 
-        if (formData.website) {
-            // Simple validation: must have a dot and no spaces
-            if (!formData.website.includes('.') || formData.website.includes(' ')) {
-                newErrors.website = 'Please enter a valid website (e.g., example.com)';
-                isValid = false;
+            if (!urlPattern.test(value)) {
+                return 'Please enter a valid website (e.g., example.com)';
             }
         }
+        return '';
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+        // Only validate fields tracked in errors state
+        if (Object.keys(errors).includes(id)) {
+            const error = validateField(id, value);
+            setErrors((prev) => ({ ...prev, [id]: error }));
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {
+            username: validateField('username', formData.username),
+            display_name: '',
+            website: validateField('website', formData.website),
+        };
 
         setErrors(newErrors);
-        return isValid;
+        return !Object.values(newErrors).some(Boolean);
     };
 
     const handleSubmit = async (e: FormEvent) => {
@@ -241,7 +251,7 @@ export default function ProfilePage() {
                                         error={errors.display_name}
                                         onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                                     />
-                                    <p className="text-xs text-muted-foreground">Your real name or pen name.</p>
+
                                 </div>
 
                                 {/* Location Input */}
@@ -267,6 +277,7 @@ export default function ProfilePage() {
                                         autoComplete="off"
                                         error={errors.website}
                                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                        onBlur={handleBlur}
                                         maxLength={100}
                                     />
                                 </div>
@@ -294,6 +305,7 @@ export default function ProfilePage() {
                                         data-lpignore="true"
                                         error={errors.username}
                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                        onBlur={handleBlur}
                                     />
                                     <p className="text-xs text-muted-foreground">
                                         URL: praxis.com/<b>{formData.username || 'username'}</b>
