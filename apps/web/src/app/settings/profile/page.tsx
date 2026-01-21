@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Loader2 } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTextarea';
@@ -207,8 +208,18 @@ export default function ProfilePage() {
                     {/* Main Content */}
                     <main className="md:col-span-9 rounded-xl border border-border p-6 shadow-sm bg-card">
                         <div className="space-y-6">
-                            <div>
+                            <div className="flex items-center justify-between">
                                 <h1 className="text-3xl font-semibold tracking-tight">Profile</h1>
+                                <div className="text-sm text-muted-foreground">
+                                    {updating ? (
+                                        <div className="flex items-center gap-2">
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                            <span>Saving...</span>
+                                        </div>
+                                    ) : (
+                                        <span>All changes saved</span>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="border-t border-border my-6"></div>
