@@ -79,6 +79,39 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
                             <span className="text-xl font-bold tracking-tight text-foreground/90">Praxis</span>
                         </Link>
 
+                        {/* Desktop Navigation */}
+                        {user && (
+                            <nav className="hidden md:flex items-center gap-8 h-full">
+                                <Link
+                                    href="/dashboard"
+                                    className={`flex items-end pb-3 h-full px-1 text-sm font-medium border-b-2 transition-colors ${pathname === '/dashboard'
+                                            ? 'border-primary text-primary'
+                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        }`}
+                                >
+                                    Dashboard
+                                </Link>
+                                <Link
+                                    href={`/${user.username}`}
+                                    className={`flex items-end pb-3 h-full px-1 text-sm font-medium border-b-2 transition-colors ${pathname === `/${user.username}`
+                                            ? 'border-primary text-primary'
+                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        }`}
+                                >
+                                    Profile
+                                </Link>
+                                <Link
+                                    href="/settings/profile"
+                                    className={`flex items-end pb-3 h-full px-1 text-sm font-medium border-b-2 transition-colors ${pathname.startsWith('/settings')
+                                            ? 'border-primary text-primary'
+                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        }`}
+                                >
+                                    Settings
+                                </Link>
+                            </nav>
+                        )}
+
                         {/* Right Area: User Profile */}
                         {isLoading ? (
                             // Loading state skeleton
