@@ -425,7 +425,7 @@ export default function ProfilePage() {
                                             <button
                                                 type="button"
                                                 onClick={() => handleEditClick('avatar_url')}
-                                                className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors inline-block"
+                                                className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors inline-block cursor-pointer"
                                             >
                                                 Change picture
                                             </button>
