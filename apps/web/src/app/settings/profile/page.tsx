@@ -138,7 +138,7 @@ export default function ProfilePage() {
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify(formData),
-            });x
+            });
 
             if (!res.ok) {
                 const text = await res.text();
@@ -578,7 +578,7 @@ export default function ProfilePage() {
                 />
             )}
 
-            {/* <ImageEditDialog
+            {/* <ImageCropper
                 isOpen={editModalConfig.isOpen}
                 type={editModalConfig.type}
                 onClose={handleEditClose}
