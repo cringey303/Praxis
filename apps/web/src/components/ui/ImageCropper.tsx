@@ -80,7 +80,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
                             step={0.1}
                             aria-labelledby="Zoom"
                             onChange={(e) => setZoom(Number(e.target.value))}
-                            className="w-full h-5 bg-secondary rounded-lg appearance-none cursor-pointer 
+                            className="w-full h-4 bg-secondary rounded-lg appearance-none cursor-pointer 
                             [&::-webkit-slider-thumb]:appearance-none 
                             [&::-webkit-slider-thumb]:h-4 
                             [&::-webkit-slider-thumb]:w-4 
