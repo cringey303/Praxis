@@ -99,40 +99,48 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-between gap-3 pt-2">
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-1">
                             {onUploadSelect && (
-                                <button
-                                    onClick={onUploadSelect}
-                                    className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover:bg-secondary/80 transition-colors cursor-pointer"
-                                >
-                                    <Upload className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Upload New</span>
-                                </button>
+                                <p className="text-xs text-muted-foreground">JPG, GIF or PNG. 10MB max.</p>
                             )}
-                            {onRemove && (
-                                <button
-                                    onClick={onRemove}
-                                    className="flex items-center gap-2 px-3 py-2 bg-destructive/10 text-destructive rounded-md text-sm font-medium hover:bg-destructive/20 transition-colors cursor-pointer"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Remove</span>
-                                </button>
-                            )}
+                            <div className="flex gap-2">
+                                {onUploadSelect && (
+                                    <button
+                                        onClick={onUploadSelect}
+                                        className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover:bg-secondary/80 transition-colors cursor-pointer"
+                                    >
+                                        <Upload className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Upload New</span>
+                                    </button>
+                                )}
+                                {onRemove && (
+                                    <button
+                                        onClick={onRemove}
+                                        className="flex items-center gap-2 px-3 py-2 bg-destructive/10 text-destructive rounded-md text-sm font-medium hover:bg-destructive/20 transition-colors cursor-pointer"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Remove</span>
+                                    </button>
+                                )}
+                                
+                            </div>
                         </div>
 
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={onCancel}
-                                className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer"
-                            >
-                                Save
-                            </button>
+                        <div className="flex flex-col justify-end gap-1">
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={onCancel}
+                                    className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer"
+                                >
+                                    Save
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

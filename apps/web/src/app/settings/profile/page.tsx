@@ -145,14 +145,21 @@ export default function ProfilePage() {
         } catch (err: unknown) {
             console.error('UseProfile: Update failed', err);
 
-            if (err instanceof Error && err.message === 'Website could not be reached') {
+            let errorMessage = 'An unexpected error occurred';
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            } else if (typeof err === 'string') {
+                errorMessage = err;
+            }
+
+            if (errorMessage === 'Website could not be reached') {
                 setErrors((prev) => ({ ...prev, website: 'Website could not be reached' }));
                 // Optional: show toast if you want attention, but field error is good
                 showToast('Website validation failed.', 'error');
-            } else if (err.message.includes("Username already taken")) {
+            } else if (errorMessage.includes("Username already taken")) {
                 setErrors((prev) => ({ ...prev, username: 'Username already taken' }));
             } else {
-                showToast(err.message, 'error');
+                showToast(errorMessage, 'error');
             }
         } finally {
             setUpdating(false);
@@ -404,7 +411,7 @@ export default function ProfilePage() {
                                         <div className="flex flex-col gap-3">
                                             <div
                                                 onClick={() => handleEditClick('avatar_url')}
-                                                className="relative h-24 w-24 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground cursor-pointer hover:opacity-80 transition-opacity"
+                                                className="relative h-32 w-32 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground cursor-pointer hover:opacity-80 transition-opacity"
                                             >
                                                 {formData.avatar_url ? (
                                                     <Image
@@ -421,7 +428,6 @@ export default function ProfilePage() {
                                                     <span className="text-xs font-medium text-white">Edit</span>
                                                 </div>
                                             </div>
-                                            <p className="text-xs text-muted-foreground">JPG, GIF or PNG. 1MB max.</p>
                                             <input
                                                 type="file"
                                                 id="avatar_upload_hidden"
