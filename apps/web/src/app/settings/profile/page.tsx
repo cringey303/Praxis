@@ -10,6 +10,7 @@ import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTextarea';
 import { useToast } from "@/components/ui/Toast";
 import { ImageCropper } from '@/components/ui/ImageCropper';
+import { ImageEditDialog } from '@/components/ui/ImageEditDialog';
 
 interface UserProfile {
     id: string;
@@ -51,6 +52,15 @@ export default function ProfilePage() {
     const [imageSrc, setImageSrc] = useState<string | null>(null);
     const [cropAspect, setCropAspect] = useState(1);
     const [cropType, setCropType] = useState<'avatar_url' | 'banner_url' | null>(null);
+
+    // Edit Modal State
+    const [editModalConfig, setEditModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'avatar_url' | 'banner_url' | null;
+    }>({
+        isOpen: false,
+        type: null,
+    });
 
     // Fetch user data on mount
     useEffect(() => {
@@ -159,6 +169,53 @@ export default function ProfilePage() {
         }
     };
 
+    const handleEditClick = (type: 'avatar_url' | 'banner_url') => {
+        setEditModalConfig({ isOpen: true, type });
+    };
+
+    const handleEditClose = () => {
+        setEditModalConfig({ isOpen: false, type: null });
+    };
+
+    const handleTriggerUpload = () => {
+        if (!editModalConfig.type) return;
+
+        // Find and click the hidden file input
+        const inputId = editModalConfig.type === 'avatar_url' ? 'avatar_upload_hidden' : 'banner_upload_hidden';
+        document.getElementById(inputId)?.click();
+    };
+
+    const handleRemoveImage = async () => {
+        if (!editModalConfig.type) return;
+        const type = editModalConfig.type;
+
+        setUpdating(true);
+        handleEditClose();
+
+        try {
+            const updatedFormData = { ...formData, [type]: '' };
+            setFormData(updatedFormData);
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/profile`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(updatedFormData),
+            });
+
+            if (!res.ok) throw new Error('Failed to remove image');
+
+            setUser((prev) => prev ? { ...prev, [type]: '' } : null);
+            showToast('Image removed successfully', 'success');
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to remove image', 'error');
+            // Revert on error if needed, or just let the user try again
+        } finally {
+            setUpdating(false);
+        }
+    };
+
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar_url' | 'banner_url') => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -177,6 +234,7 @@ export default function ProfilePage() {
             setImageSrc(reader.result as string);
             setCropAspect(aspect);
             setCropType(type);
+            setEditModalConfig({ isOpen: false, type: null }); // Close the choice modal
             // Reset the input value so the same file can be selected again if cancelled
             e.target.value = '';
         });
@@ -341,7 +399,10 @@ export default function ProfilePage() {
                                 <div className="space-y-4">
                                     <label className="block text-sm font-medium">Profile picture</label>
                                     <div className="flex items-center gap-6">
-                                        <div className="relative h-24 w-24 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground">
+                                        <div
+                                            onClick={() => handleEditClick('avatar_url')}
+                                            className="relative h-24 w-24 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground cursor-pointer hover:opacity-80 transition-opacity"
+                                        >
                                             {formData.avatar_url ? (
                                                 <Image
                                                     src={formData.avatar_url}
@@ -353,21 +414,26 @@ export default function ProfilePage() {
                                             ) : (
                                                 <span>{user?.display_name?.[0] || user?.username?.[0] || '?'}</span>
                                             )}
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span className="text-xs font-medium text-white">Edit</span>
+                                            </div>
                                         </div>
+
                                         <div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleEditClick('avatar_url')}
+                                                className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors inline-block"
+                                            >
+                                                Change picture
+                                            </button>
                                             <input
                                                 type="file"
-                                                id="avatar_upload"
+                                                id="avatar_upload_hidden"
                                                 accept="image/*"
                                                 className="hidden"
                                                 onChange={(e) => handleImageUpload(e, 'avatar_url')}
                                             />
-                                            <label
-                                                htmlFor="avatar_upload"
-                                                className="cursor-pointer px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors inline-block"
-                                            >
-                                                Upload new picture
-                                            </label>
                                             <p className="text-xs text-muted-foreground mt-2">JPG, GIF or PNG. 1MB max.</p>
                                         </div>
                                     </div>
@@ -376,7 +442,10 @@ export default function ProfilePage() {
                                 {/* Banner Section */}
                                 <div className="space-y-4">
                                     <label className="block text-sm font-medium">Banner</label>
-                                    <div className="relative h-32 w-full rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center">
+                                    <div
+                                        onClick={() => handleEditClick('banner_url')}
+                                        className="relative h-32 w-full rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center cursor-pointer group"
+                                    >
                                         {formData.banner_url ? (
                                             <Image
                                                 src={formData.banner_url}
@@ -388,39 +457,20 @@ export default function ProfilePage() {
                                         ) : (
                                             <span className="text-muted-foreground text-sm">No banner uploaded</span>
                                         )}
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <input
-                                                type="file"
-                                                id="banner_upload"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={(e) => handleImageUpload(e, 'banner_url')}
-                                            />
-                                            <label
-                                                htmlFor="banner_upload"
-                                                className="cursor-pointer px-4 py-2 bg-background/80 hover:bg-background text-foreground rounded-md text-sm font-medium transition-colors"
-                                            >
-                                                Change Banner
-                                            </label>
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span className="px-4 py-2 bg-background/80 text-foreground rounded-md text-sm font-medium">
+                                                Edit Banner
+                                            </span>
                                         </div>
                                     </div>
-                                    {!formData.banner_url && (
-                                        <div>
-                                            <input
-                                                type="file"
-                                                id="banner_upload_btn"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={(e) => handleImageUpload(e, 'banner_url')}
-                                            />
-                                            <label
-                                                htmlFor="banner_upload_btn"
-                                                className="cursor-pointer px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors inline-block"
-                                            >
-                                                Upload banner
-                                            </label>
-                                        </div>
-                                    )}
+
+                                    <input
+                                        type="file"
+                                        id="banner_upload_hidden"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => handleImageUpload(e, 'banner_url')}
+                                    />
                                 </div>
 
                                 {/* Name Input */}
@@ -527,6 +577,14 @@ export default function ProfilePage() {
                     onCancel={handleCropCancel}
                 />
             )}
+
+            <ImageEditDialog
+                isOpen={editModalConfig.isOpen}
+                type={editModalConfig.type}
+                onClose={handleEditClose}
+                onUploadConfig={handleTriggerUpload}
+                onRemove={handleRemoveImage}
+            />
         </div>
     );
 }
