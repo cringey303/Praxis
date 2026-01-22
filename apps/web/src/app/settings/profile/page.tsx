@@ -10,7 +10,6 @@ import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTextarea';
 import { useToast } from "@/components/ui/Toast";
 import { ImageCropper } from '@/components/ui/ImageCropper';
-// import { ImageEditDialog } from '@/components/ui/ImageEditDialog';
 
 interface UserProfile {
     id: string;
@@ -52,15 +51,6 @@ export default function ProfilePage() {
     const [imageSrc, setImageSrc] = useState<string | null>(null);
     const [cropAspect, setCropAspect] = useState(1);
     const [cropType, setCropType] = useState<'avatar_url' | 'banner_url' | null>(null);
-
-    // Edit Modal State
-    const [editModalConfig, setEditModalConfig] = useState<{
-        isOpen: boolean;
-        type: 'avatar_url' | 'banner_url' | null;
-    }>({
-        isOpen: false,
-        type: null,
-    });
 
     // Fetch user data on mount
     useEffect(() => {
@@ -170,27 +160,40 @@ export default function ProfilePage() {
     };
 
     const handleEditClick = (type: 'avatar_url' | 'banner_url') => {
-        setEditModalConfig({ isOpen: true, type });
-    };
-
-    const handleEditClose = () => {
-        setEditModalConfig({ isOpen: false, type: null });
+        // Automatically open the cropper with the existing image if available, or just set type to allow upload
+        const existingImage = formData[type];
+        if (existingImage) {
+            setImageSrc(existingImage);
+            setCropAspect(type === 'avatar_url' ? 1 : 3);
+            setCropType(type);
+        } else {
+            // No image exists, trigger upload directly
+            setCropType(type); // track which type we are uploading for
+            setTimeout(() => {
+                const inputId = type === 'avatar_url' ? 'avatar_upload_hidden' : 'banner_upload_hidden';
+                document.getElementById(inputId)?.click();
+            }, 0);
+        }
     };
 
     const handleTriggerUpload = () => {
-        if (!editModalConfig.type) return;
+        if (!cropType) return;
+
+        const type = cropType;
+        // Close cropper to allow file selection
+        setImageSrc(null);
 
         // Find and click the hidden file input
-        const inputId = editModalConfig.type === 'avatar_url' ? 'avatar_upload_hidden' : 'banner_upload_hidden';
+        const inputId = type === 'avatar_url' ? 'avatar_upload_hidden' : 'banner_upload_hidden';
         document.getElementById(inputId)?.click();
     };
 
     const handleRemoveImage = async () => {
-        if (!editModalConfig.type) return;
-        const type = editModalConfig.type;
+        if (!cropType) return;
+        const type = cropType;
 
         setUpdating(true);
-        handleEditClose();
+        handleCropCancel(); // Close modal
 
         try {
             const updatedFormData = { ...formData, [type]: '' };
@@ -234,7 +237,6 @@ export default function ProfilePage() {
             setImageSrc(reader.result as string);
             setCropAspect(aspect);
             setCropType(type);
-            setEditModalConfig({ isOpen: false, type: null }); // Close the choice modal
             // Reset the input value so the same file can be selected again if cancelled
             e.target.value = '';
         });
@@ -575,16 +577,10 @@ export default function ProfilePage() {
                     aspect={cropAspect}
                     onCropComplete={handleCropSave}
                     onCancel={handleCropCancel}
+                    onRemove={handleRemoveImage}
+                    onUploadSelect={handleTriggerUpload}
                 />
             )}
-
-            {/* <ImageCropper
-                isOpen={editModalConfig.isOpen}
-                type={editModalConfig.type}
-                onClose={handleEditClose}
-                onUploadConfig={handleTriggerUpload}
-                onRemove={handleRemoveImage}
-            /> */}
         </div>
     );
 }

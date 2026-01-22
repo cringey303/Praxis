@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
+import { Upload, Trash2 } from 'lucide-react';
 import getCroppedImg from '@/lib/cropImage';
 
 interface ImageCropperProps {
@@ -7,9 +8,18 @@ interface ImageCropperProps {
     aspect: number;
     onCropComplete: (croppedImage: Blob) => void;
     onCancel: () => void;
+    onRemove?: () => void;
+    onUploadSelect?: () => void;
 }
 
-export const ImageCropper: React.FC<ImageCropperProps> = ({ image, aspect, onCropComplete, onCancel }) => {
+export const ImageCropper: React.FC<ImageCropperProps> = ({
+    image,
+    aspect,
+    onCropComplete,
+    onCancel,
+    onRemove,
+    onUploadSelect
+}) => {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
@@ -74,19 +84,42 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({ image, aspect, onCro
                         />
                     </div>
 
-                    <div className="flex justify-end gap-3">
-                        <button
-                            onClick={onCancel}
-                            className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-                        >
-                            Save
-                        </button>
+                    <div className="flex flex-col md:flex-row justify-between gap-3 pt-2">
+                        <div className="flex gap-2">
+                            {onUploadSelect && (
+                                <button
+                                    onClick={onUploadSelect}
+                                    className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover:bg-secondary/80 transition-colors"
+                                >
+                                    <Upload className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Upload New</span>
+                                </button>
+                            )}
+                            {onRemove && (
+                                <button
+                                    onClick={onRemove}
+                                    className="flex items-center gap-2 px-3 py-2 bg-destructive/10 text-destructive rounded-md text-sm font-medium hover:bg-destructive/20 transition-colors"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Remove</span>
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={onCancel}
+                                className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+                            >
+                                Save
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
