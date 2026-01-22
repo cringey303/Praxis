@@ -142,10 +142,10 @@ export default function ProfilePage() {
             // Clear backend errors if they resolve
             setErrors(prev => ({ ...prev, website: '', username: '' }));
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('UseProfile: Update failed', err);
 
-            if (err.message === 'Website could not be reached') {
+            if (err instanceof Error && err.message === 'Website could not be reached') {
                 setErrors((prev) => ({ ...prev, website: 'Website could not be reached' }));
                 // Optional: show toast if you want attention, but field error is good
                 showToast('Website validation failed.', 'error');
@@ -397,38 +397,31 @@ export default function ProfilePage() {
                                 onSubmit={(e) => e.preventDefault()}
                             >
 
-                                {/* Profile Picture Section */}
-                                <div className="space-y-4">
-                                    <label className="block text-sm font-medium">Profile picture</label>
-                                    <div className="flex items-center gap-6">
-                                        <div
-                                            onClick={() => handleEditClick('avatar_url')}
-                                            className="relative h-24 w-24 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground cursor-pointer hover:opacity-80 transition-opacity"
-                                        >
-                                            {formData.avatar_url ? (
-                                                <Image
-                                                    src={formData.avatar_url}
-                                                    alt={formData.username}
-                                                    fill
-                                                    className="object-cover"
-                                                    unoptimized
-                                                />
-                                            ) : (
-                                                <span>{user?.display_name?.[0] || user?.username?.[0] || '?'}</span>
-                                            )}
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <span className="text-xs font-medium text-white">Edit</span>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <button
-                                                type="button"
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {/* Profile Picture Section */}
+                                    <div className="md:col-span-1 space-y-4">
+                                        <label className="block text-sm font-medium">Profile picture</label>
+                                        <div className="flex flex-col gap-3">
+                                            <div
                                                 onClick={() => handleEditClick('avatar_url')}
-                                                className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors inline-block cursor-pointer"
+                                                className="relative h-24 w-24 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground cursor-pointer hover:opacity-80 transition-opacity"
                                             >
-                                                Change picture
-                                            </button>
+                                                {formData.avatar_url ? (
+                                                    <Image
+                                                        src={formData.avatar_url}
+                                                        alt={formData.username}
+                                                        fill
+                                                        className="object-cover"
+                                                        unoptimized
+                                                    />
+                                                ) : (
+                                                    <span>{user?.display_name?.[0] || user?.username?.[0] || '?'}</span>
+                                                )}
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <span className="text-xs font-medium text-white">Edit</span>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">JPG, GIF or PNG. 1MB max.</p>
                                             <input
                                                 type="file"
                                                 id="avatar_upload_hidden"
@@ -436,43 +429,39 @@ export default function ProfilePage() {
                                                 className="hidden"
                                                 onChange={(e) => handleImageUpload(e, 'avatar_url')}
                                             />
-                                            <p className="text-xs text-muted-foreground mt-2">JPG, GIF or PNG. 1MB max.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Banner Section */}
-                                <div className="space-y-4">
-                                    <label className="block text-sm font-medium">Banner</label>
-                                    <div
-                                        onClick={() => handleEditClick('banner_url')}
-                                        className="relative h-32 w-full rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center cursor-pointer group"
-                                    >
-                                        {formData.banner_url ? (
-                                            <Image
-                                                src={formData.banner_url}
-                                                alt="Profile Banner"
-                                                fill
-                                                className="object-cover"
-                                                unoptimized
-                                            />
-                                        ) : (
-                                            <span className="text-muted-foreground text-sm">No banner uploaded</span>
-                                        )}
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <span className="px-4 py-2 bg-background/80 text-foreground rounded-md text-sm font-medium">
-                                                Edit Banner
-                                            </span>
                                         </div>
                                     </div>
 
-                                    <input
-                                        type="file"
-                                        id="banner_upload_hidden"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={(e) => handleImageUpload(e, 'banner_url')}
-                                    />
+                                    {/* Banner Section */}
+                                    <div className="md:col-span-2 space-y-4">
+                                        <label className="block text-sm font-medium">Banner</label>
+                                        <div
+                                            onClick={() => handleEditClick('banner_url')}
+                                            className="relative h-32 w-full rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground cursor-pointer hover:opacity-80 transition-opacity"
+                                        >
+                                            {formData.banner_url ? (
+                                                <Image
+                                                    src={formData.banner_url}
+                                                    alt="Profile Banner"
+                                                    fill
+                                                    className="object-cover"
+                                                    unoptimized
+                                                />
+                                            ) : (
+                                                <span className="text-muted-foreground text-sm">No banner uploaded</span>
+                                            )}
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span className="text-xs font-medium text-white">Edit</span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            id="banner_upload_hidden"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => handleImageUpload(e, 'banner_url')}
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Name Input */}

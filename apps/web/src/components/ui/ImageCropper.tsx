@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import Cropper from 'react-easy-crop';
+import Cropper, { Area } from 'react-easy-crop';
 import { Upload, Trash2 } from 'lucide-react';
 import getCroppedImg from '@/lib/cropImage';
 
@@ -22,7 +22,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
 }) => {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
     const onCropChange = (crop: { x: number; y: number }) => {
         setCrop(crop);
@@ -32,12 +32,13 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
         setZoom(zoom);
     };
 
-    const onCropCompleteInternal = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+    const onCropCompleteInternal = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
         setCroppedAreaPixels(croppedAreaPixels);
     }, []);
 
     const handleSave = async () => {
         try {
+            if (!croppedAreaPixels) return;
             const croppedImage = await getCroppedImg(image, croppedAreaPixels);
             if (croppedImage) {
                 onCropComplete(croppedImage);
@@ -83,10 +84,10 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
                             className="
                             w-full h-4 bg-primary/20 rounded-lg appearance-none cursor-pointer focus:outline-none
                             [&::-webkit-slider-thumb]:appearance-none 
+                            [&::-webkit-slider-thumb]:rounded-full
                             [&::-webkit-slider-thumb]:h-4 
                             [&::-webkit-slider-thumb]:w-4 
-                            [&::-webkit-slider-thumb]:bg-primary 
-                            
+                            [&::-webkit-slider-thumb]:bg-primary
 
                             [&::-moz-range-thumb]:appearance-none 
                             [&::-moz-range-thumb]:h-4 
