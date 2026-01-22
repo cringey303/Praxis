@@ -348,6 +348,7 @@ export default function ProfilePage() {
                                                     alt={formData.username}
                                                     fill
                                                     className="object-cover"
+                                                    unoptimized
                                                 />
                                             ) : (
                                                 <span>{user?.display_name?.[0] || user?.username?.[0] || '?'}</span>
@@ -382,6 +383,7 @@ export default function ProfilePage() {
                                                 alt="Profile Banner"
                                                 fill
                                                 className="object-cover"
+                                                unoptimized
                                             />
                                         ) : (
                                             <span className="text-muted-foreground text-sm">No banner uploaded</span>
