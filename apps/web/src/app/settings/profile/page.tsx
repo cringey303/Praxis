@@ -10,7 +10,7 @@ import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTextarea';
 import { useToast } from "@/components/ui/Toast";
 import { ImageCropper } from '@/components/ui/ImageCropper';
-import { ImageEditDialog } from '@/components/ui/ImageEditDialog';
+// import { ImageEditDialog } from '@/components/ui/ImageEditDialog';
 
 interface UserProfile {
     id: string;
@@ -138,7 +138,7 @@ export default function ProfilePage() {
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify(formData),
-            });
+            });x
 
             if (!res.ok) {
                 const text = await res.text();
@@ -578,13 +578,13 @@ export default function ProfilePage() {
                 />
             )}
 
-            <ImageEditDialog
+            {/* <ImageEditDialog
                 isOpen={editModalConfig.isOpen}
                 type={editModalConfig.type}
                 onClose={handleEditClose}
                 onUploadConfig={handleTriggerUpload}
                 onRemove={handleRemoveImage}
-            />
+            /> */}
         </div>
     );
 }
