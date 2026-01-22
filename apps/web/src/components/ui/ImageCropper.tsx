@@ -77,18 +77,23 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
                             value={zoom}
                             min={1}
                             max={3}
-                            step={0.1}
+                            step={0.02}
                             aria-labelledby="Zoom"
                             onChange={(e) => setZoom(Number(e.target.value))}
-                            className="w-full h-4 bg-secondary rounded-lg appearance-none cursor-pointer 
+                            className="
+                            w-full h-4 bg-primary/20 rounded-lg appearance-none cursor-pointer focus:outline-none
                             [&::-webkit-slider-thumb]:appearance-none 
                             [&::-webkit-slider-thumb]:h-4 
                             [&::-webkit-slider-thumb]:w-4 
-                            [&::-webkit-slider-thumb]:bg-black 
+                            [&::-webkit-slider-thumb]:bg-primary 
+                            
 
+                            [&::-moz-range-thumb]:appearance-none 
                             [&::-moz-range-thumb]:h-4 
                             [&::-moz-range-thumb]:w-4 
-                            [&::-moz-range-thumb]:bg-black"
+                            [&::-moz-range-thumb]:bg-primary
+                            [&::-moz-range-thumb]:border-0
+                            "
                         />
                     </div>
 
