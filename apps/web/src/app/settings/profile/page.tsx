@@ -9,6 +9,7 @@ import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTextarea';
 import { useToast } from "@/components/ui/Toast";
+import { ImageCropper } from '@/components/ui/ImageCropper';
 
 interface UserProfile {
     id: string;
@@ -45,6 +46,11 @@ export default function ProfilePage() {
         display_name: '',
         website: '',
     });
+
+    // Cropper State
+    const [imageSrc, setImageSrc] = useState<string | null>(null);
+    const [cropAspect, setCropAspect] = useState(1);
+    const [cropType, setCropType] = useState<'avatar_url' | 'banner_url' | null>(null);
 
     // Fetch user data on mount
     useEffect(() => {
@@ -153,7 +159,7 @@ export default function ProfilePage() {
         }
     };
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar_url' | 'banner_url') => {
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar_url' | 'banner_url') => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -163,10 +169,30 @@ export default function ProfilePage() {
             return;
         }
 
-        const uploadFormData = new FormData();
-        uploadFormData.append('file', file);
+        // Set aspect ratio based on type
+        const aspect = type === 'avatar_url' ? 1 : 3; // 3:1 for banner, 1:1 for avatar
 
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+            setImageSrc(reader.result as string);
+            setCropAspect(aspect);
+            setCropType(type);
+            // Reset the input value so the same file can be selected again if cancelled
+            e.target.value = '';
+        });
+        reader.readAsDataURL(file);
+    };
+
+    const handleCropSave = async (croppedBlob: Blob) => {
+        if (!cropType) return;
+
+        setImageSrc(null); // Close cropper
         setUpdating(true);
+
+        const uploadFormData = new FormData();
+        // Append blob with a filename
+        uploadFormData.append('file', croppedBlob, 'cropped_image.jpg');
+
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/upload`, {
                 method: 'POST',
@@ -179,27 +205,24 @@ export default function ProfilePage() {
             const data = await res.json();
             const fullUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${data.url}`;
 
-            // Update form data and trigger save
+            // Update form data
             setFormData(prev => {
-                const updated = { ...prev, [type]: fullUrl };
-                // We need to trigger save with this new data immediately
-                // However, saveChanges reads from 'formData' state which might be stale in this closure
-                // So we'll pass the updated data directly to a modified logic or just call a save function that accepts data
+                const updated = { ...prev, [cropType]: fullUrl };
                 return updated;
             });
 
-            // Manual save trigger with explicit payload
+            // Save Profile
             const resSave = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/profile`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ ...formData, [type]: fullUrl }),
+                body: JSON.stringify({ ...formData, [cropType]: fullUrl }),
             });
 
             if (!resSave.ok) throw new Error('Failed to save profile with new image');
 
-            // Update local user state to reflect change immediately
-            setUser(prev => prev ? { ...prev, [type]: fullUrl } : null);
+            // Update local user state
+            setUser(prev => prev ? { ...prev, [cropType]: fullUrl } : null);
             showToast('Image uploaded successfully', 'success');
 
         } catch (err) {
@@ -207,7 +230,13 @@ export default function ProfilePage() {
             showToast('Failed to upload image', 'error');
         } finally {
             setUpdating(false);
+            setCropType(null);
         }
+    };
+
+    const handleCropCancel = () => {
+        setImageSrc(null);
+        setCropType(null);
     };
 
     const handleBlur = async (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -488,6 +517,14 @@ export default function ProfilePage() {
                     </main>
                 </div>
             </div>
+            {imageSrc && (
+                <ImageCropper
+                    image={imageSrc}
+                    aspect={cropAspect}
+                    onCropComplete={handleCropSave}
+                    onCancel={handleCropCancel}
+                />
+            )}
         </div>
     );
 }
