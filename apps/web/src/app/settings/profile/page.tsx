@@ -21,6 +21,14 @@ interface UserProfile {
     location?: string;
     website?: string;
     banner_url?: string;
+    avatar_original_url?: string;
+    banner_original_url?: string;
+    avatar_crop_x?: number;
+    avatar_crop_y?: number;
+    avatar_zoom?: number;
+    banner_crop_x?: number;
+    banner_crop_y?: number;
+    banner_zoom?: number;
 }
 
 export default function ProfilePage() {
@@ -39,6 +47,14 @@ export default function ProfilePage() {
         website: '',
         avatar_url: '',
         banner_url: '',
+        avatar_original_url: '',
+        banner_original_url: '',
+        avatar_crop_x: 0,
+        avatar_crop_y: 0,
+        avatar_zoom: 1,
+        banner_crop_x: 0,
+        banner_crop_y: 0,
+        banner_zoom: 1,
     });
 
     const [errors, setErrors] = useState({
@@ -49,8 +65,15 @@ export default function ProfilePage() {
 
     // Cropper State
     const [imageSrc, setImageSrc] = useState<string | null>(null);
+    const [originalFile, setOriginalFile] = useState<File | null>(null);
     const [cropAspect, setCropAspect] = useState(1);
     const [cropType, setCropType] = useState<'avatar_url' | 'banner_url' | null>(null);
+    const [initialCrop, setInitialCrop] = useState<{ x: number, y: number } | undefined>(undefined);
+    const [initialZoom, setInitialZoom] = useState<number | undefined>(undefined);
+
+    useEffect(() => {
+        console.log('[Debug] originalFile state changed:', originalFile ? `${originalFile.name} (${originalFile.size})` : 'null');
+    }, [originalFile]);
 
     // Fetch user data on mount
     useEffect(() => {
@@ -67,6 +90,7 @@ export default function ProfilePage() {
                     throw new Error('Failed to load profile');
                 }
                 const data = await res.json();
+                console.log('[Debug] fetchUser data:', data);
                 setUser(data);
                 setFormData({
                     username: data.username || '',
@@ -76,6 +100,14 @@ export default function ProfilePage() {
                     website: data.website || '',
                     avatar_url: data.avatar_url || '',
                     banner_url: data.banner_url || '',
+                    avatar_original_url: data.avatar_original_url || '',
+                    banner_original_url: data.banner_original_url || '',
+                    avatar_crop_x: data.avatar_crop_x || 0,
+                    avatar_crop_y: data.avatar_crop_y || 0,
+                    avatar_zoom: data.avatar_zoom || 1,
+                    banner_crop_x: data.banner_crop_x || 0,
+                    banner_crop_y: data.banner_crop_y || 0,
+                    banner_zoom: data.banner_zoom || 1,
                 });
             } catch (err) {
                 console.error(err);
@@ -168,14 +200,38 @@ export default function ProfilePage() {
 
     const handleEditClick = (type: 'avatar_url' | 'banner_url') => {
         // Automatically open the cropper with the existing image if available, or just set type to allow upload
-        const existingImage = formData[type];
+        // Prefer original image if available
+        const originalKey = type === 'avatar_url' ? 'avatar_original_url' : 'banner_original_url';
+        console.log(`[Debug] Checking original for ${type}. Original Key: ${originalKey}`);
+        console.log(`[Debug] Values:`, { cropped: formData[type], original: formData[originalKey] });
+
+        const existingImage = formData[originalKey] || formData[type]; // Fallback to cropped if original not found
+        console.log(`[Debug] Selected Image Source:`, existingImage);
+
         if (existingImage) {
             setImageSrc(existingImage);
+            setOriginalFile(null); // Clear any pending new file since we are editing existing
             setCropAspect(type === 'avatar_url' ? 1 : 3);
             setCropType(type);
+
+            // Restore crop state
+            const cropXKey = type === 'avatar_url' ? 'avatar_crop_x' : 'banner_crop_x';
+            const cropYKey = type === 'avatar_url' ? 'avatar_crop_y' : 'banner_crop_y';
+            const zoomKey = type === 'avatar_url' ? 'avatar_zoom' : 'banner_zoom';
+
+            // Retrieve values correctly, defaulting if missing
+            const x = formData[cropXKey] || 0;
+            const y = formData[cropYKey] || 0;
+            const zoom = formData[zoomKey] || 1;
+
+            console.log(`[Debug] Restoring crop state: x=${x}, y=${y}, zoom=${zoom}`);
+            setInitialCrop({ x, y });
+            setInitialZoom(zoom);
         } else {
             // No image exists, trigger upload directly
             setCropType(type); // track which type we are uploading for
+            setInitialCrop(undefined); // Reset for new upload
+            setInitialZoom(undefined);
             setTimeout(() => {
                 const inputId = type === 'avatar_url' ? 'avatar_upload_hidden' : 'banner_upload_hidden';
                 document.getElementById(inputId)?.click();
@@ -203,7 +259,8 @@ export default function ProfilePage() {
         handleCropCancel(); // Close modal
 
         try {
-            const updatedFormData = { ...formData, [type]: '' };
+            const originalInfo = type === 'avatar_url' ? 'avatar_original_url' : 'banner_original_url';
+            const updatedFormData = { ...formData, [type]: '', [originalInfo]: '' };
             setFormData(updatedFormData);
 
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/profile`, {
@@ -215,7 +272,7 @@ export default function ProfilePage() {
 
             if (!res.ok) throw new Error('Failed to remove image');
 
-            setUser((prev) => prev ? { ...prev, [type]: '' } : null);
+            setUser((prev) => prev ? { ...prev, [type]: '', [originalInfo]: '' } : null);
             showToast('Image removed successfully', 'success');
         } catch (err) {
             console.error(err);
@@ -230,6 +287,8 @@ export default function ProfilePage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        console.log('[Debug] handleImageUpload: File selected', file.name, file.size, file.type);
+
         // Basic validation
         if (!file.type.startsWith('image/')) {
             showToast('Please upload an image file', 'error');
@@ -238,6 +297,8 @@ export default function ProfilePage() {
 
         // Set aspect ratio based on type
         const aspect = type === 'avatar_url' ? 1 : 3; // 3:1 for banner, 1:1 for avatar
+
+        setOriginalFile(file);
 
         const reader = new FileReader();
         reader.addEventListener('load', () => {
@@ -250,46 +311,111 @@ export default function ProfilePage() {
         reader.readAsDataURL(file);
     };
 
-    const handleCropSave = async (croppedBlob: Blob) => {
+    const handleCropSave = async (croppedBlob: Blob, crop: { x: number, y: number }, zoom: number) => {
+        console.log('[Debug] handleCropSave called');
+        console.log('[Debug] cropType:', cropType);
+        console.log('[Debug] originalFile:', originalFile ? `${originalFile.name} (${originalFile.size} bytes)` : 'null');
+        console.log('[Debug] Crop State:', crop, 'Zoom:', zoom);
+
         if (!cropType) return;
+
+        const type = cropType;
+        const originalInfo = type === 'avatar_url' ? 'avatar_original_url' : 'banner_original_url';
+        const cropXKey = type === 'avatar_url' ? 'avatar_crop_x' : 'banner_crop_x';
+        const cropYKey = type === 'avatar_url' ? 'avatar_crop_y' : 'banner_crop_y';
+        const zoomKey = type === 'avatar_url' ? 'avatar_zoom' : 'banner_zoom';
 
         setImageSrc(null); // Close cropper
         setUpdating(true);
 
-        const uploadFormData = new FormData();
-        // Append blob with a filename
-        uploadFormData.append('file', croppedBlob, 'cropped_image.jpg');
-
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/upload`, {
+            // 1. Upload Cropped Image
+            const croppedFormData = new FormData();
+            croppedFormData.append('file', croppedBlob, 'cropped_image.jpg');
+
+            const resCropped = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/upload`, {
                 method: 'POST',
                 credentials: 'include',
-                body: uploadFormData,
+                body: croppedFormData,
             });
 
-            if (!res.ok) throw new Error('Upload failed');
+            if (!resCropped.ok) throw new Error('Upload failed for cropped image');
+            const dataCropped = await resCropped.json();
+            const croppedUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${dataCropped.url}`;
 
-            const data = await res.json();
-            const fullUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${data.url}`;
+            // 2. Upload Original Image (if new file was selected)
+            let originalUrl = undefined;
+            if (originalFile) {
+                const originalFormData = new FormData();
+                originalFormData.append('file', originalFile);
 
-            // Update form data
-            setFormData(prev => {
-                const updated = { ...prev, [cropType]: fullUrl };
-                return updated;
-            });
+                const resOriginal = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/upload`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: originalFormData,
+                });
+
+                if (!resOriginal.ok) throw new Error('Upload failed for original image');
+                const dataOriginal = await resOriginal.json();
+                originalUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${dataOriginal.url}`;
+            }
+
+            const updatePayload: any = {
+                ...formData,
+                [type]: croppedUrl,
+                [cropXKey]: crop.x,
+                [cropYKey]: crop.y,
+                [zoomKey]: zoom,
+            };
+
+            console.log('[Debug] Sending updatePayload:', updatePayload);
+
+            if (originalUrl) {
+                updatePayload[originalInfo] = originalUrl;
+            }
 
             // Save Profile
             const resSave = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/profile`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ ...formData, [cropType]: fullUrl }),
+                body: JSON.stringify(updatePayload),
             });
 
             if (!resSave.ok) throw new Error('Failed to save profile with new image');
 
-            // Update local user state
-            setUser(prev => prev ? { ...prev, [cropType]: fullUrl } : null);
+            // Update form data and user state
+            setFormData(prev => {
+                const updated = {
+                    ...prev,
+                    [type]: croppedUrl,
+                    [cropXKey]: crop.x,
+                    [cropYKey]: crop.y,
+                    [zoomKey]: zoom
+                };
+                if (originalUrl) {
+                    // @ts-ignore
+                    updated[originalInfo] = originalUrl;
+                }
+                return updated;
+            });
+
+            setUser(prev => {
+                if (!prev) return null;
+                const updated = {
+                    ...prev,
+                    [type]: croppedUrl,
+                    [cropXKey]: crop.x,
+                    [cropYKey]: crop.y,
+                    [zoomKey]: zoom
+                };
+                if (originalUrl) {
+                    // @ts-ignore
+                    updated[originalInfo] = originalUrl;
+                }
+                return updated;
+            });
+
             showToast('Image uploaded successfully', 'success');
 
         } catch (err) {
@@ -298,6 +424,7 @@ export default function ProfilePage() {
         } finally {
             setUpdating(false);
             setCropType(null);
+            setOriginalFile(null);
         }
     };
 
@@ -574,6 +701,8 @@ export default function ProfilePage() {
                     onCancel={handleCropCancel}
                     onRemove={handleRemoveImage}
                     onUploadSelect={handleTriggerUpload}
+                    initialCrop={initialCrop}
+                    initialZoom={initialZoom}
                 />
             )}
         </div>

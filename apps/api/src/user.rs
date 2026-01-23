@@ -21,6 +21,14 @@ pub struct UserProfile {
     pub location: Option<String>,
     pub website: Option<String>,
     pub banner_url: Option<String>,
+    pub avatar_original_url: Option<String>,
+    pub banner_original_url: Option<String>,
+    pub avatar_crop_x: Option<f64>,
+    pub avatar_crop_y: Option<f64>,
+    pub avatar_zoom: Option<f64>,
+    pub banner_crop_x: Option<f64>,
+    pub banner_crop_y: Option<f64>,
+    pub banner_zoom: Option<f64>,
     pub verified: Option<bool>,
 }
 
@@ -33,9 +41,17 @@ pub struct PublicUserProfile {
     pub location: Option<String>,
     pub website: Option<String>,
     pub banner_url: Option<String>,
+    pub avatar_original_url: Option<String>,
+    pub banner_original_url: Option<String>,
+    pub avatar_crop_x: Option<f64>,
+    pub avatar_crop_y: Option<f64>,
+    pub avatar_zoom: Option<f64>,
+    pub banner_crop_x: Option<f64>,
+    pub banner_crop_y: Option<f64>,
+    pub banner_zoom: Option<f64>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct UpdateProfileRequest {
     pub username: Option<String>,
     pub display_name: Option<String>,
@@ -44,6 +60,14 @@ pub struct UpdateProfileRequest {
     pub website: Option<String>,
     pub avatar_url: Option<String>,
     pub banner_url: Option<String>,
+    pub avatar_original_url: Option<String>,
+    pub banner_original_url: Option<String>,
+    pub avatar_crop_x: Option<f64>,
+    pub avatar_crop_y: Option<f64>,
+    pub avatar_zoom: Option<f64>,
+    pub banner_crop_x: Option<f64>,
+    pub banner_crop_y: Option<f64>,
+    pub banner_zoom: Option<f64>,
 }
 
 pub async fn get_me(
@@ -67,6 +91,9 @@ pub async fn get_me(
         r#"
         SELECT 
             u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, u.banner_url,
+            u.avatar_original_url, u.banner_original_url,
+            u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,
+            u.banner_crop_x, u.banner_crop_y, u.banner_zoom,
             l.email as "email?", l.verified as "verified?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
@@ -90,6 +117,14 @@ pub async fn get_me(
             location: u.location,
             website: u.website,
             banner_url: u.banner_url,
+            avatar_original_url: u.avatar_original_url,
+            banner_original_url: u.banner_original_url,
+            avatar_crop_x: u.avatar_crop_x,
+            avatar_crop_y: u.avatar_crop_y,
+            avatar_zoom: u.avatar_zoom,
+            banner_crop_x: u.banner_crop_x,
+            banner_crop_y: u.banner_crop_y,
+            banner_zoom: u.banner_zoom,
             verified: u.verified,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
@@ -103,6 +138,7 @@ pub async fn update_profile(
     Json(payload): Json<UpdateProfileRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     tracing::info!("update_profile: Headers: {:?}", headers);
+    tracing::info!("update_profile: Payload: {:?}", payload);
     // 1. Get user_id from session
     let user_id: Uuid = match session.get("user_id").await {
         Ok(Some(id)) => id,
@@ -209,8 +245,16 @@ pub async fn update_profile(
             location = COALESCE($4, location),
             website = COALESCE($5, website),
             avatar_url = COALESCE($6, avatar_url),
-            banner_url = COALESCE($7, banner_url)
-        WHERE id = $8
+            banner_url = COALESCE($7, banner_url),
+            avatar_original_url = COALESCE($8, avatar_original_url),
+            banner_original_url = COALESCE($9, banner_original_url),
+            avatar_crop_x = COALESCE($10, avatar_crop_x),
+            avatar_crop_y = COALESCE($11, avatar_crop_y),
+            avatar_zoom = COALESCE($12, avatar_zoom),
+            banner_crop_x = COALESCE($13, banner_crop_x),
+            banner_crop_y = COALESCE($14, banner_crop_y),
+            banner_zoom = COALESCE($15, banner_zoom)
+        WHERE id = $16
         "#,
         safe_username, // Username usually strict validation, but assuming alphanumeric elsewhere
         safe_display_name,
@@ -219,6 +263,14 @@ pub async fn update_profile(
         safe_website,
         payload.avatar_url,
         payload.banner_url,
+        payload.avatar_original_url,
+        payload.banner_original_url,
+        payload.avatar_crop_x,
+        payload.avatar_crop_y,
+        payload.avatar_zoom,
+        payload.banner_crop_x,
+        payload.banner_crop_y,
+        payload.banner_zoom,
         user_id
     )
     .execute(&pool)
@@ -247,6 +299,9 @@ pub async fn get_all(
         r#"
         SELECT 
             u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, u.banner_url,
+            u.avatar_original_url, u.banner_original_url,
+            u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,
+            u.banner_crop_x, u.banner_crop_y, u.banner_zoom,
             l.email as "email?", l.verified as "verified?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
@@ -270,6 +325,14 @@ pub async fn get_all(
             location: u.location,
             website: u.website,
             banner_url: u.banner_url,
+            avatar_original_url: u.avatar_original_url,
+            banner_original_url: u.banner_original_url,
+            avatar_crop_x: u.avatar_crop_x,
+            avatar_crop_y: u.avatar_crop_y,
+            avatar_zoom: u.avatar_zoom,
+            banner_crop_x: u.banner_crop_x,
+            banner_crop_y: u.banner_crop_y,
+            banner_zoom: u.banner_zoom,
             verified: u.verified,
         })
         .collect();
@@ -317,7 +380,8 @@ pub async fn get_public_profile(
 ) -> Result<Json<PublicUserProfile>, (StatusCode, String)> {
     let user = sqlx::query!(
         r#"
-        SELECT username, display_name, avatar_url, bio, location, website, banner_url
+        SELECT username, display_name, avatar_url, bio, location, website, banner_url, avatar_original_url, banner_original_url,
+        avatar_crop_x, avatar_crop_y, avatar_zoom, banner_crop_x, banner_crop_y, banner_zoom
         FROM users
         WHERE username = $1
         "#,
@@ -336,6 +400,14 @@ pub async fn get_public_profile(
             location: u.location,
             website: u.website,
             banner_url: u.banner_url,
+            avatar_original_url: u.avatar_original_url,
+            banner_original_url: u.banner_original_url,
+            avatar_crop_x: u.avatar_crop_x,
+            avatar_crop_y: u.avatar_crop_y,
+            avatar_zoom: u.avatar_zoom,
+            banner_crop_x: u.banner_crop_x,
+            banner_crop_y: u.banner_crop_y,
+            banner_zoom: u.banner_zoom,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
@@ -411,6 +483,14 @@ pub async fn create_test_user(
         location: None,
         website: None,
         banner_url: None,
+        avatar_original_url: None,
+        banner_original_url: None,
+        avatar_crop_x: None,
+        avatar_crop_y: None,
+        avatar_zoom: None,
+        banner_crop_x: None,
+        banner_crop_y: None,
+        banner_zoom: None,
         verified: Some(false),
     }))
 }

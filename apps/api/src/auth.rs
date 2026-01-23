@@ -89,7 +89,7 @@ pub struct AuthRequest {
 */
 pub async fn signup(
     State(pool): State<PgPool>,
-    session: Session,
+    _session: Session,
     Json(payload): Json<SignupRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // check if email already exists
@@ -107,7 +107,6 @@ pub async fn signup(
         return Err((StatusCode::CONFLICT, "Email already exists".to_string()));
     }
 
-    // Sanitize inputs
     // Sanitize inputs
     // We do NOT use ammonia::clean here because it HTML-encodes entities (e.g. & -> &amp;),
     // which leads to double encoding issues. React keeps us safe.

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { Upload, Trash2 } from 'lucide-react';
 import getCroppedImg from '@/lib/cropImage';
@@ -6,7 +6,9 @@ import getCroppedImg from '@/lib/cropImage';
 interface ImageCropperProps {
     image: string;
     aspect: number;
-    onCropComplete: (croppedImage: Blob) => void;
+    initialCrop?: { x: number, y: number };
+    initialZoom?: number;
+    onCropComplete: (croppedImage: Blob, crop: { x: number, y: number }, zoom: number) => void;
     onCancel: () => void;
     onRemove?: () => void;
     onUploadSelect?: () => void;
@@ -15,14 +17,24 @@ interface ImageCropperProps {
 export const ImageCropper: React.FC<ImageCropperProps> = ({
     image,
     aspect,
+    initialCrop = { x: 0, y: 0 },
+    initialZoom = 1,
     onCropComplete,
     onCancel,
     onRemove,
     onUploadSelect
 }) => {
-    const [crop, setCrop] = useState({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
+    const [crop, setCrop] = useState(initialCrop);
+    const [zoom, setZoom] = useState(initialZoom);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
+    useEffect(() => {
+        console.log('[Debug] ImageCropper mounted/updated');
+        console.log('[Debug] Props - initialCrop:', initialCrop);
+        console.log('[Debug] Props - initialZoom:', initialZoom);
+        setCrop(initialCrop);
+        setZoom(initialZoom);
+    }, [initialCrop, initialZoom]);
 
     const onCropChange = (crop: { x: number; y: number }) => {
         setCrop(crop);
@@ -41,7 +53,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
             if (!croppedAreaPixels) return;
             const croppedImage = await getCroppedImg(image, croppedAreaPixels);
             if (croppedImage) {
-                onCropComplete(croppedImage);
+                onCropComplete(croppedImage, crop, zoom);
             }
         } catch (e) {
             console.error('Error cropping image:', e);
@@ -122,7 +134,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
                                         <span className="hidden sm:inline">Remove</span>
                                     </button>
                                 )}
-                                
+
                             </div>
                         </div>
 
