@@ -511,7 +511,7 @@ export default function ProfilePage() {
                     {/* Main Content */}
                     <main className="md:col-span-9 bg-card">
                         <div className="space-y-6">
-                            <div className="flex items-center justify-between mb-4 pt-6">
+                            <div className="max-w-[700px] flex items-center justify-between mb-4">
                                 <h1 className="text-3xl font-semibold tracking-tight">Public Profile</h1>
                                 <div className="text-sm text-muted-foreground">
                                     {updating ? (
@@ -525,11 +525,11 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            <div className="border border-border rounded-xl shadow-sm overflow-hidden bg-background">
+                            <div className="w-full max-w-[700px] border border-border rounded-xl shadow-sm overflow-hidden bg-background">
 
                                 {/* Banner Area (Preview Style) */}
                                 <div
-                                    className="relative h-32 md:h-48 bg-secondary/30 overflow-hidden cursor-pointer group"
+                                    className="relative w-full aspect-3/1 bg-secondary/30 overflow-hidden cursor-pointer group "
                                     onClick={() => handleEditClick('banner_url')}
                                 >
                                     {formData.banner_url ? (
@@ -719,7 +719,7 @@ export default function ProfilePage() {
                             {/* Account Settings Section */}
                             <div className="pt-6">
                                 <h2 className="text-lg font-medium mb-4 px-1">Account Settings</h2>
-                                <div className="p-6 rounded-xl border border-border bg-card/50">
+                                <div className="max-w-[700px] p-6 rounded-xl border border-border bg-card/50">
                                     <div className="max-w-md space-y-4">
                                         <div className="space-y-2">
                                             <FloatingLabelInput

@@ -124,206 +124,208 @@ export default function PublicProfilePage() {
         <div className="min-h-screen bg-background text-foreground pb-20">
             <NavBar user={currentUser} onLogout={handleLogout} isLoggingOut={isLoggingOut} />
 
-            {/* Banner Area */}
-            <div className="relative h-32 md:h-48 bg-secondary/30 overflow-hidden">
-                {profile.banner_url ? (
-                    <img
-                        src={profile.banner_url}
-                        alt="Profile Banner"
-                        className="w-full h-full object-cover"
-                    />
-                ) : (
-                    <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
-                )}
-            </div>
+            <div className="w-full max-w-[7000px] mx-auto border-x border-border min-h-screen">
+                {/* Banner Area */}
+                <div className="relative w-full aspect-3/1 bg-secondary/30 overflow-hidden">
+                    {profile.banner_url ? (
+                        <img
+                            src={profile.banner_url}
+                            alt="Profile Banner"
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
+                    )}
+                </div>
 
-            <main className="container mx-auto px-4 max-w-5xl relative z-10 -mt-12">
-                <div className="flex flex-col md:flex-row gap-6 md:items-start">
-                    {/* Avatar */}
-                    <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-background bg-secondary shadow-xl flex items-center justify-center overflow-hidden shrink-0">
-                        {profile.avatar_url ? (
-                            <img src={profile.avatar_url} alt={profile.username} className="h-full w-full object-cover" />
-                        ) : (
-                            <span className="text-4xl font-bold text-foreground">
-                                {profile.display_name?.[0] || profile.username?.[0]}
-                            </span>
-                        )}
-                    </div>
+                <main className="px-6 relative z-10 -mt-12">
+                    <div className="flex flex-col md:flex-row gap-6 md:items-start">
+                        {/* Avatar */}
+                        <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-background bg-secondary shadow-xl flex items-center justify-center overflow-hidden shrink-0">
+                            {profile.avatar_url ? (
+                                <img src={profile.avatar_url} alt={profile.username} className="h-full w-full object-cover" />
+                            ) : (
+                                <span className="text-4xl font-bold text-foreground">
+                                    {profile.display_name?.[0] || profile.username?.[0]}
+                                </span>
+                            )}
+                        </div>
 
-                    {/* Profile Info */}
-                    <div className="flex-1">
-                        <div className="pt-16 flex flex-col md:flex-row md:items-start justify-between gap-4">
-                            <div>
-                                <h1 className="text-3xl font-bold tracking-tight">{profile.display_name}</h1>
-                                <p className="text-lg text-muted-foreground">@{profile.username}</p>
-                            </div>
+                        {/* Profile Info */}
+                        <div className="flex-1">
+                            <div className="pt-16 flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                <div>
+                                    <h1 className="text-3xl font-bold tracking-tight">{profile.display_name}</h1>
+                                    <p className="text-lg text-muted-foreground">@{profile.username}</p>
+                                </div>
 
-                            <div className="flex items-center gap-3">
-                                {isOwnProfile ? (
-                                    <Link
-                                        href="/settings/profile"
-                                        className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors font-medium text-sm"
-                                    >
-                                        <Edit3 className="h-4 w-4" />
-                                        Edit Profile
-                                    </Link>
-                                ) : (
+                                <div className="flex items-center gap-3">
+                                    {isOwnProfile ? (
+                                        <Link
+                                            href="/settings/profile"
+                                            className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors font-medium text-sm"
+                                        >
+                                            <Edit3 className="h-4 w-4" />
+                                            Edit Profile
+                                        </Link>
+                                    ) : (
+                                        <button
+                                            onClick={() => { }}
+                                            className="cursor-not-allowed flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium text-sm"
+                                        >
+                                            <MessageSquare className="h-4 w-4" />
+                                            Message
+                                        </button>
+                                    )}
                                     <button
-                                        onClick={() => { }}
-                                        className="cursor-not-allowed flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium text-sm"
+                                        onClick={handleShare}
+                                        className="p-2 rounded-full border border-border bg-card hover:bg-secondary hover:text-foreground transition-colors cursor-pointer text-muted-foreground"
+                                        aria-label="Share profile"
                                     >
-                                        <MessageSquare className="h-4 w-4" />
-                                        Message
+                                        <Share2 className="h-4 w-4" />
                                     </button>
+                                </div>
+                            </div>
+
+                            {(profile.bio || ' ') && (
+                                <div className="mt-4 max-w-2xl">
+                                    <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed break-words">
+                                        {profile.bio || ' '}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="mt-8 flex flex-col md:flex-row gap-8 items-start">
+                        {/* Left Column: Metadata */}
+                        <div className="flex flex-col gap-6 shrink-0 w-full md:w-auto">
+                            <div className="space-y-4 pt-1 whitespace-nowrap">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Joined recently</span>
+                                </div>
+
+                                {profile.location && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <MapPin className="h-4 w-4" />
+                                        <span>{profile.location}</span>
+                                    </div>
                                 )}
-                                <button
-                                    onClick={handleShare}
-                                    className="p-2 rounded-full border border-border bg-card hover:bg-secondary hover:text-foreground transition-colors cursor-pointer text-muted-foreground"
-                                    aria-label="Share profile"
-                                >
-                                    <Share2 className="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
 
-                        {(profile.bio || ' ') && (
-                            <div className="mt-4 max-w-2xl">
-                                <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed break-words">
-                                    {profile.bio || ' '}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Content Area */}
-                <div className="mt-8 flex flex-col md:flex-row gap-8 items-start">
-                    {/* Left Column: Metadata */}
-                    <div className="flex flex-col gap-6 shrink-0 w-full md:w-auto">
-                        <div className="space-y-4 pt-1 whitespace-nowrap">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Calendar className="h-4 w-4" />
-                                <span>Joined recently</span>
-                            </div>
-
-                            {profile.location && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <MapPin className="h-4 w-4" />
-                                    <span>{profile.location}</span>
-                                </div>
-                            )}
-
-                            {profile.website && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <LinkIcon className="h-4 w-4" />
-                                    <a
-                                        href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="hover:text-primary transition-colors"
-                                    >
-                                        {profile.website.replace(/^https?:\/\//, '')}
-                                    </a>
-                                </div>
-                            )}
-
-                            {profile.pronouns && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="shrink-0"
-                                    >
-                                        <circle cx="8" cy="8" r="6" />
-                                        <circle cx="16" cy="8" r="6" />
-                                        <circle cx="12" cy="16" r="6" />
-                                    </svg>
-                                    <span>{profile.pronouns}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Right Column: Content Tabs */}
-                    <div className="flex-1 w-full max-w-full">
-                        <div className="border-b border-border">
-                            <nav className="flex items-center gap-6">
-                                <button
-                                    onClick={() => setActiveTab('overview')}
-                                    className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'overview'
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
-                                        }`}
-                                >
-                                    Overview
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('posts')}
-                                    className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'posts'
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
-                                        }`}
-                                >
-                                    Posts
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('activity')}
-                                    className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'activity'
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
-                                        }`}
-                                >
-                                    Activity
-                                </button>
-                            </nav>
-                        </div>
-
-                        <div className="mt-6">
-                            {activeTab === 'overview' && (
-                                <div className="space-y-4">
-                                    {/* Empty State / Placeholder */}
-                                    <div className="rounded-xl border border-border border-dashed p-12 flex flex-col items-center justify-center text-center text-muted-foreground bg-secondary/20">
-                                        <Grid className="h-10 w-10 mb-3 opacity-50" />
-                                        <h3 className="text-lg font-medium text-foreground">No posts yet</h3>
-                                        <p className="text-sm max-w-sm mt-1">
-                                            {profile.display_name} hasn't published any content yet.
-                                        </p>
+                                {profile.website && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <LinkIcon className="h-4 w-4" />
+                                        <a
+                                            href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:text-primary transition-colors"
+                                        >
+                                            {profile.website.replace(/^https?:\/\//, '')}
+                                        </a>
                                     </div>
-                                </div>
-                            )}
-                            {activeTab === 'posts' && (
-                                <div className="space-y-4">
-                                    <div className="rounded-xl border border-border p-6 bg-card/50">
-                                        <div className="h-4 w-2/3 bg-muted rounded mb-3"></div>
-                                        <div className="h-4 w-full bg-muted rounded mb-2 opacity-60"></div>
-                                        <div className="h-4 w-1/2 bg-muted rounded opacity-60"></div>
+                                )}
+
+                                {profile.pronouns && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            className="h-4 w-4 shrink-0"
+                                        >
+                                            <circle cx="8" cy="8" r="6" />
+                                            <circle cx="16" cy="8" r="6" />
+                                            <circle cx="12" cy="16" r="6" />
+                                        </svg>
+                                        <span>{profile.pronouns}</span>
                                     </div>
-                                </div>
-                            )}
-                            {activeTab === 'activity' && (
-                                <div className="space-y-6">
-                                    <div className="flex gap-4">
-                                        <div className="relative h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                            <Activity className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium">Joined Praxis</p>
-                                            <p className="text-xs text-muted-foreground">Just now</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Right Column: Content Tabs */}
+                        <div className="flex-1 w-full max-w-full">
+                            <div className="border-b border-border">
+                                <nav className="flex items-center gap-6">
+                                    <button
+                                        onClick={() => setActiveTab('overview')}
+                                        className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'overview'
+                                            ? 'border-primary text-primary'
+                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                            }`}
+                                    >
+                                        Overview
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('posts')}
+                                        className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'posts'
+                                            ? 'border-primary text-primary'
+                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                            }`}
+                                    >
+                                        Posts
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('activity')}
+                                        className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'activity'
+                                            ? 'border-primary text-primary'
+                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                            }`}
+                                    >
+                                        Activity
+                                    </button>
+                                </nav>
+                            </div>
+
+                            <div className="mt-6">
+                                {activeTab === 'overview' && (
+                                    <div className="space-y-4">
+                                        {/* Empty State / Placeholder */}
+                                        <div className="rounded-xl border border-border border-dashed p-12 flex flex-col items-center justify-center text-center text-muted-foreground bg-secondary/20">
+                                            <Grid className="h-10 w-10 mb-3 opacity-50" />
+                                            <h3 className="text-lg font-medium text-foreground">No posts yet</h3>
+                                            <p className="text-sm max-w-sm mt-1">
+                                                {profile.display_name} hasn't published any content yet.
+                                            </p>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                                {activeTab === 'posts' && (
+                                    <div className="space-y-4">
+                                        <div className="rounded-xl border border-border p-6 bg-card/50">
+                                            <div className="h-4 w-2/3 bg-muted rounded mb-3"></div>
+                                            <div className="h-4 w-full bg-muted rounded mb-2 opacity-60"></div>
+                                            <div className="h-4 w-1/2 bg-muted rounded opacity-60"></div>
+                                        </div>
+                                    </div>
+                                )}
+                                {activeTab === 'activity' && (
+                                    <div className="space-y-6">
+                                        <div className="flex gap-4">
+                                            <div className="relative h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                <Activity className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium">Joined Praxis</p>
+                                                <p className="text-xs text-muted-foreground">Just now</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </main>
+                </main>
+            </div>
         </div>
     );
 }
