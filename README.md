@@ -23,7 +23,7 @@ The database runs in a Docker container.
 
 In the root folder:
 ```bash
-docker compose up -d⁵
+docker compose up -d
 ```
 
 Run migrations
