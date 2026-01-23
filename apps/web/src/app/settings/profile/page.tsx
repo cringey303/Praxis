@@ -558,10 +558,10 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div className="px-6 pb-4">
-                                    <div className="flex flex-col md:flex-row gap-6 relative">
+                                    <div className="flex flex-row gap-4 md:gap-6 relative">
 
                                         {/* Avatar (Preview Style) */}
-                                        <div className="relative -mt-12">
+                                        <div className="relative -mt-12 shrink-0 w-32 md:w-auto">
                                             <div
                                                 className="h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-background bg-secondary shadow-xl flex items-center justify-center overflow-hidden shrink-0 relative z-10 group cursor-pointer"
                                                 onClick={() => handleEditClick('avatar_url')}
