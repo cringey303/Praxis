@@ -9,13 +9,17 @@ async fn main() {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        eprintln!("Usage: cargo run --bin make_admin -- <username>");
+        return;
+    }
+    let username = &args[1];
+
     let pool = PgPoolOptions::new()
         .connect(&database_url)
         .await
         .expect("Failed to connect to DB");
-
-    // Change to your actual username different
-    let username = "lucas";
 
     let result = sqlx::query("UPDATE users SET role = 'admin' WHERE username = $1")
         .bind(username)

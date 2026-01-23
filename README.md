@@ -68,7 +68,7 @@ echo "NEXT_PUBLIC_API_URL=http://localhost:8080" > .env.local
 
 run the server
 ```bash
-cargo run
+cargo run --bin api
 ```
 
 ### 4. Start Frontend (Web)
@@ -89,6 +89,8 @@ Go to
 and you should see the Praxis homepage.
 
 # Useful Commands
+Make User Admin: `cd apps/api && cargo run --bin make_admin -- <username>`
+(replace brackets as well)
 
 Reset Database: `docker compose down -v` (Deletes all data)
 
