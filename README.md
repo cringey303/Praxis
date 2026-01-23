@@ -84,6 +84,7 @@ npm run dev
 ```
 ```bash
 # Production (faster/optimized, but no automatic refresh)
+# you need to rebuild every code change
 npm build
 npm start
 ```
