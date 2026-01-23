@@ -544,9 +544,8 @@ export default function ProfilePage() {
                                         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
                                     )}
                                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className="flex items-center gap-2 text-white font-medium bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                                            <Camera className="h-4 w-4" />
-                                            <span>Edit Banner</span>
+                                        <div className="flex items-center gap-2 text-white font-medium">
+                                            <span>Edit</span>
                                         </div>
                                     </div>
                                     <input
@@ -581,7 +580,9 @@ export default function ProfilePage() {
                                                     </span>
                                                 )}
                                                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                                                    <Camera className="h-6 w-6 text-white" />
+                                                    <div className="flex items-center gap-2 text-white font-medium">
+                                                        <span>Edit</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <input
@@ -595,7 +596,6 @@ export default function ProfilePage() {
                                             {/* Metadata under avatar */}
                                             <div className="mt-4 space-y-2 flex flex-col">
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                                                    <span className="shrink-0 font-medium text-xs border border-muted-foreground/30 rounded px-1">He/Him</span>
                                                     <input
                                                         type="text"
                                                         id="pronouns"
