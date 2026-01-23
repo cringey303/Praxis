@@ -596,20 +596,6 @@ export default function ProfilePage() {
                                             {/* Metadata under avatar */}
                                             <div className="mt-4 space-y-2 flex flex-col">
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                                                    <input
-                                                        type="text"
-                                                        id="pronouns"
-                                                        value={formData.pronouns}
-                                                        onChange={(e) => setFormData({ ...formData, pronouns: e.target.value })}
-                                                        onBlur={handleBlur}
-                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50"
-                                                        placeholder="Add pronouns"
-                                                        maxLength={30}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                </div>
-
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                                                     <MapPin className="h-4 w-4 shrink-0" />
                                                     <input
                                                         type="text"
@@ -639,6 +625,36 @@ export default function ProfilePage() {
                                                     />
                                                 </div>
                                                 {errors.website && <p className="text-xs text-destructive">{errors.website}</p>}
+
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="16"
+                                                        height="16"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="2"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        className="h-4 w-4 shrink-0"
+                                                    >
+                                                        <circle cx="8" cy="8" r="6" />
+                                                        <circle cx="16" cy="8" r="6" />
+                                                        <circle cx="12" cy="16" r="6" />
+                                                    </svg>
+                                                    <input
+                                                        type="text"
+                                                        id="pronouns"
+                                                        value={formData.pronouns}
+                                                        onChange={(e) => setFormData({ ...formData, pronouns: e.target.value })}
+                                                        onBlur={handleBlur}
+                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50"
+                                                        placeholder="Add pronouns"
+                                                        maxLength={30}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
 

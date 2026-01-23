@@ -15,6 +15,7 @@ interface PublicUserProfile {
     location?: string;
     website?: string;
     banner_url?: string;
+    pronouns?: string;
     // created_at?: string; // Not yet in API response
 }
 
@@ -223,6 +224,28 @@ export default function PublicProfilePage() {
                                     >
                                         {profile.website.replace(/^https?:\/\//, '')}
                                     </a>
+                                </div>
+                            )}
+
+                            {profile.pronouns && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="shrink-0"
+                                    >
+                                        <circle cx="8" cy="8" r="6" />
+                                        <circle cx="16" cy="8" r="6" />
+                                        <circle cx="12" cy="16" r="6" />
+                                    </svg>
+                                    <span>{profile.pronouns}</span>
                                 </div>
                             )}
                         </div>
