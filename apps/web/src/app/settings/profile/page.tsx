@@ -558,7 +558,7 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div className="px-6 pb-4">
-                                    <div className="flex flex-col md:flex-row gap-6 md:items-start relative">
+                                    <div className="flex flex-col md:flex-row gap-6 relative">
 
                                         {/* Avatar (Preview Style) */}
                                         <div className="relative -mt-12">
@@ -659,52 +659,44 @@ export default function ProfilePage() {
                                         </div>
 
                                         {/* Profile Details (Inline Inputs) */}
-                                        <div className="flex-1 mt-4 md:mt-2 space-y-4">
+                                        <div className="flex-1 mt-8 md:mt-6 md:pt-2 flex flex-col h-full gap-4">
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-1">
-                                                    <label htmlFor="display_name" className="text-xs font-medium text-muted-foreground ml-1">Display Name</label>
-                                                    <input
-                                                        type="text"
+                                                    <FloatingLabelInput
                                                         id="display_name"
+                                                        type="text"
+                                                        label="Display Name"
                                                         value={formData.display_name}
                                                         onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                                                         onBlur={handleBlur}
-                                                        className="w-full text-2xl md:text-3xl font-bold tracking-tight bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-2 -ml-2 transition-colors focus:ring-0 placeholder-muted-foreground/50"
-                                                        placeholder="Your Name"
+                                                        error={errors.display_name}
                                                     />
-                                                    {errors.display_name && <p className="text-xs text-destructive">{errors.display_name}</p>}
                                                 </div>
 
                                                 <div className="space-y-1">
-                                                    <label htmlFor="username" className="text-xs font-medium text-muted-foreground ml-1">Username</label>
-                                                    <div className="flex items-center text-lg text-muted-foreground hover:text-foreground transition-colors group rounded px-2 -ml-2 hover:bg-secondary/30 focus-within:bg-secondary/30">
-                                                        <span className="text-muted-foreground">@</span>
-                                                        <input
-                                                            type="text"
-                                                            id="username"
-                                                            value={formData.username}
-                                                            onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
-                                                            onBlur={handleBlur}
-                                                            className="w-full bg-transparent border-none focus:ring-0 p-0 ml-0.5 text-foreground placeholder-muted-foreground/50"
-                                                            placeholder="username"
-                                                        />
-                                                    </div>
-                                                    {errors.username && <p className="text-xs text-destructive">{errors.username}</p>}
+                                                    <FloatingLabelInput
+                                                        id="username"
+                                                        type="text"
+                                                        label="Username"
+                                                        value={formData.username}
+                                                        onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
+                                                        onBlur={handleBlur}
+                                                        error={errors.username}
+                                                    />
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-1 pt-2">
-                                                <label htmlFor="bio" className="text-xs font-medium text-muted-foreground ml-1">Bio</label>
-                                                <textarea
+                                            <div className="pt-2 flex flex-col flex-1">
+                                                <FloatingLabelTextarea
                                                     id="bio"
-                                                    rows={3}
+                                                    label="Bio"
                                                     value={formData.bio}
                                                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                                     onBlur={handleBlur}
                                                     maxLength={200}
-                                                    className="w-full text-foreground/90 bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-2 -ml-2 py-2 transition-colors focus:ring-0 resize-none leading-relaxed break-words placeholder-muted-foreground/50"
-                                                    placeholder="Tell us about yourself..."
+                                                    className="h-full leading-relaxed"
+                                                    wrapperClassName="flex-1 h-full"
                                                 />
                                             </div>
 

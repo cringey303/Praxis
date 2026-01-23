@@ -3,15 +3,16 @@ import React, { TextareaHTMLAttributes } from 'react';
 interface FloatingLabelTextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
     label: string;
     error?: string;
+    wrapperClassName?: string;
 }
 
 export const FloatingLabelTextarea = React.forwardRef<HTMLTextAreaElement, FloatingLabelTextareaProps>(
-    ({ label, className, error, maxLength, value, ...props }, ref) => {
+    ({ label, className, wrapperClassName, error, maxLength, value, ...props }, ref) => {
         const currentLength = typeof value === 'string' ? value.length : 0;
 
         return (
-            <div className="w-full">
-                <div className="relative">
+            <div className={`w-full ${wrapperClassName || ''}`}>
+                <div className="relative h-full flex flex-col">
                     <textarea
                         {...props}
                         ref={ref}
