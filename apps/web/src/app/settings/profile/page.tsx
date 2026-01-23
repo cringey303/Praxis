@@ -665,7 +665,7 @@ export default function ProfilePage() {
                                         autoComplete="off"
                                         data-lpignore="true"
                                         error={errors.username}
-                                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                        onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
                                         onBlur={handleBlur}
                                     />
                                     <p className="text-xs text-muted-foreground">

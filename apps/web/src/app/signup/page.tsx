@@ -23,7 +23,10 @@ export default function SignupPage() {
 
     // helper function that updates the form e.target.name with e.target.value
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
+        let { name, value } = e.target;
+        if (name === 'username') {
+            value = value.toLowerCase();
+        }
         setFormData({ ...formData, [name]: value });
 
         // Password validation on change

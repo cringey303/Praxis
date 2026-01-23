@@ -150,7 +150,7 @@ pub async fn update_profile(
     // For simplicity, we can do separate updates or a COALESCE.
     // However, if username is changing, we must check uniqueness.
 
-    let safe_username = payload.username.clone();
+    let safe_username = payload.username.clone().map(|u| u.to_lowercase());
 
     if let Some(new_username) = &safe_username {
         // check if username is reserved
@@ -385,7 +385,7 @@ pub async fn get_public_profile(
         FROM users
         WHERE username = $1
         "#,
-        username
+        username.to_lowercase()
     )
     .fetch_optional(&pool)
     .await

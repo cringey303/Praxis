@@ -89,7 +89,7 @@ pub struct AuthRequest {
 */
 pub async fn signup(
     State(pool): State<PgPool>,
-    _session: Session,
+    session: Session,
     Json(payload): Json<SignupRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // check if email already exists
@@ -110,7 +110,7 @@ pub async fn signup(
     // Sanitize inputs
     // We do NOT use ammonia::clean here because it HTML-encodes entities (e.g. & -> &amp;),
     // which leads to double encoding issues. React keeps us safe.
-    let safe_username = &payload.username;
+    let safe_username = payload.username.to_lowercase();
     let safe_display_name = &payload.display_name;
 
     if RESERVED_USERNAMES.contains(&safe_username.as_str()) {
@@ -177,11 +177,10 @@ pub async fn signup(
     println!("--------------------------------------------------");
 
     // Log the user in
-    // The user is not logged in immediately, they need to verify their email first.
-    // session
-    //     .insert("user_id", user_id)
-    //     .await
-    //     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    session
+        .insert("user_id", user_id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     tracing::info!("Signup successful for user_id: {}", user_id);
 
@@ -415,7 +414,12 @@ pub async fn google_callback(
 
         let new_user_id = sqlx::query!(
             "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
-            google_user.email.split('@').next().unwrap_or("user"),
+            google_user
+                .email
+                .split('@')
+                .next()
+                .unwrap_or("user")
+                .to_lowercase(),
             google_user.name
         )
         .fetch_one(&mut *tx)
@@ -580,7 +584,7 @@ pub async fn github_callback(
 
         let new_user_id = sqlx::query!(
             "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
-            github_user.login, // use github username
+            github_user.login.to_lowercase(), // use github username (lowercase)
             display_name
         )
         .fetch_one(&mut *tx)
