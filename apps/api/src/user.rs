@@ -30,6 +30,7 @@ pub struct UserProfile {
     pub banner_crop_y: Option<f64>,
     pub banner_zoom: Option<f64>,
     pub verified: Option<bool>,
+    pub pronouns: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -49,6 +50,7 @@ pub struct PublicUserProfile {
     pub banner_crop_x: Option<f64>,
     pub banner_crop_y: Option<f64>,
     pub banner_zoom: Option<f64>,
+    pub pronouns: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -68,6 +70,7 @@ pub struct UpdateProfileRequest {
     pub banner_crop_x: Option<f64>,
     pub banner_crop_y: Option<f64>,
     pub banner_zoom: Option<f64>,
+    pub pronouns: Option<String>,
 }
 
 pub async fn get_me(
@@ -94,10 +97,11 @@ pub async fn get_me(
             u.avatar_original_url, u.banner_original_url,
             u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,
             u.banner_crop_x, u.banner_crop_y, u.banner_zoom,
-            l.email as "email?", l.verified as "verified?"
+            l.email as "email?", l.verified as "verified?",
+            u.pronouns
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
-        WHERE u.id = $1
+        WHERE u.id = $1 
         "#,
         user_id
     )
@@ -126,6 +130,7 @@ pub async fn get_me(
             banner_crop_y: u.banner_crop_y,
             banner_zoom: u.banner_zoom,
             verified: u.verified,
+            pronouns: u.pronouns,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
@@ -187,6 +192,7 @@ pub async fn update_profile(
         .map(|s| s.replace('\n', " ").replace('\r', " "));
     let safe_display_name = payload.display_name.as_ref();
     let safe_location = payload.location.as_ref();
+    let safe_pronouns = payload.pronouns.as_ref();
 
     let safe_website = if let Some(website) = &payload.website {
         if !website.trim().is_empty() {
@@ -253,7 +259,8 @@ pub async fn update_profile(
             avatar_zoom = COALESCE($12, avatar_zoom),
             banner_crop_x = COALESCE($13, banner_crop_x),
             banner_crop_y = COALESCE($14, banner_crop_y),
-            banner_zoom = COALESCE($15, banner_zoom)
+            banner_zoom = COALESCE($15, banner_zoom),
+            pronouns = COALESCE($17, pronouns)
         WHERE id = $16
         "#,
         safe_username, // Username usually strict validation, but assuming alphanumeric elsewhere
@@ -271,7 +278,8 @@ pub async fn update_profile(
         payload.banner_crop_x,
         payload.banner_crop_y,
         payload.banner_zoom,
-        user_id
+        user_id,
+        safe_pronouns
     )
     .execute(&pool)
     .await
@@ -302,10 +310,11 @@ pub async fn get_all(
             u.avatar_original_url, u.banner_original_url,
             u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,
             u.banner_crop_x, u.banner_crop_y, u.banner_zoom,
-            l.email as "email?", l.verified as "verified?"
+            l.email as "email?", l.verified as "verified?",
+            u.pronouns
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
-        ORDER BY u.created_at DESC
+        ORDER BY u.created_at DESC 
         "#
     )
     .fetch_all(&pool)
@@ -334,6 +343,7 @@ pub async fn get_all(
             banner_crop_y: u.banner_crop_y,
             banner_zoom: u.banner_zoom,
             verified: u.verified,
+            pronouns: u.pronouns,
         })
         .collect();
 
@@ -381,7 +391,7 @@ pub async fn get_public_profile(
     let user = sqlx::query!(
         r#"
         SELECT username, display_name, avatar_url, bio, location, website, banner_url, avatar_original_url, banner_original_url,
-        avatar_crop_x, avatar_crop_y, avatar_zoom, banner_crop_x, banner_crop_y, banner_zoom
+        avatar_crop_x, avatar_crop_y, avatar_zoom, banner_crop_x, banner_crop_y, banner_zoom, pronouns
         FROM users
         WHERE username = $1
         "#,
@@ -408,6 +418,7 @@ pub async fn get_public_profile(
             banner_crop_x: u.banner_crop_x,
             banner_crop_y: u.banner_crop_y,
             banner_zoom: u.banner_zoom,
+            pronouns: u.pronouns,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
@@ -492,5 +503,6 @@ pub async fn create_test_user(
         banner_crop_y: None,
         banner_zoom: None,
         verified: Some(false),
+        pronouns: None,
     }))
 }

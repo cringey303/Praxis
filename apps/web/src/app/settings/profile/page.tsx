@@ -19,6 +19,7 @@ interface UserProfile {
     avatar_url?: string;
     bio?: string;
     location?: string;
+    pronouns?: string;
     website?: string;
     banner_url?: string;
     avatar_original_url?: string;
@@ -44,6 +45,7 @@ export default function ProfilePage() {
         display_name: '',
         bio: '',
         location: '',
+        pronouns: '',
         website: '',
         avatar_url: '',
         banner_url: '',
@@ -97,6 +99,7 @@ export default function ProfilePage() {
                     display_name: data.display_name || '',
                     bio: data.bio || '',
                     location: data.location || '',
+                    pronouns: data.pronouns || '',
                     website: data.website || '',
                     avatar_url: data.avatar_url || '',
                     banner_url: data.banner_url || '',
@@ -559,8 +562,11 @@ export default function ProfilePage() {
                                     <div className="flex flex-col md:flex-row gap-6 md:items-start relative">
 
                                         {/* Avatar (Preview Style) */}
-                                        <div className="relative -mt-12 group cursor-pointer" onClick={() => handleEditClick('avatar_url')}>
-                                            <div className="h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-background bg-secondary shadow-xl flex items-center justify-center overflow-hidden shrink-0 relative z-10">
+                                        <div className="relative -mt-12">
+                                            <div
+                                                className="h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-background bg-secondary shadow-xl flex items-center justify-center overflow-hidden shrink-0 relative z-10 group cursor-pointer"
+                                                onClick={() => handleEditClick('avatar_url')}
+                                            >
                                                 {formData.avatar_url ? (
                                                     <Image
                                                         src={formData.avatar_url}
@@ -589,20 +595,20 @@ export default function ProfilePage() {
                                             {/* Metadata under avatar */}
                                             <div className="mt-4 space-y-2 flex flex-col">
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                                                    <MapPin className="h-4 w-4 shrink-0" />
+                                                    <span className="shrink-0 font-medium text-xs border border-muted-foreground/30 rounded px-1">He/Him</span>
                                                     <input
                                                         type="text"
-                                                        id="location"
-                                                        value={formData.location}
-                                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                                        id="pronouns"
+                                                        value={formData.pronouns}
+                                                        onChange={(e) => setFormData({ ...formData, pronouns: e.target.value })}
                                                         onBlur={handleBlur}
                                                         className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50"
-                                                        placeholder="Add location"
+                                                        placeholder="Add pronouns"
                                                         maxLength={30}
                                                         onClick={(e) => e.stopPropagation()}
                                                     />
                                                 </div>
-                                                
+
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                                                     <MapPin className="h-4 w-4 shrink-0" />
                                                     <input

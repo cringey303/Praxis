@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE users\n        SET \n            username = COALESCE($1, username),\n            display_name = COALESCE($2, display_name),\n            bio = COALESCE($3, bio),\n            location = COALESCE($4, location),\n            website = COALESCE($5, website),\n            avatar_url = COALESCE($6, avatar_url),\n            banner_url = COALESCE($7, banner_url),\n            avatar_original_url = COALESCE($8, avatar_original_url),\n            banner_original_url = COALESCE($9, banner_original_url),\n            avatar_crop_x = COALESCE($10, avatar_crop_x),\n            avatar_crop_y = COALESCE($11, avatar_crop_y),\n            avatar_zoom = COALESCE($12, avatar_zoom),\n            banner_crop_x = COALESCE($13, banner_crop_x),\n            banner_crop_y = COALESCE($14, banner_crop_y),\n            banner_zoom = COALESCE($15, banner_zoom),\n            pronouns = COALESCE($17, pronouns)\n        WHERE id = $16\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Float8",
+        "Float8",
+        "Float8",
+        "Float8",
+        "Float8",
+        "Float8",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1574be452b410e5f87695299e1f28aa50002708ed3c0111cf2816e5fd9f20fc4"
+}
