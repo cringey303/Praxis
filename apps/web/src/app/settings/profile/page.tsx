@@ -671,6 +671,7 @@ export default function ProfilePage() {
                                                         onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                                                         onBlur={handleBlur}
                                                         error={errors.display_name}
+                                                        maxLength={20}
                                                     />
                                                 </div>
 
@@ -683,6 +684,7 @@ export default function ProfilePage() {
                                                         onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
                                                         onBlur={handleBlur}
                                                         error={errors.username}
+                                                        maxLength={20}
                                                     />
                                                 </div>
                                             </div>

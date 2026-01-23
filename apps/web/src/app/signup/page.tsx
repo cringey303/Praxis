@@ -125,6 +125,7 @@ export default function SignupPage() {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 error={errors.username}
+                                maxLength={20}
                             />
                             <FloatingLabelInput
                                 id="display_name"
@@ -136,6 +137,7 @@ export default function SignupPage() {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 error={errors.display_name}
+                                maxLength={20}
                             />
                             <FloatingLabelInput
                                 id="email"
