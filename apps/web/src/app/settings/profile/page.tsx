@@ -4,7 +4,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Camera, MapPin, Link as LinkIcon, Edit3 } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTextarea';
@@ -506,10 +506,10 @@ export default function ProfilePage() {
                     </aside>
 
                     {/* Main Content */}
-                    <main className="md:col-span-9 rounded-xl border border-border p-6 shadow-sm bg-card">
+                    <main className="md:col-span-9 bg-card">
                         <div className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <h1 className="text-3xl font-semibold tracking-tight">Profile</h1>
+                            <div className="flex items-center justify-between mb-4 pt-6">
+                                <h1 className="text-3xl font-semibold tracking-tight">Public Profile</h1>
                                 <div className="text-sm text-muted-foreground">
                                     {updating ? (
                                         <div className="flex items-center gap-2">
@@ -522,37 +522,60 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            <div className="border-t border-border my-6"></div>
+                            <div className="border border-border rounded-xl shadow-sm overflow-hidden bg-background">
 
-                            <form
-                                className="space-y-8 max-w-2xl"
-                                autoComplete="off"
-                                data-lpignore="true"
-                                onSubmit={(e) => e.preventDefault()}
-                            >
+                                {/* Banner Area (Preview Style) */}
+                                <div
+                                    className="relative h-32 md:h-48 bg-secondary/30 overflow-hidden cursor-pointer group"
+                                    onClick={() => handleEditClick('banner_url')}
+                                >
+                                    {formData.banner_url ? (
+                                        <Image
+                                            src={formData.banner_url}
+                                            alt="Profile Banner"
+                                            fill
+                                            className="object-cover transition-opacity group-hover:opacity-90"
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
+                                    )}
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex items-center gap-2 text-white font-medium bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                                            <Camera className="h-4 w-4" />
+                                            <span>Edit Banner</span>
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        id="banner_upload_hidden"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => handleImageUpload(e, 'banner_url')}
+                                    />
+                                </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {/* Profile Picture Section */}
-                                    <div className="md:col-span-1 space-y-4">
-                                        <label className="block text-sm font-medium">Profile picture</label>
-                                        <div className="flex flex-col gap-3">
-                                            <div
-                                                onClick={() => handleEditClick('avatar_url')}
-                                                className="relative h-32 w-32 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground cursor-pointer hover:opacity-80 transition-opacity"
-                                            >
+                                <div className="px-6 pb-8">
+                                    <div className="flex flex-col md:flex-row gap-6 md:items-start relative">
+
+                                        {/* Avatar (Preview Style) */}
+                                        <div className="relative -mt-12 group cursor-pointer" onClick={() => handleEditClick('avatar_url')}>
+                                            <div className="h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-background bg-secondary shadow-xl flex items-center justify-center overflow-hidden shrink-0 relative z-10">
                                                 {formData.avatar_url ? (
                                                     <Image
                                                         src={formData.avatar_url}
                                                         alt={formData.username}
                                                         fill
-                                                        className="object-cover"
+                                                        className="object-cover transition-opacity group-hover:opacity-90"
                                                         unoptimized
                                                     />
                                                 ) : (
-                                                    <span>{user?.display_name?.[0] || user?.username?.[0] || '?'}</span>
+                                                    <span className="text-4xl font-bold text-foreground">
+                                                        {user?.display_name?.[0] || user?.username?.[0] || '?'}
+                                                    </span>
                                                 )}
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="text-xs font-medium text-white">Edit</span>
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                                    <Camera className="h-6 w-6 text-white" />
                                                 </div>
                                             </div>
                                             <input
@@ -563,132 +586,116 @@ export default function ProfilePage() {
                                                 onChange={(e) => handleImageUpload(e, 'avatar_url')}
                                             />
                                         </div>
-                                    </div>
 
-                                    {/* Banner Section */}
-                                    <div className="md:col-span-2 space-y-4">
-                                        <label className="block text-sm font-medium">Banner</label>
-                                        <div
-                                            onClick={() => handleEditClick('banner_url')}
-                                            className="relative h-32 w-full rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center text-2xl font-bold uppercase text-foreground cursor-pointer hover:opacity-80 transition-opacity"
-                                        >
-                                            {formData.banner_url ? (
-                                                <Image
-                                                    src={formData.banner_url}
-                                                    alt="Profile Banner"
-                                                    fill
-                                                    className="object-cover"
-                                                    unoptimized
-                                                />
-                                            ) : (
-                                                <span className="text-muted-foreground text-sm">No banner uploaded</span>
-                                            )}
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <span className="text-xs font-medium text-white">Edit</span>
+                                        {/* Profile Details (Inline Inputs) */}
+                                        <div className="flex-1 mt-4 md:mt-2 space-y-4">
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-1">
+                                                    <label htmlFor="display_name" className="text-xs font-medium text-muted-foreground ml-1">Display Name</label>
+                                                    <input
+                                                        type="text"
+                                                        id="display_name"
+                                                        value={formData.display_name}
+                                                        onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                                                        onBlur={handleBlur}
+                                                        className="w-full text-2xl md:text-3xl font-bold tracking-tight bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-2 -ml-2 transition-colors focus:ring-0 placeholder-muted-foreground/50"
+                                                        placeholder="Your Name"
+                                                    />
+                                                    {errors.display_name && <p className="text-xs text-destructive">{errors.display_name}</p>}
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <label htmlFor="username" className="text-xs font-medium text-muted-foreground ml-1">Username</label>
+                                                    <div className="flex items-center text-lg text-muted-foreground hover:text-foreground transition-colors group rounded px-2 -ml-2 hover:bg-secondary/30 focus-within:bg-secondary/30">
+                                                        <span className="text-muted-foreground">@</span>
+                                                        <input
+                                                            type="text"
+                                                            id="username"
+                                                            value={formData.username}
+                                                            onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
+                                                            onBlur={handleBlur}
+                                                            className="w-full bg-transparent border-none focus:ring-0 p-0 ml-0.5 text-foreground placeholder-muted-foreground/50"
+                                                            placeholder="username"
+                                                        />
+                                                    </div>
+                                                    {errors.username && <p className="text-xs text-destructive">{errors.username}</p>}
+                                                </div>
                                             </div>
+
+                                            <div className="space-y-1 pt-2">
+                                                <label htmlFor="bio" className="text-xs font-medium text-muted-foreground ml-1">Bio</label>
+                                                <textarea
+                                                    id="bio"
+                                                    rows={3}
+                                                    value={formData.bio}
+                                                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                                                    onBlur={handleBlur}
+                                                    maxLength={200}
+                                                    className="w-full text-foreground/90 bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-2 -ml-2 py-2 transition-colors focus:ring-0 resize-none leading-relaxed break-words placeholder-muted-foreground/50"
+                                                    placeholder="Tell us about yourself..."
+                                                />
+                                            </div>
+
+                                            <div className="flex flex-col md:flex-row gap-4 pt-2">
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                                    <MapPin className="h-4 w-4 shrink-0" />
+                                                    <input
+                                                        type="text"
+                                                        id="location"
+                                                        value={formData.location}
+                                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                                        onBlur={handleBlur}
+                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full md:w-48 placeholder-muted-foreground/50"
+                                                        placeholder="Add location"
+                                                        maxLength={100}
+                                                    />
+                                                </div>
+
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                                    <LinkIcon className="h-4 w-4 shrink-0" />
+                                                    <input
+                                                        type="text"
+                                                        id="website"
+                                                        value={formData.website}
+                                                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                                        onBlur={handleBlur}
+                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full md:w-64 placeholder-muted-foreground/50"
+                                                        placeholder="Add website (e.g. example.com)"
+                                                        maxLength={100}
+                                                    />
+
+                                                </div>
+                                            </div>
+                                            {errors.website && <p className="text-xs text-destructive ml-6">{errors.website}</p>}
+
                                         </div>
-                                        <input
-                                            type="file"
-                                            id="banner_upload_hidden"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={(e) => handleImageUpload(e, 'banner_url')}
-                                        />
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Name Input */}
-                                <div className="space-y-2">
-                                    <FloatingLabelInput
-                                        id="display_name"
-                                        label="Display Name"
-                                        type="text"
-                                        value={formData.display_name}
-                                        autoComplete="off"
-                                        data-lpignore="true"
-                                        error={errors.display_name}
-                                        onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                                        onBlur={handleBlur}
-                                    />
-
+                            {/* Account Settings Section */}
+                            <div className="pt-6">
+                                <h2 className="text-lg font-medium mb-4 px-1">Account Settings</h2>
+                                <div className="p-6 rounded-xl border border-border bg-card/50">
+                                    <div className="max-w-md space-y-4">
+                                        <div className="space-y-2">
+                                            <FloatingLabelInput
+                                                id="email"
+                                                label="Email Address"
+                                                type="text"
+                                                disabled
+                                                className="cursor-not-allowed bg-secondary/50 text-muted-foreground"
+                                                value={user?.email || 'No email visible'}
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Subject to change? Contact support.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
 
-                                {/* Location Input */}
-                                <div className="space-y-2">
-                                    <FloatingLabelInput
-                                        id="location"
-                                        label="Location"
-                                        type="text"
-                                        value={formData.location}
-                                        autoComplete="off"
-                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                        onBlur={handleBlur}
-                                        maxLength={100}
-                                    />
-                                </div>
-
-                                {/* Website Input */}
-                                <div className="space-y-2">
-                                    <FloatingLabelInput
-                                        id="website"
-                                        label="Website"
-                                        type="text"
-                                        value={formData.website}
-                                        autoComplete="off"
-                                        error={errors.website}
-                                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                        onBlur={handleBlur}
-                                        maxLength={100}
-                                    />
-                                </div>
-
-                                {/* Bio Input */}
-                                <div className="space-y-2">
-                                    <FloatingLabelTextarea
-                                        id="bio"
-                                        label="Bio"
-                                        rows={4}
-                                        value={formData.bio}
-                                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                        onBlur={handleBlur}
-                                        maxLength={200}
-                                    />
-                                </div>
-
-                                {/* Username Input */}
-                                <div className="space-y-2">
-                                    <FloatingLabelInput
-                                        id="username"
-                                        label="Username"
-                                        type="text"
-                                        value={formData.username}
-                                        autoComplete="off"
-                                        data-lpignore="true"
-                                        error={errors.username}
-                                        onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
-                                        onBlur={handleBlur}
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        URL: praxis.com/<b>{formData.username || 'username'}</b>
-                                    </p>
-                                </div>
-
-                                {/* Email Input (Read Only) */}
-                                <div className="space-y-2">
-                                    <FloatingLabelInput
-                                        id="email"
-                                        label="Email"
-                                        type="text"
-                                        disabled
-                                        className="cursor-not-allowed bg-secondary/50 text-muted-foreground"
-                                        value={user?.email || 'No email visible'}
-                                    />
-                                    <p className="text-xs text-muted-foreground">To change your email, please contact support.</p>
-                                </div>
-
-
-
-                            </form>
                         </div>
                     </main>
                 </div>
