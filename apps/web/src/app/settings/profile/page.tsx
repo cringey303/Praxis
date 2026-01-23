@@ -557,7 +557,7 @@ export default function ProfilePage() {
                                     />
                                 </div>
 
-                                <div className="px-6 pb-8">
+                                <div className="px-6 pb-4">
                                     <div className="flex flex-col md:flex-row gap-6 md:items-start relative">
 
                                         {/* Avatar (Preview Style) */}
@@ -651,7 +651,7 @@ export default function ProfilePage() {
                                                         onBlur={handleBlur}
                                                         className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50"
                                                         placeholder="Add pronouns"
-                                                        maxLength={30}
+                                                        maxLength={10}
                                                         onClick={(e) => e.stopPropagation()}
                                                     />
                                                 </div>
