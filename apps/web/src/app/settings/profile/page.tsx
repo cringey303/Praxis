@@ -594,7 +594,7 @@ export default function ProfilePage() {
                                             />
 
                                             {/* Metadata under avatar */}
-                                            <div className="mt-4 space-y-2 flex flex-col">
+                                            <div className="mt-2 space-y-2 flex flex-col">
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                                                     <MapPin className="h-4 w-4 shrink-0" />
                                                     <input
