@@ -585,6 +585,55 @@ export default function ProfilePage() {
                                                 className="hidden"
                                                 onChange={(e) => handleImageUpload(e, 'avatar_url')}
                                             />
+
+                                            {/* Metadata under avatar */}
+                                            <div className="mt-4 space-y-2 flex flex-col">
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                                    <MapPin className="h-4 w-4 shrink-0" />
+                                                    <input
+                                                        type="text"
+                                                        id="location"
+                                                        value={formData.location}
+                                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                                        onBlur={handleBlur}
+                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50"
+                                                        placeholder="Add location"
+                                                        maxLength={30}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                                    <MapPin className="h-4 w-4 shrink-0" />
+                                                    <input
+                                                        type="text"
+                                                        id="location"
+                                                        value={formData.location}
+                                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                                        onBlur={handleBlur}
+                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50"
+                                                        placeholder="Add location"
+                                                        maxLength={30}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                </div>
+
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                                    <LinkIcon className="h-4 w-4 shrink-0" />
+                                                    <input
+                                                        type="text"
+                                                        id="website"
+                                                        value={formData.website}
+                                                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                                        onBlur={handleBlur}
+                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50"
+                                                        placeholder="Add website"
+                                                        maxLength={30}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                </div>
+                                                {errors.website && <p className="text-xs text-destructive">{errors.website}</p>}
+                                            </div>
                                         </div>
 
                                         {/* Profile Details (Inline Inputs) */}
@@ -637,36 +686,7 @@ export default function ProfilePage() {
                                                 />
                                             </div>
 
-                                            <div className="flex flex-col md:flex-row gap-4 pt-2">
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                                                    <MapPin className="h-4 w-4 shrink-0" />
-                                                    <input
-                                                        type="text"
-                                                        id="location"
-                                                        value={formData.location}
-                                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                                        onBlur={handleBlur}
-                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full md:w-48 placeholder-muted-foreground/50"
-                                                        placeholder="Add location"
-                                                        maxLength={100}
-                                                    />
-                                                </div>
 
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                                                    <LinkIcon className="h-4 w-4 shrink-0" />
-                                                    <input
-                                                        type="text"
-                                                        id="website"
-                                                        value={formData.website}
-                                                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                                        onBlur={handleBlur}
-                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full md:w-64 placeholder-muted-foreground/50"
-                                                        placeholder="Add website (e.g. example.com)"
-                                                        maxLength={100}
-                                                    />
-
-                                                </div>
-                                            </div>
                                             {errors.website && <p className="text-xs text-destructive ml-6">{errors.website}</p>}
 
                                         </div>
