@@ -17,6 +17,7 @@ Get Praxis ready to develop and run locally.
 - Docker Desktop (Must be running for the database)
 - Rust (`rustup update`)
 - Node.js & npm
+- Clone this repo
 
 ### 2. Start Database
 The database runs in a Docker container.
