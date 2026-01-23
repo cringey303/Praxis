@@ -78,7 +78,14 @@ Open a new terminal tab
 ```bash
 cd apps/web
 npm install
+
+# Development (hot refresh)
 npm run dev
+```
+```bash
+# Production (faster/optimized, but no automatic refresh)
+npm build
+npm start
 ```
 
 ### 5. Testing
