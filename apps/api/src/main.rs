@@ -1,14 +1,14 @@
 use axum::{
-    Router,
-    http::{Method, header},
+    http::{header, Method},
     routing::{get, post},
+    Router,
 };
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 use time::Duration;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
-use tower_sessions::{Expiry, SessionManagerLayer, cookie::SameSite};
+use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 
 mod auth;
@@ -56,7 +56,7 @@ async fn main() {
 
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(secure_cookies)
-        .with_same_site(SameSite::Lax) // Lax needed for OAuth redirects to work
+        .with_same_site(SameSite::None) // None required for cross-domain usage (requires Secure=true)
         .with_expiry(Expiry::OnInactivity(Duration::days(1)));
 
     // CORS Setup: Allow Frontend URL(s)

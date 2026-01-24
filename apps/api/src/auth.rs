@@ -427,13 +427,19 @@ pub async fn google_callback(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .id;
 
-        // insert into local_auths with dummy password
-        // TODO: handle null password_hash
+        // insert into local_auths with dummy password (randomly generated)
+        let salt = SaltString::generate(&mut OsRng);
+        let dummy_pwd = Uuid::new_v4().to_string();
+        let dummy_hash = Argon2::default()
+            .hash_password(dummy_pwd.as_bytes(), &salt)
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+            .to_string();
+
         sqlx::query!(
             "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
             new_user_id,
             google_user.email,
-            "$argon2id$v=19$m=19456,t=2,p=1$dummy$dummy"
+            dummy_hash
         )
         .execute(&mut *tx)
         .await
@@ -622,11 +628,19 @@ pub async fn github_callback(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .id;
 
+        // insert into local_auths with dummy password (randomly generated)
+        let salt = SaltString::generate(&mut OsRng);
+        let dummy_pwd = Uuid::new_v4().to_string();
+        let dummy_hash = Argon2::default()
+            .hash_password(dummy_pwd.as_bytes(), &salt)
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+            .to_string();
+
         sqlx::query!(
             "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
             new_user_id,
             email,
-            "$argon2id$v=19$m=19456,t=2,p=1$dummy$dummy"
+            dummy_hash
         )
         .execute(&mut *tx)
         .await
