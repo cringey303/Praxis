@@ -508,7 +508,7 @@ pub async fn github_callback(
     // exchange code for token
     let token = client
         .exchange_code(oauth2::AuthorizationCode::new(query.code))
-        .request_async(oauth2::reqwest::async_http_client)
+        .request_async(async_http_client_logging)
         .await
         .map_err(|e| {
             tracing::error!("Failed to exchange code for token: {}", e);
@@ -658,4 +658,43 @@ pub async fn github_callback(
 pub async fn logout(session: Session) -> impl IntoResponse {
     let _ = session.delete().await;
     Ok::<_, (StatusCode, String)>((StatusCode::OK, "Logged out successfully".to_string()))
+}
+
+async fn async_http_client_logging(
+    request: oauth2::HttpRequest,
+) -> Result<oauth2::HttpResponse, reqwest::Error> {
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?;
+
+    let url = request.uri().to_string();
+    tracing::info!("OAUTH2 TOKEN REQUEST URL: {}", url);
+
+    let mut request_builder = client
+        .request(request.method().clone(), request.uri().to_string())
+        .body(request.body().clone());
+
+    for (name, value) in request.headers() {
+        request_builder = request_builder.header(name, value);
+    }
+
+    let request = request_builder.build()?;
+    let response = client.execute(request).await?;
+
+    let status = response.status();
+    let headers = response.headers().clone();
+    let version = response.version();
+    let body = response.bytes().await?;
+
+    tracing::info!("OAUTH2 TOKEN RESPONSE STATUS: {}", status);
+    let body_text = String::from_utf8_lossy(&body);
+    tracing::info!("OAUTH2 TOKEN RESPONSE BODY: {}", body_text);
+
+    let mut builder = http::Response::builder().status(status).version(version);
+
+    for (name, value) in headers.iter() {
+        builder = builder.header(name, value);
+    }
+
+    Ok(builder.body(body.to_vec()).unwrap())
 }
