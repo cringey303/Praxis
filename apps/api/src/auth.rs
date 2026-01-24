@@ -510,7 +510,10 @@ pub async fn github_callback(
         .exchange_code(oauth2::AuthorizationCode::new(query.code))
         .request_async(oauth2::reqwest::async_http_client)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        .map_err(|e| {
+            tracing::error!("Failed to exchange code for token: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
 
     // get user info from GitHub
     let http_client = reqwest::Client::new();
@@ -520,12 +523,15 @@ pub async fn github_callback(
         .bearer_auth(token.access_token().secret())
         .send()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        .map_err(|e| {
+            tracing::error!("Failed to fetch user info from GitHub: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
 
-    let user_text = user_resp
-        .text()
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let user_text = user_resp.text().await.map_err(|e| {
+        tracing::error!("Failed to get text from response: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
 
     tracing::info!("GITHUB USER RESPONSE (Before Parse): {}", user_text);
 
