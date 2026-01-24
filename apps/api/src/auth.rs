@@ -527,13 +527,20 @@ pub async fn github_callback(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    println!("GITHUB USER RESPONSE: {}", user_text);
+    tracing::info!("GITHUB USER RESPONSE (Before Parse): {}", user_text);
 
     let github_user: GithubUser = serde_json::from_str(&user_text).map_err(|e| {
-        println!("Failed to parse GitHub user: {}", e);
+        tracing::error!(
+            "Failed to parse GitHub user: {}. RAW RESPONSE: {}",
+            e,
+            user_text
+        );
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Failed to parse server response: {}", e),
+            format!(
+                "Failed to parse server response: {}. RAW RESPONSE: {}",
+                e, user_text
+            ),
         )
     })?;
 
