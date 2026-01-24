@@ -454,6 +454,11 @@ pub async fn google_callback(
 
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+    let frontend_url = frontend_url
+        .split(',')
+        .next()
+        .unwrap_or("http://localhost:3000")
+        .trim();
     Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
 }
 
@@ -617,6 +622,11 @@ pub async fn github_callback(
 
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+    let frontend_url = frontend_url
+        .split(',')
+        .next()
+        .unwrap_or("http://localhost:3000")
+        .trim();
     Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
 }
 

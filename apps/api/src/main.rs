@@ -59,16 +59,21 @@ async fn main() {
         .with_same_site(SameSite::Lax) // Lax needed for OAuth redirects to work
         .with_expiry(Expiry::OnInactivity(Duration::days(1)));
 
-    // CORS Setup: Allow Frontend URL
-    let frontend_url =
+    // CORS Setup: Allow Frontend URL(s)
+    let frontend_urls_env =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
 
-    let cors = CorsLayer::new()
-        .allow_origin(
-            frontend_url
+    let frontend_urls: Vec<_> = frontend_urls_env
+        .split(',')
+        .map(|url| {
+            url.trim()
                 .parse::<axum::http::HeaderValue>()
-                .expect("Invalid FRONTEND_URL"),
-        )
+                .expect("Invalid FRONTEND_URL")
+        })
+        .collect();
+
+    let cors = CorsLayer::new()
+        .allow_origin(frontend_urls)
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
         .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION, header::ACCEPT])
         .allow_credentials(true);
