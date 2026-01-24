@@ -44,20 +44,30 @@ async fn main() {
         .expect("Failed to connect to DB");
 
     // --- Setup Session --- //
+    // --- Setup Session --- //
     let session_store = PostgresStore::new(pool.clone());
     session_store
         .migrate()
         .await
         .expect("Failed to migrate session store");
+
+    // Secure cookie setting: Use true in production (requires HTTPS), false in dev
+    let secure_cookies = std::env::var("RAILWAY_ENVIRONMENT").is_ok(); // Auto-detect if on Railway
+
     let session_layer = SessionManagerLayer::new(session_store)
-        .with_secure(false) // set to true in production (requires https)
-        .with_same_site(SameSite::Lax)
+        .with_secure(secure_cookies)
+        .with_same_site(SameSite::Lax) // Lax needed for OAuth redirects to work
         .with_expiry(Expiry::OnInactivity(Duration::days(1)));
+
+    // CORS Setup: Allow Frontend URL
+    let frontend_url =
+        std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+
     let cors = CorsLayer::new()
         .allow_origin(
-            "http://localhost:3000"
+            frontend_url
                 .parse::<axum::http::HeaderValue>()
-                .unwrap(),
+                .expect("Invalid FRONTEND_URL"),
         )
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
         .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION, header::ACCEPT])
@@ -89,18 +99,21 @@ async fn main() {
             10 * 1024 * 1024,
         )) // 10MB limit
         .layer(TraceLayer::new_for_http())
-        .with_state(pool); // injecting the DB pool
+        .with_state(pool);
 
-    //define route
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    // BIND to 0.0.0.0 for Docker/Railway support
+    // Allow PORT env var or default to 8080
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let port_num = port.parse::<u16>().expect("Invalid PORT");
+    let addr = SocketAddr::from(([0, 0, 0, 0], port_num));
 
     //start server
+    println!("Listening on {}", addr);
     let listener = match tokio::net::TcpListener::bind(addr).await {
         Ok(listener) => listener,
         Err(e) => {
             if e.kind() == std::io::ErrorKind::AddrInUse {
-                eprintln!("Error: Port 8080 is already in use.");
-                eprintln!("You can identify the conflicting process with: lsof -i :8080");
+                eprintln!("Error: Port {} is already in use.", port_num);
                 std::process::exit(1);
             } else {
                 panic!("Failed to bind to address: {}", e);

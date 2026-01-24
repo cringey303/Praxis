@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT \n            u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, u.banner_url,\n            u.avatar_original_url, u.banner_original_url,\n            u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,\n            u.banner_crop_x, u.banner_crop_y, u.banner_zoom,\n            l.email as \"email?\", l.verified as \"verified?\"\n        FROM users u\n        LEFT JOIN local_auths l ON u.id = l.user_id\n        ORDER BY u.created_at DESC\n        ",
+  "query": "\n        SELECT \n            u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, u.banner_url,\n            u.avatar_original_url, u.banner_original_url,\n            u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,\n            u.banner_crop_x, u.banner_crop_y, u.banner_zoom,\n            l.email as \"email?\", l.verified as \"verified?\",\n            u.pronouns\n        FROM users u\n        LEFT JOIN local_auths l ON u.id = l.user_id\n        ORDER BY u.created_at DESC \n        ",
   "describe": {
     "columns": [
       {
@@ -97,6 +97,11 @@
         "ordinal": 18,
         "name": "verified?",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 19,
+        "name": "pronouns",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -121,8 +126,9 @@
       true,
       true,
       false,
+      true,
       true
     ]
   },
-  "hash": "739da83a68a9f1969b1c169551a963290ede5f55dee1533a5afa0fc3a0da6270"
+  "hash": "bf73901a7099efc6cb8cf3844f089c5fcbe852f895c74f4ca7842c0dce01ec34"
 }
