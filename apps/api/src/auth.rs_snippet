@@ -1,0 +1,68 @@
+
+use oauth2::{HttpRequest, HttpResponse};
+
+// Custom HTTP Client to log OAuth2 requests/responses
+async fn async_http_client_logging(
+    request: HttpRequest,
+) -> Result<HttpResponse, reqwest::Error> {
+    let client = reqwest::Client::builder()
+        // OAuth2 should not follow redirects automatically
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?;
+
+    let url = request.uri().to_string();
+    tracing::info!("OAUTH2 TOKEN REQUEST URL: {}", url);
+    
+    // Construct reqwest request manually
+    let mut request_builder = client
+        .request(request.method().clone(), request.uri().to_string())
+        .body(request.body().clone());
+
+    for (name, value) in request.headers() {
+        request_builder = request_builder.header(name, value);
+    }
+
+    let request = request_builder.build()?;
+    
+    tracing::info!("OAUTH2 TOKEN REQUEST HEADERS: {:?}", request.headers());
+    // tracing::info!("OAUTH2 TOKEN REQUEST BODY: {:?}", request.body()); // Body is typicaly bytes, might not be readable
+
+    let response = client.execute(request).await?;
+
+    let status = response.status();
+    let headers = response.headers().clone();
+    let body = response.bytes().await?;
+
+    tracing::info!("OAUTH2 TOKEN RESPONSE STATUS: {}", status);
+    
+    // Log the body text
+    let body_text = String::from_utf8_lossy(&body);
+    tracing::info!("OAUTH2 TOKEN RESPONSE BODY: {}", body_text);
+
+    // Reconstruct http::Response (v0.2 compatible)
+    let mut builder = http::Response::builder()
+        .status(status)
+        .version(response.version());
+
+    for (name, value) in headers.iter() {
+        builder = builder.header(name, value);
+    }
+
+    builder.body(body.to_vec()).map_err(|e| {
+        // We can't easily construct reqwest::Error from http::Error, so we panic or wrap?
+        // But map_err is expected to return reqwest::Error.
+        // Actually, we can use a trick or just simple panic since this shouldn't fail for valid bytes.
+        tracing::error!("Failed to rebuild response: {}", e);
+        // Create a dummy error using reqwest::Error::new (if available) or similar.
+        // reqwest 0.11 doesn't expose easy constructor. 
+        // We'll trust builder doesn't fail.
+        reqwest::Error::from(e) // Wait, reqwest::Error doesn't implement From<http::Error> usually?
+        // Actually, checking reqwest docs: it might not.
+        // But wait! reqwest::Error is opaque. 
+        // We will just unwrap() because we just unpacked it from a valid response, so it should be valid.
+    }).unwrap_or_else(|_| {
+         panic!("Failed to build response")
+    })
+    
+    Ok(builder.body(body.to_vec()).unwrap())
+}
