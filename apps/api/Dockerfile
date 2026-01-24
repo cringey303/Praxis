@@ -6,6 +6,9 @@ WORKDIR /app
 # Install build dependencies
 RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 
+# Enable SQLx offline mode
+ENV SQLX_OFFLINE=true
+
 # Copy manifest and lock file
 COPY Cargo.toml Cargo.lock ./
 
