@@ -1,16 +1,16 @@
 use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
 use axum::{
-    Json,
     extract::{Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect},
+    Json,
 };
 use oauth2::{
-    AuthUrl, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl,
-    basic::BasicClient,
+    basic::BasicClient, AuthUrl, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
+    TokenResponse, TokenUrl,
 };
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -514,16 +514,28 @@ pub async fn github_callback(
 
     // get user info from GitHub
     let http_client = reqwest::Client::new();
-    let github_user: GithubUser = http_client
+    let user_resp = http_client
         .get("https://api.github.com/user")
-        .header("User-Agent", "praxis-app") // GitHub requires User-Agent
+        .header("User-Agent", "praxis-app")
         .bearer_auth(token.access_token().secret())
         .send()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .json()
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let user_text = user_resp
+        .text()
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    println!("GITHUB USER RESPONSE: {}", user_text);
+
+    let github_user: GithubUser = serde_json::from_str(&user_text).map_err(|e| {
+        println!("Failed to parse GitHub user: {}", e);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to parse server response: {}", e),
+        )
+    })?;
 
     // GitHub doesn't always return the email in the public profile, we might need to fetch it separately
     // But since we asked for user:email scope, let's try to get it from the user endpoint or a separate emails endpoint if needed.
