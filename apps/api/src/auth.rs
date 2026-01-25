@@ -304,13 +304,22 @@ pub async fn login(
     };
 
     // parse hash from DB
-    let parsed_hash = PasswordHash::new(&user.password_hash)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let parsed_hash = match PasswordHash::new(&user.password_hash) {
+        Ok(hash) => hash,
+        Err(e) => {
+            tracing::error!("Corrupted password hash for user {}: {}", user.user_id, e);
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                "Invalid email or password".to_string(),
+            ));
+        }
+    };
 
     // verify password
     Argon2::default()
         .verify_password(payload.password.as_bytes(), &parsed_hash)
-        .map_err(|_| {
+        .map_err(|e| {
+            tracing::warn!("Failed login attempt for user {}: {}", user.user_id, e);
             (
                 StatusCode::UNAUTHORIZED,
                 "Invalid email or password".to_string(),
@@ -682,7 +691,7 @@ async fn async_http_client_logging(
         .build()?;
 
     let url = request.uri().to_string();
-    tracing::info!("OAUTH2 TOKEN REQUEST URL: {}", url);
+    tracing::error!("OAUTH2 TOKEN REQUEST URL: {}", url);
 
     let mut request_builder = client
         .request(request.method().clone(), request.uri().to_string())
@@ -692,7 +701,10 @@ async fn async_http_client_logging(
         request_builder = request_builder.header(name, value);
     }
 
-    let request = request_builder.build()?;
+    let request = request_builder.build().map_err(|e| {
+        tracing::error!("Failed to build request: {}", e);
+        e
+    })?;
     let response = client.execute(request).await?;
 
     let status = response.status();
@@ -700,9 +712,9 @@ async fn async_http_client_logging(
     let version = response.version();
     let body = response.bytes().await?;
 
-    tracing::info!("OAUTH2 TOKEN RESPONSE STATUS: {}", status);
+    tracing::error!("OAUTH2 TOKEN RESPONSE STATUS: {}", status);
     let body_text = String::from_utf8_lossy(&body);
-    tracing::info!("OAUTH2 TOKEN RESPONSE BODY: {}", body_text);
+    tracing::error!("OAUTH2 TOKEN RESPONSE BODY: {}", body_text);
 
     let mut builder = http::Response::builder().status(status).version(version);
 
