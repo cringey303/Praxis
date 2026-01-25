@@ -52,11 +52,22 @@ async fn main() {
         .expect("Failed to migrate session store");
 
     // Secure cookie setting: Use true in production (requires HTTPS), false in dev
-    let secure_cookies = std::env::var("RAILWAY_ENVIRONMENT").is_ok(); // Auto-detect if on Railway
+    // Secure cookie setting: Use true in production (requires HTTPS), false in dev
+    let is_production = std::env::var("RAILWAY_ENVIRONMENT").is_ok()
+        || std::env::var("RAILWAY_PUBLIC_DOMAIN").is_ok();
+
+    // If we use SameSite::None, we MUST use Secure=true, otherwise browsers reject it.
+    // So we force secure=true in production.
+    let secure_cookies = is_production;
+    let same_site = if is_production {
+        SameSite::None
+    } else {
+        SameSite::Lax
+    };
 
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(secure_cookies)
-        .with_same_site(SameSite::None) // None required for cross-domain usage (requires Secure=true)
+        .with_same_site(same_site)
         .with_expiry(Expiry::OnInactivity(Duration::days(1)));
 
     // CORS Setup: Allow Frontend URL(s)
