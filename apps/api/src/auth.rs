@@ -169,11 +169,10 @@ pub async fn signup(
     println!("--------------------------------------------------");
     println!("EMAIL SENT TO: {}", payload.email);
     println!("SUBJECT: Verify your email");
+    let frontend_url =
+        std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
     println!("BODY: Please click this link to verify your email:");
-    println!(
-        "http://localhost:3000/verify-email?token={}",
-        verification_token
-    );
+    println!("{}/verify-email?token={}", frontend_url, verification_token);
     println!("--------------------------------------------------");
 
     // Log the user in
@@ -261,10 +260,9 @@ pub async fn resend_verification(
             "RESPECT: Resending verification email to: {}",
             payload.email
         );
-        println!(
-            "http://localhost:3000/verify-email?token={}",
-            verification_token
-        );
+        let frontend_url =
+            std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+        println!("{}/verify-email?token={}", frontend_url, verification_token);
         println!("--------------------------------------------------");
 
         Ok((StatusCode::OK, "Verification email sent".to_string()))
