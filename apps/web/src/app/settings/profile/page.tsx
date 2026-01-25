@@ -651,13 +651,7 @@ export default function ProfilePage() {
                                             <span>Edit</span>
                                         </div>
                                     </div>
-                                    <input
-                                        type="file"
-                                        id="banner_upload_hidden"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={(e) => handleImageUpload(e, 'banner_url')}
-                                    />
+
                                 </div>
 
                                 <div className="px-6 pb-4">
@@ -688,13 +682,7 @@ export default function ProfilePage() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <input
-                                                type="file"
-                                                id="avatar_upload_hidden"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={(e) => handleImageUpload(e, 'avatar_url')}
-                                            />
+
 
                                             {/* Metadata under avatar */}
                                             <div className="mt-2 space-y-2 flex flex-col">
@@ -839,6 +827,23 @@ export default function ProfilePage() {
                     </main>
                 </div>
             </div>
+
+            {/* Hidden Inputs moved here to prevent bubbling loops */}
+            <input
+                type="file"
+                id="banner_upload_hidden"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleImageUpload(e, 'banner_url')}
+            />
+            <input
+                type="file"
+                id="avatar_upload_hidden"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleImageUpload(e, 'avatar_url')}
+            />
+
             {imageSrc && (
                 <ImageCropper
                     image={imageSrc}
