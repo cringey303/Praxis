@@ -47,23 +47,26 @@ cd apps/api
 
 create .env if missing
 ```bash
-echo "DATABASE_URL=postgres://postgres:password@localhost:5432/praxis_db\nGOOGLE_CLIENT_ID=your_client_id_here\nGOOGLE_CLIENT_SECRET=your_client_secret_here\nGOOGLE_REDIRECT_URL=http://localhost:8080/auth/google/callback\nFRONTEND_URL=http://localhost:3000" > .env
+echo "DATABASE_URL=postgres://postgres:password@localhost:5432/praxis_db\nGOOGLE_CLIENT_ID=...\nGOOGLE_CLIENT_SECRET=...\nGOOGLE_REDIRECT_URL=http://localhost:3000/api/auth/google/callback\nGITHUB_CLIENT_ID=...\nGITHUB_CLIENT_SECRET=...\nGITHUB_REDIRECT_URL=http://localhost:3000/api/auth/github/callback\nFRONTEND_URL=http://localhost:3000" > .env
 ```
 
-replace placeholders (get keys from Lucas or setup your own in Google Cloud Console)
+replace placeholders (get keys from Lucas or setup your own in Google Cloud Console / GitHub Developer Settings)
 ```bash
 # apps/api/.env
 DATABASE_URL=postgres://postgres:password@localhost:5432/praxis_db
-GOOGLE_CLIENT_ID=your_client_id_here
-GOOGLE_CLIENT_SECRET=your_client_secret_here
-GOOGLE_REDIRECT_URL=http://localhost:8080/auth/google/callback
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_REDIRECT_URL=http://localhost:3000/api/auth/google/callback
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_REDIRECT_URL=http://localhost:3000/api/auth/github/callback
 FRONTEND_URL=http://localhost:3000
 ```
 
 create .env.local if missing
 ```bash
 # apps/web/
-echo "NEXT_PUBLIC_API_URL=http://localhost:8080" > .env.local
+echo "NEXT_PUBLIC_API_URL=/api\nAPI_URL=http://localhost:8080" > .env.local
 ```
 
 run the server
