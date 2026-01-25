@@ -690,14 +690,14 @@ async fn async_http_client_logging(
         .redirect(reqwest::redirect::Policy::none())
         .build()?;
 
-    let url = request.uri().to_string();
+    let url = request.url.to_string();
     tracing::error!("OAUTH2 TOKEN REQUEST URL: {}", url);
 
     let mut request_builder = client
-        .request(request.method().clone(), request.uri().to_string())
-        .body(request.body().clone());
+        .request(request.method.clone(), request.url.clone())
+        .body(request.body.clone());
 
-    for (name, value) in request.headers() {
+    for (name, value) in &request.headers {
         request_builder = request_builder.header(name, value);
     }
 
@@ -709,18 +709,15 @@ async fn async_http_client_logging(
 
     let status = response.status();
     let headers = response.headers().clone();
-    let version = response.version();
     let body = response.bytes().await?;
 
     tracing::error!("OAUTH2 TOKEN RESPONSE STATUS: {}", status);
     let body_text = String::from_utf8_lossy(&body);
     tracing::error!("OAUTH2 TOKEN RESPONSE BODY: {}", body_text);
 
-    let mut builder = http::Response::builder().status(status).version(version);
-
-    for (name, value) in headers.iter() {
-        builder = builder.header(name, value);
-    }
-
-    Ok(builder.body(body.to_vec()).unwrap())
+    Ok(oauth2::HttpResponse {
+        status_code: status,
+        headers,
+        body: body.to_vec(),
+    })
 }
