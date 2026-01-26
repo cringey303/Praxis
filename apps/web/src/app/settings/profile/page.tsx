@@ -11,7 +11,6 @@ import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTexta
 import { useToast } from "@/components/ui/Toast";
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { getImageUrl } from '@/lib/utils';
 
 interface UserProfile {
     id: string;
@@ -639,7 +638,7 @@ export default function ProfilePage() {
                                 >
                                     {formData.banner_url ? (
                                         <Image
-                                            src={getImageUrl(formData.banner_url) || ''}
+                                            src={formData.banner_url}
                                             alt="Profile Banner"
                                             fill
                                             className="object-cover transition-opacity group-hover:opacity-90"
@@ -667,7 +666,7 @@ export default function ProfilePage() {
                                             >
                                                 {formData.avatar_url ? (
                                                     <Image
-                                                        src={getImageUrl(formData.avatar_url) || ''}
+                                                        src={formData.avatar_url}
                                                         alt={formData.username}
                                                         fill
                                                         className="object-cover transition-opacity group-hover:opacity-90"
