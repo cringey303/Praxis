@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Sidebar } from './Sidebar';
+import { getProfileImageUrl } from '@/lib/utils';
+
 
 interface User {
     display_name: string;
@@ -134,7 +136,7 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
                                     aria-label="Open profile menu"
                                 >
                                     {user.avatar_url ? (
-                                        <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
+                                        <img src={getProfileImageUrl(user.avatar_url)} alt={user.username} className="h-full w-full object-cover" />
                                     ) : (
                                         <span className="font-semibold text-foreground">{user.display_name?.[0]?.toUpperCase() || '?'}</span>
                                     )}

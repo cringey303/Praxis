@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: '/uploads/:path*',
+        destination: `${process.env.API_URL || 'http://localhost:8080'}/uploads/:path*`, // Proxy uploads to Backend
+      },
+      {
         source: '/api/:path*',
         destination: `${process.env.API_URL || 'http://localhost:8080'}/:path*`, // Proxy to Backend
       },

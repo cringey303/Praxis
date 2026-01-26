@@ -11,6 +11,8 @@ import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTexta
 import { useToast } from "@/components/ui/Toast";
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { getProfileImageUrl } from '@/lib/utils';
+
 
 interface UserProfile {
     id: string;
@@ -346,7 +348,8 @@ export default function ProfilePage() {
 
             if (!resCropped.ok) throw new Error('Upload failed for cropped image');
             const dataCropped = await resCropped.json();
-            const croppedUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${dataCropped.url}`;
+            const croppedUrl = dataCropped.url;
+
 
             // 2. Upload Original Image (if new file was selected)
             let originalUrl = undefined;
@@ -362,7 +365,7 @@ export default function ProfilePage() {
 
                 if (!resOriginal.ok) throw new Error('Upload failed for original image');
                 const dataOriginal = await resOriginal.json();
-                originalUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${dataOriginal.url}`;
+                originalUrl = dataOriginal.url;
             }
 
             const updatePayload: any = {
@@ -638,7 +641,7 @@ export default function ProfilePage() {
                                 >
                                     {formData.banner_url ? (
                                         <Image
-                                            src={formData.banner_url}
+                                            src={getProfileImageUrl(formData.banner_url) || ''}
                                             alt="Profile Banner"
                                             fill
                                             className="object-cover transition-opacity group-hover:opacity-90"
@@ -666,7 +669,7 @@ export default function ProfilePage() {
                                             >
                                                 {formData.avatar_url ? (
                                                     <Image
-                                                        src={formData.avatar_url}
+                                                        src={getProfileImageUrl(formData.avatar_url) || ''}
                                                         alt={formData.username}
                                                         fill
                                                         className="object-cover transition-opacity group-hover:opacity-90"
