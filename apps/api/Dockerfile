@@ -36,6 +36,7 @@ RUN apt-get update && apt-get install -y ca-certificates libssl-dev && rm -rf /v
 # Copy the binary from the builder stage
 # Replace 'api' with your actual package name if different
 COPY --from=builder /app/target/release/api /app/api
+COPY --from=builder /app/migrations /app/migrations
 
 # Expose the port
 ENV PORT=8080

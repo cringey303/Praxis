@@ -44,7 +44,12 @@ async fn main() {
         .await
         .expect("Failed to connect to DB");
 
-    // --- Setup Session --- //
+    // --- Run Migrations --- //
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("Failed to run migrations");
+
     // --- Setup Session --- //
     let session_store = PostgresStore::new(pool.clone());
     session_store
@@ -52,7 +57,6 @@ async fn main() {
         .await
         .expect("Failed to migrate session store");
 
-    // Secure cookie setting: Use true in production (requires HTTPS), false in dev
     // Secure cookie setting: Use true in production (requires HTTPS), false in dev
     let is_production = std::env::var("RAILWAY_ENVIRONMENT").is_ok()
         || std::env::var("RAILWAY_PUBLIC_DOMAIN").is_ok();
