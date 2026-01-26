@@ -1,0 +1,118 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT username, display_name, avatar_url, bio, location, website, banner_url, avatar_original_url, banner_original_url,\n        avatar_crop_x, avatar_crop_y, avatar_zoom, banner_crop_x, banner_crop_y, banner_zoom, pronouns, created_at\n        FROM users\n        WHERE username = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "avatar_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "bio",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "location",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "website",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "banner_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "avatar_original_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "banner_original_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "avatar_crop_x",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 10,
+        "name": "avatar_crop_y",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 11,
+        "name": "avatar_zoom",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 12,
+        "name": "banner_crop_x",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 13,
+        "name": "banner_crop_y",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 14,
+        "name": "banner_zoom",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 15,
+        "name": "pronouns",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "6ff9585f9ed8f4d5cbbaaecec10b6d881b3932b20a5bae12bca809050571de3f"
+}

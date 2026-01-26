@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE local_auths SET verification_token = $1 WHERE email = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2b0db7a55cdef6a29c49e1a85b2dfbf4c5a54f03721b4d913e3c13640115efa0"
+}

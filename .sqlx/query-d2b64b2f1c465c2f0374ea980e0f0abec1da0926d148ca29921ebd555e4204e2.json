@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO local_auths (user_id, email, password_hash)\n        VALUES ($1, $2, $3)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d2b64b2f1c465c2f0374ea980e0f0abec1da0926d148ca29921ebd555e4204e2"
+}

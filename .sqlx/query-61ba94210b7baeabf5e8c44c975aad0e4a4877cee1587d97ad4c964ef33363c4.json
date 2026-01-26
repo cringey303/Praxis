@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE local_auths SET verified = TRUE, verification_token = NULL WHERE verification_token = $1 RETURNING user_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "61ba94210b7baeabf5e8c44c975aad0e4a4877cee1587d97ad4c964ef33363c4"
+}

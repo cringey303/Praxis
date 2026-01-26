@@ -1,0 +1,142 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT \n            u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, u.banner_url,\n            u.avatar_original_url, u.banner_original_url,\n            u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,\n            u.banner_crop_x, u.banner_crop_y, u.banner_zoom,\n            l.email as \"email?\", l.verified as \"verified?\",\n            u.pronouns, u.created_at as \"created_at?\"\n        FROM users u\n        LEFT JOIN local_auths l ON u.id = l.user_id\n        WHERE u.id = $1 \n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "avatar_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "bio",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "location",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "website",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "banner_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "avatar_original_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "banner_original_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "avatar_crop_x",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 12,
+        "name": "avatar_crop_y",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 13,
+        "name": "avatar_zoom",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 14,
+        "name": "banner_crop_x",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 15,
+        "name": "banner_crop_y",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 16,
+        "name": "banner_zoom",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 17,
+        "name": "email?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
+        "name": "verified?",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 19,
+        "name": "pronouns",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 20,
+        "name": "created_at?",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "688f649593ff7c7a2e5036516c2fd19f22a1eb8094cb9c1ee22336aecbbf322b"
+}
