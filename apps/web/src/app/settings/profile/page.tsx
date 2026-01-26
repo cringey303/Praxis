@@ -31,6 +31,7 @@ interface UserProfile {
     banner_crop_x?: number;
     banner_crop_y?: number;
     banner_zoom?: number;
+    created_at?: string;
 }
 
 export default function ProfilePage() {

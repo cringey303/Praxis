@@ -16,7 +16,7 @@ interface PublicUserProfile {
     website?: string;
     banner_url?: string;
     pronouns?: string;
-    // created_at?: string; // Not yet in API response
+    created_at?: string;
 }
 
 interface CurrentUser {
@@ -202,10 +202,7 @@ export default function PublicProfilePage() {
                         {/* Left Column: Metadata */}
                         <div className="flex flex-col gap-6 shrink-0 w-full md:w-auto">
                             <div className="space-y-4 pt-1 whitespace-nowrap">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>Joined recently</span>
-                                </div>
+                                
 
                                 {profile.location && (
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -249,6 +246,11 @@ export default function PublicProfilePage() {
                                         <span>{profile.pronouns}</span>
                                     </div>
                                 )}
+
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Joined {profile.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'recently'}</span>
+                                </div>
                             </div>
                         </div>
 
@@ -316,7 +318,11 @@ export default function PublicProfilePage() {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium">Joined Praxis</p>
-                                                <p className="text-xs text-muted-foreground">Just now</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {profile.created_at
+                                                        ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                                        : 'Just now'}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
