@@ -8,7 +8,7 @@ pub struct Announcement {
     pub id: uuid::Uuid,
     pub content: String,
     pub author_id: uuid::Uuid,
-    pub created_at: time::OffsetDateTime,
+    pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Deserialize)]
