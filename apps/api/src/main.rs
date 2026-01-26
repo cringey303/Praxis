@@ -11,6 +11,7 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 
+mod announcements;
 mod auth;
 mod upload;
 mod user;
@@ -108,6 +109,8 @@ async fn main() {
         .route("/user/test", post(user::create_test_user))
         .route("/user/:id", axum::routing::delete(user::delete_user))
         .route("/upload", post(upload::upload_image))
+        .route("/announcement", get(announcements::get_latest))
+        .route("/announcement", post(announcements::create))
         .nest_service("/uploads", tower_http::services::ServeDir::new("uploads"))
         .layer(session_layer)
         .layer(cors)

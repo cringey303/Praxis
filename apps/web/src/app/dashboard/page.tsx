@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { UserListWidget } from '../../components/dashboard/UserListWidget';
+import { WelcomeWidget } from '../../components/dashboard/WelcomeWidget';
 import { NavBar } from '@/components/dashboard/NavBar';
 
 export default function Dashboard() {
@@ -57,14 +58,7 @@ export default function Dashboard() {
 
                     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                         {/* Welcome Card */}
-                        <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm">
-                            <h2 className="text-xl mb-2">
-                                Welcome Back{user ? `, ${user.display_name}` : ''}
-                            </h2>
-                            <p className="text-muted-foreground">
-                                This is the dashboard for Praxis. You will find different widgets here in the future.
-                            </p>
-                        </div>
+                        <WelcomeWidget user={user} />
 
                         {/* User List Widget */}
                         <div className="col-span-full md:col-span-1">
