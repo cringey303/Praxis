@@ -31,6 +31,7 @@ pub struct UserProfile {
     pub banner_zoom: Option<f64>,
     pub verified: Option<bool>,
     pub pronouns: Option<String>,
+    pub created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 #[derive(Serialize)]
@@ -51,6 +52,7 @@ pub struct PublicUserProfile {
     pub banner_crop_y: Option<f64>,
     pub banner_zoom: Option<f64>,
     pub pronouns: Option<String>,
+    pub created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -98,7 +100,7 @@ pub async fn get_me(
             u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,
             u.banner_crop_x, u.banner_crop_y, u.banner_zoom,
             l.email as "email?", l.verified as "verified?",
-            u.pronouns
+            u.pronouns, u.created_at as "created_at?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
         WHERE u.id = $1 
@@ -131,6 +133,7 @@ pub async fn get_me(
             banner_zoom: u.banner_zoom,
             verified: u.verified,
             pronouns: u.pronouns,
+            created_at: u.created_at,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
@@ -311,7 +314,7 @@ pub async fn get_all(
             u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,
             u.banner_crop_x, u.banner_crop_y, u.banner_zoom,
             l.email as "email?", l.verified as "verified?",
-            u.pronouns
+            u.pronouns, u.created_at as "created_at?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
         ORDER BY u.created_at DESC 
@@ -344,6 +347,7 @@ pub async fn get_all(
             banner_zoom: u.banner_zoom,
             verified: u.verified,
             pronouns: u.pronouns,
+            created_at: u.created_at,
         })
         .collect();
 
@@ -391,7 +395,7 @@ pub async fn get_public_profile(
     let user = sqlx::query!(
         r#"
         SELECT username, display_name, avatar_url, bio, location, website, banner_url, avatar_original_url, banner_original_url,
-        avatar_crop_x, avatar_crop_y, avatar_zoom, banner_crop_x, banner_crop_y, banner_zoom, pronouns
+        avatar_crop_x, avatar_crop_y, avatar_zoom, banner_crop_x, banner_crop_y, banner_zoom, pronouns, created_at
         FROM users
         WHERE username = $1
         "#,
@@ -419,6 +423,7 @@ pub async fn get_public_profile(
             banner_crop_y: u.banner_crop_y,
             banner_zoom: u.banner_zoom,
             pronouns: u.pronouns,
+            created_at: u.created_at,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
@@ -504,5 +509,6 @@ pub async fn create_test_user(
         banner_zoom: None,
         verified: Some(false),
         pronouns: None,
+        created_at: Some(chrono::Utc::now()),
     }))
 }
