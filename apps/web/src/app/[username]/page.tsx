@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Calendar, MapPin, Link as LinkIcon, Share2, Edit3, MessageSquare, Grid, Activity } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { useToast } from "@/components/ui/Toast";
+import { getImageUrl } from '@/lib/utils';
 
 interface PublicUserProfile {
     username: string;
@@ -129,7 +130,7 @@ export default function PublicProfilePage() {
                 <div className="relative w-full aspect-3/1 bg-secondary/30 overflow-hidden">
                     {profile.banner_url ? (
                         <img
-                            src={profile.banner_url}
+                            src={getImageUrl(profile.banner_url)}
                             alt="Profile Banner"
                             className="w-full h-full object-cover"
                         />
@@ -143,7 +144,7 @@ export default function PublicProfilePage() {
                         {/* Avatar */}
                         <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-background bg-secondary shadow-xl flex items-center justify-center overflow-hidden shrink-0">
                             {profile.avatar_url ? (
-                                <img src={profile.avatar_url} alt={profile.username} className="h-full w-full object-cover" />
+                                <img src={getImageUrl(profile.avatar_url)} alt={profile.username} className="h-full w-full object-cover" />
                             ) : (
                                 <span className="text-4xl font-bold text-foreground">
                                     {profile.display_name?.[0] || profile.username?.[0]}
@@ -202,7 +203,7 @@ export default function PublicProfilePage() {
                         {/* Left Column: Metadata */}
                         <div className="flex flex-col gap-6 shrink-0 w-full md:w-auto">
                             <div className="space-y-4 pt-1 whitespace-nowrap">
-                                
+
 
                                 {profile.location && (
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">

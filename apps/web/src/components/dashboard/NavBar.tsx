@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Sidebar } from './Sidebar';
+import { getImageUrl } from '@/lib/utils';
 
 interface User {
     display_name: string;
@@ -85,8 +86,8 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
                                 <Link
                                     href="/dashboard"
                                     className={`flex items-end pb-3 h-full px-1 text-sm font-medium border-b-2 transition-colors ${pathname === '/dashboard'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        ? 'border-primary text-primary'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground'
                                         }`}
                                 >
                                     Dashboard
@@ -94,8 +95,8 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
                                 <Link
                                     href={`/${user.username}`}
                                     className={`flex items-end pb-3 h-full px-1 text-sm font-medium border-b-2 transition-colors ${pathname === `/${user.username}`
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        ? 'border-primary text-primary'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground'
                                         }`}
                                 >
                                     Profile
@@ -103,8 +104,8 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
                                 <Link
                                     href="/settings/profile"
                                     className={`flex items-end pb-3 h-full px-1 text-sm font-medium border-b-2 transition-colors ${pathname.startsWith('/settings')
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        ? 'border-primary text-primary'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground'
                                         }`}
                                 >
                                     Settings
@@ -134,7 +135,7 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
                                     aria-label="Open profile menu"
                                 >
                                     {user.avatar_url ? (
-                                        <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
+                                        <img src={getImageUrl(user.avatar_url)} alt={user.username} className="h-full w-full object-cover" />
                                     ) : (
                                         <span className="font-semibold text-foreground">{user.display_name?.[0]?.toUpperCase() || '?'}</span>
                                     )}

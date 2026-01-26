@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '../ui/Toast';
+import { getImageUrl } from '@/lib/utils';
 
 interface User {
     id: string;
@@ -127,7 +128,7 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
                             <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none z-10 relative">
                                 <div className="relative h-10 w-10 shrink-0 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-sm font-bold text-foreground">
                                     {user.avatar_url ? (
-                                        <img src={user.avatar_url} alt={user.username} className="h-full w-full object-cover" />
+                                        <img src={getImageUrl(user.avatar_url)} alt={user.username} className="h-full w-full object-cover" />
                                     ) : (
                                         <span>{user.display_name?.[0] || user.username?.[0] || '?'}</span>
                                     )}
