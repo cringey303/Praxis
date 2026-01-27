@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '../ui/Toast';
 import { FloatingLabelTextarea } from '../ui/FloatingLabelTextarea';
+import { Megaphone } from 'lucide-react';
 
 interface WelcomeWidgetProps {
     user: {
@@ -82,7 +83,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                 {/* Announcement Display */}
                 <div className="mt-4 p-4 rounded-lg bg-secondary/50 border border-border/50">
                     <h3 className="text-sm font-medium text-primary mb-2 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5c0-5 5-5 10 0Z" /><path d="M8 9h.01" /><path d="M16 9h.01" /><path d="M12 16c1.5 0 3-.6 3-1.5" /></svg>
+                        <Megaphone className="w-4 h-4" />
                         Latest Announcement
                     </h3>
                     {announcement ? (
