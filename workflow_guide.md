@@ -36,23 +36,3 @@ If you or Luke modify the database schema (migrations) or add new SQL queries in
     ```bash
     git push origin main
     ```
-
-## 2. Solving the Current Build Failure
-
-The error `SQLX_OFFLINE=true but there is no cached data` means the `.sqlx` JSON files in the repo do not match the queries in your code.
-
-**Why it failed twice:**
-1.  First time: You didn't run `prepare` at all.
-2.  Second time: It's possible the `prepare` command ran *before* you fixed the struct/type error, or the build started before the push arrived.
-
-**Fix:**
-Since the previous `prepare` might have been on broken code (or race condition), let's do it one last time cleanly:
-
-1.  Ensure local code compiles: `cargo check`
-2.  Run prepare: `cargo sqlx prepare --workspace`
-3.  Commit and push:
-    ```bash
-    git add .sqlx
-    git commit -m "fresh sqlx prepare"
-    git push
-    ```

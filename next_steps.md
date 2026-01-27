@@ -2,12 +2,12 @@
 
 Based on the current project state (Next.js + Rust API, Auth & User Management implemented), here are the recommended next features to implement, ordered by impact and logical progression.
 
-## 1. Public Profile Page (`/profile/[username]`)
-**Why:** You currently collect `username` and display it in settings as `praxis.com/username`, but this route doesn't exist yet.
-**Implementation:**
-- Create dynamic route `apps/web/src/app/profile/[username]/page.tsx`.
-- Fetch user public info (display name, avatar, bio - *need to add bio field*).
-- reuse [Sidebar](file:///Users/lucasroot/projects/praxis/apps/web/src/components/dashboard/Sidebar.tsx#23-131) / [NavBar](file:///Users/lucasroot/projects/praxis/apps/web/src/components/dashboard/NavBar.tsx#19-84) or decided if public pages are layout-free.
+## ~~1. Public Profile Page (`/profile/[username]`)~~
+~~**Why:** You currently collect `username` and display it in settings as `praxis.com/username`, but this route doesn't exist yet.~~
+**~~Implementation:~~**
+- ~~Create dynamic route `apps/web/src/app/profile/[username]/page.tsx`.~~
+- ~~Fetch user public info (display name, avatar, bio - *need to add bio field*).~~
+- ~~reuse [Sidebar](file:///Users/lucasroot/projects/praxis/apps/web/src/components/dashboard/Sidebar.tsx#23-131) / [NavBar](file:///Users/lucasroot/projects/praxis/apps/web/src/components/dashboard/NavBar.tsx#19-84) or decided if public pages are layout-free.~~
 
 ## 2. Activity Feed / Dashboard Widgets
 **Why:** The dashboard currently only shows a "Welcome" card and a "User List". It feels empty.
