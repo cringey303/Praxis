@@ -25,14 +25,19 @@ If you or Luke modify the database schema (migrations) or add new SQL queries in
     *Tip: Make this a pre-commit hook or just remember to do it whenever you touch `sqlx::query!` macros.*
 3.  **Commit the `.sqlx` folder**: These JSON files are required for the server to build.
 
-### C. pushing Your Changes
-1.  Add and commit your files.
-2.  **Pull again** just in case Luke pushed while you were working.
+### C. Pushing Your Changes
+1.  Add and commit your files on your feature branch.
+2.  **Switch to Main and Update**:
     ```bash
+    git checkout main
     git pull origin main
     ```
+3.  **Merge Your Feature**:
+    ```bash
+    git merge feature/my-new-feature
+    ```
     (Resolve any merge conflicts if they happen).
-3.  Push to GitHub.
+4.  **Push to GitHub**:
     ```bash
     git push origin main
     ```
