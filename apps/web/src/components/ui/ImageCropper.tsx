@@ -51,6 +51,17 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
     const handleSave = async () => {
         try {
             if (!croppedAreaPixels) return;
+
+            // Check if image is a GIF (animated)
+            // We cannot crop GIFs in the browser without losing animation (canvas converts to static)
+            // So we pass the original blob instead
+            if (image.startsWith('data:image/gif') || image.toLowerCase().endsWith('.gif')) {
+                const response = await fetch(image);
+                const blob = await response.blob();
+                onCropComplete(blob, crop, zoom);
+                return;
+            }
+
             const croppedImage = await getCroppedImg(image, croppedAreaPixels);
             if (croppedImage) {
                 onCropComplete(croppedImage, crop, zoom);
@@ -112,6 +123,11 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
 
                     <div className="flex flex-col md:flex-row justify-between gap-3 pt-2">
                         <div className="flex flex-col gap-1">
+                            {(image.startsWith('data:image/gif') || image.toLowerCase().endsWith('.gif')) && (
+                                <p className="text-xs text-amber-500 font-medium">
+                                    Note: Animated GIFs will be saved as-is to preserve animation.
+                                </p>
+                            )}
                             {onUploadSelect && (
                                 <p className="text-xs text-muted-foreground">JPG, GIF or PNG. 10MB max.</p>
                             )}

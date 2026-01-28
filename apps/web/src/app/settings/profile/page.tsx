@@ -338,7 +338,9 @@ export default function ProfilePage() {
         try {
             // 1. Upload Cropped Image
             const croppedFormData = new FormData();
-            croppedFormData.append('file', croppedBlob, 'cropped_image.jpg');
+            const ext = croppedBlob.type.split('/')[1] || 'jpg';
+            const filename = `cropped_image.${ext}`;
+            croppedFormData.append('file', croppedBlob, filename);
 
             const resCropped = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/upload`, {
                 method: 'POST',
