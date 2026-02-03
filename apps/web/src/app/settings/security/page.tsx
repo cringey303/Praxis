@@ -234,7 +234,7 @@ export default function SecurityPage() {
                                     <button
                                         type="submit"
                                         disabled={updating}
-                                        className="cursor-pointer w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="cursor-pointer w-full py-2 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {updating ? (
                                             <>
