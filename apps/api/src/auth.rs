@@ -17,6 +17,8 @@ use sqlx::PgPool;
 use tower_sessions::Session;
 use uuid::Uuid;
 
+use crate::email;
+
 // request structure we get from the frontend
 #[derive(Deserialize)]
 pub struct SignupRequest {
@@ -165,15 +167,13 @@ pub async fn signup(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // Mock Email Sending
-    println!("--------------------------------------------------");
-    println!("EMAIL SENT TO: {}", payload.email);
-    println!("SUBJECT: Verify your email");
-    let frontend_url =
-        std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
-    println!("BODY: Please click this link to verify your email:");
-    println!("{}/verify-email?token={}", frontend_url, verification_token);
-    println!("--------------------------------------------------");
+    // Send verification email
+    if let Err(e) = email::send_verification_email(&payload.email, &verification_token).await {
+        tracing::warn!("Failed to send verification email: {}", e);
+        // Don't fail signup if email fails - user can resend
+    } else {
+        tracing::info!("Verification email sent to: {}", payload.email);
+    }
 
     // Log the user in
     session
@@ -254,16 +254,12 @@ pub async fn resend_verification(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-        // Mock Email Sending
-        println!("--------------------------------------------------");
-        println!(
-            "RESPECT: Resending verification email to: {}",
-            payload.email
-        );
-        let frontend_url =
-            std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
-        println!("{}/verify-email?token={}", frontend_url, verification_token);
-        println!("--------------------------------------------------");
+        // Send verification email
+        if let Err(e) = email::send_verification_email(&payload.email, &verification_token).await {
+            tracing::warn!("Failed to send verification email: {}", e);
+        } else {
+            tracing::info!("Verification email resent to: {}", payload.email);
+        }
 
         Ok((StatusCode::OK, "Verification email sent".to_string()))
     } else {
@@ -679,6 +675,82 @@ pub async fn github_callback(
 pub async fn logout(session: Session) -> impl IntoResponse {
     let _ = session.delete().await;
     Ok::<_, (StatusCode, String)>((StatusCode::OK, "Logged out successfully".to_string()))
+}
+
+#[derive(Deserialize)]
+pub struct ChangePasswordRequest {
+    pub current_password: String,
+    pub new_password: String,
+}
+
+pub async fn change_password(
+    State(pool): State<PgPool>,
+    session: Session,
+    Json(payload): Json<ChangePasswordRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // Get user_id from session
+    let user_id: Uuid = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::UNAUTHORIZED, "Not logged in".to_string()))?;
+
+    // Get current password hash
+    let user = sqlx::query!(
+        "SELECT password_hash FROM local_auths WHERE user_id = $1",
+        user_id
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
+
+    // Verify current password
+    let parsed_hash = PasswordHash::new(&user.password_hash).map_err(|e| {
+        tracing::error!("Corrupted password hash for user {}: {}", user_id, e);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Password verification failed".to_string(),
+        )
+    })?;
+
+    Argon2::default()
+        .verify_password(payload.current_password.as_bytes(), &parsed_hash)
+        .map_err(|_| {
+            (
+                StatusCode::UNAUTHORIZED,
+                "Current password is incorrect".to_string(),
+            )
+        })?;
+
+    // Validate new password (minimum length)
+    if payload.new_password.len() < 8 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "New password must be at least 8 characters".to_string(),
+        ));
+    }
+
+    // Hash new password
+    let salt = SaltString::generate(&mut OsRng);
+    let new_password_hash = Argon2::default()
+        .hash_password(payload.new_password.as_bytes(), &salt)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .to_string();
+
+    // Update password in database
+    sqlx::query!(
+        "UPDATE local_auths SET password_hash = $1 WHERE user_id = $2",
+        new_password_hash,
+        user_id
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    tracing::info!("Password changed for user_id: {}", user_id);
+
+    Ok((StatusCode::OK, "Password changed successfully".to_string()))
 }
 
 async fn async_http_client_logging(
