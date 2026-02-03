@@ -105,6 +105,7 @@ async fn main() {
         .route("/auth/github/callback", get(auth::github_callback))
         .route("/auth/verify", post(auth::verify_email))
         .route("/auth/resend-verification", post(auth::resend_verification))
+        .route("/auth/change-password", post(auth::change_password))
         .route("/auth/logout", post(auth::logout))
         .route("/user/me", get(user::get_me))
         .route("/user/profile", post(user::update_profile))
