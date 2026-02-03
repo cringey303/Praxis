@@ -23,6 +23,16 @@ const nextConfig: NextConfig = {
         port: '8080',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.r2.dev',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.cloudflarestorage.com',
+        pathname: '/**',
+      },
     ],
   },
   async rewrites() {

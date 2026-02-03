@@ -13,6 +13,7 @@ use tower_sessions_sqlx_store::PostgresStore;
 
 mod announcements;
 mod auth;
+mod r2;
 mod upload;
 mod user;
 
@@ -30,8 +31,7 @@ async fn main() {
         )
         .init();
 
-    // Ensure uploads directory exists
-    std::fs::create_dir_all("uploads").expect("Failed to create uploads directory");
+    // R2 cloud storage is used instead of local filesystem
 
     // --- Connect to Database --- //
     // get database url saved in .env
@@ -115,7 +115,7 @@ async fn main() {
         .route("/upload", post(upload::upload_image))
         .route("/announcement", get(announcements::get_latest))
         .route("/announcement", post(announcements::create))
-        .nest_service("/uploads", tower_http::services::ServeDir::new("uploads"))
+        // Images are now served directly from Cloudflare R2
         .layer(session_layer)
         .layer(cors)
         .layer(tower_http::limit::RequestBodyLimitLayer::new(

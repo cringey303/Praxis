@@ -11,11 +11,16 @@ export function getProfileImageUrl(url: string | undefined | null): string | und
     // If it's a blob URL (local preview), keep it
     if (url.startsWith('blob:')) return url;
 
-    // If it's an external URL (e.g. Google), keep it.
-    // We assume our uploads are always in /uploads/
-    // But wait, the current issue is that we saved "http://localhost:8080/uploads/..." in the DB.
-    // So we need to detect that specific pattern or the API_URL pattern.
+    // If it's a full HTTPS URL (R2 or external like Google), return as-is
+    if (url.startsWith('https://')) return url;
 
+    // Legacy support: Handle old /uploads/... paths
+    // These are served via Next.js rewrite to the API
+    if (url.startsWith('/uploads')) {
+        return url;
+    }
+
+    // Handle legacy localhost URLs (from old database entries)
     try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -29,12 +34,7 @@ export function getProfileImageUrl(url: string | undefined | null): string | und
             return url.replace('http://localhost:8080', '');
         }
 
-        // If it is already relative (starts with /uploads), precise check?
-        if (url.startsWith('/uploads')) {
-            return url;
-        }
-
-        // If it's some other full URL, return as is (e.g. Google Auth picture)
+        // If it's some other full URL, return as is
         return url;
 
     } catch (e) {

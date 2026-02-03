@@ -1,20 +1,31 @@
 use axum::{
-    extract::State,
     http::StatusCode,
     response::{IntoResponse, Json},
 };
 use axum_extra::extract::Multipart;
 use serde_json::json;
-use sqlx::PgPool;
 use std::path::Path;
-use tokio::fs;
 use uuid::Uuid;
 
-pub async fn upload_image(
-    State(_pool): State<PgPool>,
-    mut multipart: Multipart,
-) -> impl IntoResponse {
+use crate::r2::{create_r2_client, upload_to_r2};
+
+pub async fn upload_image(mut multipart: Multipart) -> impl IntoResponse {
     let mut image_url = None;
+
+    // Get bucket name from environment
+    let bucket_name = match std::env::var("R2_BUCKET_NAME") {
+        Ok(name) => name,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "R2_BUCKET_NAME not configured",
+            )
+                .into_response();
+        }
+    };
+
+    // Create R2 client
+    let client = create_r2_client();
 
     while let Some(field) = multipart.next_field().await.unwrap_or(None) {
         let name = field.name().unwrap_or("").to_string();
@@ -41,18 +52,26 @@ pub async fn upload_image(
                 .and_then(std::ffi::OsStr::to_str)
                 .unwrap_or("jpg");
             let new_filename = format!("{}.{}", Uuid::new_v4(), ext);
-            let filepath = format!("uploads/{}", new_filename);
 
-            // Save file
-            if let Err(e) = fs::write(&filepath, data).await {
-                eprintln!("Failed to save file: {}", e);
-                return (StatusCode::INTERNAL_SERVER_ERROR, "Failed to save file").into_response();
+            // Upload to R2
+            match upload_to_r2(
+                &client,
+                &bucket_name,
+                &new_filename,
+                data.to_vec(),
+                &content_type,
+            )
+            .await
+            {
+                Ok(url) => {
+                    image_url = Some(url);
+                }
+                Err(e) => {
+                    eprintln!("Failed to upload to R2: {:?}", e);
+                    return (StatusCode::INTERNAL_SERVER_ERROR, "Failed to upload file")
+                        .into_response();
+                }
             }
-
-            // Return the public URL
-            // Assuming the server is running on localhost:8080 or the client knows the base URL
-            // We return the relative path, the frontend can prepend the API base URL
-            image_url = Some(format!("/uploads/{}", new_filename));
         }
     }
 
