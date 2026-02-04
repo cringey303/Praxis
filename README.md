@@ -1,5 +1,5 @@
 # Praxis
-**Please submit an issue if you find a bug!!**
+_**Please submit an issue if you find a bug!!**_
 
 
 (WIP)
