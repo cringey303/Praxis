@@ -113,7 +113,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
     };
 
     return (
-        <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm bg-card relative overflow-hidden">
+        <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm bg-card relative overflow-hidden min-h-[320px]">
             <div className="relative z-10">
                 <h2 className="text-xl mb-2 font-semibold">
                     Welcome Back{user ? `, ${user.display_name}` : ''}
