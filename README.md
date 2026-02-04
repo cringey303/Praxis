@@ -111,13 +111,15 @@ Create Migration: `cd apps/api && sqlx migrate add name_of_change`
 
 # TO-DO
 Not comprehensive.
-Bugs:
+
 ```
+Bugs:
 - adding website to profile
 - cropping images
 - 
 ```
 ```
+Other:
 - Create flowchart (Figma)
 - Create mockup UI (Excalidraw)
 - Design home/landing page
