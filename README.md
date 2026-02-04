@@ -3,14 +3,14 @@
 
 A students-first social network where students discover and collaborate on projects; creating real work rather than focusing on connections.
 
-Created by Lucas Root and Luke Coffman.
+Created by Lucas Root, Luke Coffman and Owen Abbott.
 
 Here is the 
 [figma](https://www.figma.com/design/z9Tf6F6dxn4S84Cd3mWeif/Praxis-Flowchart?node-id=0-1&m=dev&t=drysAnHQDYuItSh1-1)
 
 [stitch with google](https://stitch.withgoogle.com/projects/2144734098224224255)
 
-## Quickstart (Luke this for u)
+## Quickstart
 Get Praxis ready to develop and run locally.
 
 ### 1. Prerequisites
