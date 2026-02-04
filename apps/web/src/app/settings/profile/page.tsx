@@ -148,7 +148,7 @@ export default function ProfilePage() {
         }
         if (name === 'website' && value) {
             // site validation
-            const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}$/;
+            const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/.*)?$/;
 
             if (!urlPattern.test(value)) {
                 return 'Please enter a valid website (e.g., example.com)';
@@ -802,8 +802,6 @@ export default function ProfilePage() {
                                                 />
                                             </div>
 
-
-                                            {errors.website && <p className="text-xs text-destructive ml-6">{errors.website}</p>}
 
                                         </div>
                                     </div>
