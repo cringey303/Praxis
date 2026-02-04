@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
         port: '8080',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'pub-51dbc354d1a944d09bfc7a9b570b1f7b.r2.dev',
+        pathname: '/**',
+      },
     ],
   },
   async rewrites() {
