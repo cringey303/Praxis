@@ -1,4 +1,5 @@
 # Praxis
+**Please submit an issue if you find a bug!!**
 (WIP)
 
 A students-first social network where students discover and collaborate on projects; creating real work rather than focusing on connections.
