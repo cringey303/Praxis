@@ -56,7 +56,7 @@ export default function Dashboard() {
             <main className="p-3">
                 <div className="w-full space-y-8">
 
-                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 items-stretch">
                         {/* Welcome Card */}
                         <WelcomeWidget user={user} />
 

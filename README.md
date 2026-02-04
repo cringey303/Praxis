@@ -116,6 +116,13 @@ Run Migrations: `cd apps/api && sqlx migrate run`
 
 Create Migration: `cd apps/api && sqlx migrate add name_of_change`
 
+## Production
+Make User Admin (from your machine):
+```bash
+DATABASE_URL="<production_postgres_url>" cargo run --bin make_admin -- <username>
+```
+Get the production DATABASE_URL from Railway → Postgres service → Variables tab.
+
 # TO-DO
 Not comprehensive.
 
