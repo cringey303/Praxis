@@ -125,11 +125,9 @@ Get the production DATABASE_URL from Railway → Postgres service → Variables 
 
 # TO-DO
 Not comprehensive.
-
+Submit an issue if you find a bug!
 ```
-Bugs:
-- adding website to profile
-- cropping images
+Known bugs:
 - 
 ```
 ```
