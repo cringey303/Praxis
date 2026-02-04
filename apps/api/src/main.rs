@@ -116,6 +116,8 @@ async fn main() {
         .route("/upload", post(upload::upload_image))
         .route("/announcement", get(announcements::get_latest))
         .route("/announcement", post(announcements::create))
+        .route("/announcements/recent", get(announcements::get_recent))
+        .route("/announcements", get(announcements::get_all))
         // Images are now served directly from Cloudflare R2
         .layer(session_layer)
         .layer(cors)

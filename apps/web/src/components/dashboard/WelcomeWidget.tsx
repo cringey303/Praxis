@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '../ui/Toast';
 import { FloatingLabelTextarea } from '../ui/FloatingLabelTextarea';
-import { Megaphone } from 'lucide-react';
+import { Megaphone, ChevronDown, ChevronUp } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
 
 interface WelcomeWidgetProps {
     user: {
@@ -18,8 +20,18 @@ interface Announcement {
     created_at: string;
 }
 
+interface AnnouncementWithAuthor {
+    id: string;
+    content: string;
+    created_at: string;
+    author_name: string;
+    author_avatar: string | null;
+}
+
 export function WelcomeWidget({ user }: WelcomeWidgetProps) {
     const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+    const [pastAnnouncements, setPastAnnouncements] = useState<AnnouncementWithAuthor[]>([]);
+    const [showPast, setShowPast] = useState(false);
     const [newAnnouncement, setNewAnnouncement] = useState('');
     const [isPosting, setIsPosting] = useState(false);
     const { showToast } = useToast();
@@ -40,6 +52,25 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
 
         fetchAnnouncement();
     }, []);
+
+    // Fetch past announcements when expanded
+    useEffect(() => {
+        if (!showPast || pastAnnouncements.length > 0) return;
+
+        const fetchPast = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/announcements/recent`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setPastAnnouncements(data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch past announcements');
+            }
+        };
+
+        fetchPast();
+    }, [showPast, pastAnnouncements.length]);
 
     const handlePost = async () => {
         if (!newAnnouncement.trim()) return;
@@ -66,11 +97,19 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                 content: newAnnouncement,
                 created_at: new Date().toISOString(),
             });
-        } catch (error: any) {
-            showToast(error.message, 'error');
+            // Clear past to force refetch
+            setPastAnnouncements([]);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to post announcement';
+            showToast(message, 'error');
         } finally {
             setIsPosting(false);
         }
+    };
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     return (
@@ -92,6 +131,58 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                         <p className="text-muted-foreground italic">No announcements yet.</p>
                     )}
                 </div>
+
+                {/* Past Announcements Toggle */}
+                <button
+                    onClick={() => setShowPast(!showPast)}
+                    className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                    {showPast ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    {showPast ? 'Hide' : 'View'} Past Announcements
+                </button>
+
+                {/* Past Announcements List */}
+                {showPast && (
+                    <div className="mt-3 space-y-3">
+                        {pastAnnouncements.slice(1).map((ann) => (
+                            <div key={ann.id} className="p-3 rounded-lg bg-secondary/30 border border-border/30">
+                                <div className="flex items-center gap-2 mb-2">
+                                    {ann.author_avatar ? (
+                                        <Image
+                                            src={ann.author_avatar}
+                                            alt={ann.author_name}
+                                            width={24}
+                                            height={24}
+                                            className="rounded-full"
+                                        />
+                                    ) : (
+                                        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                                            <span className="text-xs font-medium text-primary">
+                                                {ann.author_name.charAt(0).toUpperCase()}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <span className="text-sm font-medium">{ann.author_name}</span>
+                                    <span className="text-xs text-muted-foreground">• {formatDate(ann.created_at)}</span>
+                                </div>
+                                <p className="text-sm text-foreground/80 whitespace-pre-wrap">{ann.content}</p>
+                            </div>
+                        ))}
+
+                        {pastAnnouncements.length > 1 && (
+                            <Link
+                                href="/announcements"
+                                className="block text-center text-sm text-primary hover:text-primary/80 transition-colors py-2"
+                            >
+                                View All Announcements →
+                            </Link>
+                        )}
+
+                        {pastAnnouncements.length <= 1 && (
+                            <p className="text-sm text-muted-foreground text-center py-2">No older announcements.</p>
+                        )}
+                    </div>
+                )}
 
                 {/* Admin Input Area */}
                 {user?.role === 'admin' && (
@@ -124,3 +215,4 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
         </div>
     );
 }
+
