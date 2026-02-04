@@ -84,7 +84,7 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
 
     if (loading) {
         return (
-            <div className="rounded-xl border border-border bg-card shadow-sm h-full min-h-96 animate-pulse">
+            <div className="rounded-xl border border-border bg-card shadow-sm h-full animate-pulse">
                 <div className="h-6 w-32 bg-muted rounded mb-4"></div>
                 <div className="space-y-3">
                     {[...Array(5)].map((_, i) => (
@@ -102,7 +102,7 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
     }
 
     return (
-        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full min-h-96">
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full">
             <div className="flex items-center justify-between p-6">
                 <h2 className="text-lg tracking-tight">Users</h2>
                 {currentUser?.role === 'admin' && (
