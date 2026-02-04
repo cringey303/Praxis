@@ -131,7 +131,7 @@ Not comprehensive.
 Submit an issue if you find a bug!
 ```
 Known bugs:
-- 
+- Image cropping and uploading
 ```
 ```
 Other:
