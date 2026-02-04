@@ -50,7 +50,7 @@ create .env if missing
 echo "DATABASE_URL=postgres://postgres:password@localhost:5432/praxis_db\nGOOGLE_CLIENT_ID=...\nGOOGLE_CLIENT_SECRET=...\nGOOGLE_REDIRECT_URL=http://localhost:3000/api/auth/google/callback\nGITHUB_CLIENT_ID=...\nGITHUB_CLIENT_SECRET=...\nGITHUB_REDIRECT_URL=http://localhost:3000/api/auth/github/callback\nFRONTEND_URL=http://localhost:3000" > .env
 ```
 
-replace placeholders (get keys from Lucas or setup your own in Google Cloud Console / GitHub Developer Settings)
+replace placeholders (get keys from Lucas or setup your own in Google Cloud Console / GitHub Developer Settings. Get R2 keys from Lucas)
 ```bash
 # apps/api/.env
 DATABASE_URL=postgres://postgres:password@localhost:5432/praxis_db
@@ -61,6 +61,13 @@ GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
 GITHUB_REDIRECT_URL=http://localhost:3000/api/auth/github/callback
 FRONTEND_URL=http://localhost:3000
+
+# Cloudflare R2 (for image storage)
+R2_ACCOUNT_ID=your_account_id
+R2_ACCESS_KEY_ID=your_access_key
+R2_SECRET_ACCESS_KEY=your_secret_key
+R2_BUCKET_NAME=praxis-uploads
+R2_PUBLIC_URL=https://your-bucket.r2.dev
 ```
 
 create .env.local if missing
@@ -123,7 +130,7 @@ Other:
 - Create flowchart (Figma)
 - Create mockup UI (Excalidraw)
 - Design home/landing page
-- GitHub login support
+- Email verification (needs domain for SMTP)
 ```
 
 # Possible Domains
