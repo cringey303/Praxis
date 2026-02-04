@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { Upload, Trash2 } from 'lucide-react';
 import getCroppedImg from '@/lib/cropImage';
@@ -27,14 +27,6 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
     const [crop, setCrop] = useState(initialCrop);
     const [zoom, setZoom] = useState(initialZoom);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-
-    useEffect(() => {
-        console.log('[Debug] ImageCropper mounted/updated');
-        console.log('[Debug] Props - initialCrop:', initialCrop);
-        console.log('[Debug] Props - initialZoom:', initialZoom);
-        setCrop(initialCrop);
-        setZoom(initialZoom);
-    }, [initialCrop, initialZoom]);
 
     const onCropChange = (crop: { x: number; y: number }) => {
         setCrop(crop);

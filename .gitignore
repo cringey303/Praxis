@@ -2,3 +2,4 @@
 .env
 *.env
 ngrok.yml
+apps/api/uploads/
