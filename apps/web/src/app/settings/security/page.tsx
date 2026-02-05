@@ -106,7 +106,14 @@ export default function SecurityPage() {
         }
 
         setErrors(newErrors);
-        return !newErrors.currentPassword && !newErrors.newPassword && !newErrors.confirmPassword;
+
+        // Show toasts for each error with slight delays to ensure unique IDs
+        const errorMessages = [newErrors.currentPassword, newErrors.newPassword, newErrors.confirmPassword].filter(Boolean);
+        errorMessages.forEach((msg, index) => {
+            setTimeout(() => showToast(msg, 'error'), index * 50);
+        });
+
+        return errorMessages.length === 0;
     };
 
     const validateSetPassword = () => {
@@ -134,7 +141,14 @@ export default function SecurityPage() {
         }
 
         setErrors(newErrors);
-        return !newErrors.email && !newErrors.newPassword && !newErrors.confirmPassword;
+
+        // Show toasts for each error with slight delays to ensure unique IDs
+        const errorMessages = [newErrors.email, newErrors.newPassword, newErrors.confirmPassword].filter(Boolean);
+        errorMessages.forEach((msg, index) => {
+            setTimeout(() => showToast(msg, 'error'), index * 50);
+        });
+
+        return errorMessages.length === 0;
     };
 
     const handleChangePassword = async (e: React.FormEvent) => {
