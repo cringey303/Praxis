@@ -290,7 +290,7 @@ export default function SecurityPage() {
                             {/* Password Section */}
                             <div className="max-w-[500px]">
                                 <h2 className="text-lg font-medium mb-4">
-                                    {user?.has_password ? 'Change Password' : 'Set Password'}
+                                    {user?.has_password ? 'Update Password' : 'Set Password'}
                                 </h2>
 
                                 {!user?.has_password && (
@@ -362,7 +362,7 @@ export default function SecurityPage() {
                                                     {user?.has_password ? 'Changing Password...' : 'Setting Password...'}
                                                 </>
                                             ) : (
-                                                user?.has_password ? 'Change Password' : 'Set Password'
+                                                user?.has_password ? 'Update Password' : 'Set Password'
                                             )}
                                         </button>
 
@@ -377,7 +377,7 @@ export default function SecurityPage() {
                                             </button>
                                         )}
                                     </div>
-                                    
+
                                 </form>
 
                                 <p className="text-xs text-muted-foreground mt-4">
