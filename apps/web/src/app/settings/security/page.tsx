@@ -364,11 +364,109 @@ export default function SecurityPage() {
                                             user?.has_password ? 'Change Password' : 'Set Password'
                                         )}
                                     </button>
+
+                                    {/* Forgot Password Link - Disabled */}
+                                    {user?.has_password && (
+                                        <button
+                                            type="button"
+                                            disabled
+                                            className="text-sm text-muted-foreground underline decoration-muted-foreground/30 underline-offset-4 opacity-50 cursor-not-allowed"
+                                        >
+                                            I forgot my password
+                                        </button>
+                                    )}
                                 </form>
 
                                 <p className="text-xs text-muted-foreground mt-4">
                                     Password must be at least 6 characters long.
                                 </p>
+                            </div>
+
+                            {/* Divider */}
+                            <hr className="border-border my-8" />
+
+                            {/* Two-Factor Authentication Section */}
+                            <div className="max-w-[700px]">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                    <div>
+                                        <h2 className="text-lg font-medium">Two-Factor Authentication</h2>
+                                        <p className="text-sm text-muted-foreground">Add an extra layer of security to your account.</p>
+                                    </div>
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-500 border border-red-500/20">
+                                        Disabled
+                                    </span>
+                                </div>
+
+                                <div className="bg-secondary/30 rounded-lg p-4 border border-border flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                    <div className="p-2 bg-secondary rounded-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+                                            <rect width="7" height="12" x="2" y="6" rx="1" /><rect width="7" height="12" x="15" y="6" rx="1" /><path d="M9 6V5a3 3 0 0 1 6 0v1" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium">Protect your account with 2FA</p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Configuring two-factor authentication adds an extra layer of security to your account by requiring more than just a password to log in.
+                                        </p>
+                                    </div>
+                                    <button
+                                        disabled
+                                        className="shrink-0 border border-border bg-background text-foreground font-medium py-2 px-4 rounded-lg text-sm opacity-50 cursor-not-allowed"
+                                    >
+                                        Enable 2FA
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Divider */}
+                            <hr className="border-border my-8" />
+
+                            {/* Login Sessions Section */}
+                            <div className="max-w-[700px]">
+                                <h2 className="text-lg font-medium mb-1">Login Sessions</h2>
+                                <p className="text-sm text-muted-foreground mb-6">Places where you&apos;re currently logged into Praxis.</p>
+
+                                <div className="space-y-4">
+                                    {/* Current Device */}
+                                    <div className="flex items-start gap-4 p-4 rounded-lg border border-primary/30 bg-primary/5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                                            <rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" />
+                                        </svg>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-sm font-medium">Your Current Browser</h3>
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary text-primary-foreground">
+                                                    Current Device
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-0.5">Location unavailable • IP hidden</p>
+                                            <p className="text-xs text-primary mt-1 font-medium">Active now</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Example Other Device - Placeholder */}
+                                    <div className="flex items-start gap-4 p-4 rounded-lg border border-border opacity-50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+                                            <rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" />
+                                        </svg>
+                                        <div className="flex-1">
+                                            <h3 className="text-sm font-medium text-muted-foreground">Other devices will appear here</h3>
+                                            <p className="text-xs text-muted-foreground mt-0.5">No other active sessions</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-6">
+                                    <button
+                                        disabled
+                                        className="text-red-500 text-sm font-medium flex items-center gap-2 opacity-50 cursor-not-allowed"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" />
+                                        </svg>
+                                        Log out all other sessions
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </main>
