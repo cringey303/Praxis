@@ -700,6 +700,14 @@ pub async fn change_password(
         ));
     }
 
+    // Check if new password is the same as current password
+    if payload.new_password == payload.current_password {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "New password cannot be the same as current password".to_string(),
+        ));
+    }
+
     // Hash new password
     let salt = SaltString::generate(&mut OsRng);
     let new_password_hash = Argon2::default()

@@ -95,6 +95,8 @@ export default function SecurityPage() {
             newErrors.newPassword = 'New password is required';
         } else if (newPassword.length < 6) {
             newErrors.newPassword = 'Password must be at least 6 characters';
+        } else if (newPassword === currentPassword) {
+            newErrors.newPassword = 'New password cannot be the same as current password';
         }
 
         if (!confirmPassword) {
