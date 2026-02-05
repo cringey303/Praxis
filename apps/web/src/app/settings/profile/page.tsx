@@ -808,28 +808,6 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* Account Settings Section */}
-                            <div className="pt-6">
-                                <h2 className="text-lg font-medium mb-4 px-1">Account Settings</h2>
-                                <div className="max-w-[700px] p-6 rounded-xl border border-border bg-card/50">
-                                    <div className="max-w-md space-y-4">
-                                        <div className="space-y-2">
-                                            <FloatingLabelInput
-                                                id="email"
-                                                label="Email Address"
-                                                type="text"
-                                                disabled
-                                                className="cursor-not-allowed bg-secondary/50 text-muted-foreground"
-                                                value={user?.email || 'No email visible'}
-                                            />
-                                            <p className="text-xs text-muted-foreground">
-                                                Subject to change? Contact support.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                         </div>
                     </main>
                 </div>

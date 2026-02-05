@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Smartphone, Lock } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { useToast } from "@/components/ui/Toast";
@@ -13,6 +13,7 @@ interface UserProfile {
     username: string;
     display_name: string;
     avatar_url?: string;
+    email?: string;
     has_password: boolean;
 }
 
@@ -281,14 +282,32 @@ export default function SecurityPage() {
                     </aside>
 
                     {/* Main Content */}
-                    <main className="md:col-span-9 bg-card">
-                        <div className="space-y-6 mb-6">
-                            <div className="max-w-[700px] mb-6">
+                    <main className="md:col-span-9">
+                        <div className="space-y-4 mb-6">
+                            <div className="max-w-[700px] mb-4">
                                 <h1 className="text-3xl font-semibold tracking-tight">Security</h1>
                             </div>
 
+                            {/* Emails Section */}
+                            <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
+                                <h2 className="text-lg font-medium mb-4">Emails</h2>
+                                <div className="max-w-[500px]">
+                                    <FloatingLabelInput
+                                        id="security-email"
+                                        label="Email Address"
+                                        type="email"
+                                        value={user?.email || ''}
+                                        disabled
+                                        className="cursor-not-allowed opacity-60"
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                        Your email address is used for logging in and sending security alerts.
+                                    </p>
+                                </div>
+                            </div>
+
                             {/* Password Section */}
-                            <div className="max-w-[500px]">
+                            <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
                                 <h2 className="text-lg font-medium mb-4">
                                     {user?.has_password ? 'Update Password' : 'Set Password'}
                                 </h2>
@@ -356,6 +375,7 @@ export default function SecurityPage() {
                                             disabled={updating}
                                             className="cursor-pointer w-1/2 py-1.5 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
+
                                             {updating ? (
                                                 <>
                                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -380,16 +400,13 @@ export default function SecurityPage() {
 
                                 </form>
 
-                                <p className="text-xs text-muted-foreground mt-4">
-                                    Password must be at least 6 characters long.
-                                </p>
+
                             </div>
 
-                            {/* Divider */}
-                            <hr className="border-border my-8" />
+
 
                             {/* Two-Factor Authentication Section */}
-                            <div className="max-w-[700px]">
+                            <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                     <div>
                                         <h2 className="text-lg font-medium">Two-Factor Authentication</h2>
@@ -401,10 +418,26 @@ export default function SecurityPage() {
                                 </div>
 
                                 <div className="bg-secondary/30 rounded-lg p-4 border border-border flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                    <div className="p-2 bg-secondary rounded-lg">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-                                            <rect width="7" height="12" x="2" y="6" rx="1" /><rect width="7" height="12" x="15" y="6" rx="1" /><path d="M9 6V5a3 3 0 0 1 6 0v1" />
-                                        </svg>
+                                    <div className="p-2 bg-secondary rounded-lg relative">
+                                        {/* Smartphone + Lock 2FA Icon Combo */}
+                                        <Smartphone className="h-6 w-6 white" />
+                                        <div className="absolute bottom-3 left-1 bg-secondary rounded-sm p-0.5">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="24"
+                                                height="24"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                className="h-3 w-3"
+                                            >
+                                                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" fill="currentColor" />
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                            </svg>
+                                        </div>
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-sm font-medium">Protect your account with 2FA</p>
@@ -421,11 +454,10 @@ export default function SecurityPage() {
                                 </div>
                             </div>
 
-                            {/* Divider */}
-                            <hr className="border-border my-8" />
+
 
                             {/* Login Sessions Section */}
-                            <div className="max-w-[700px]">
+                            <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
                                 <h2 className="text-lg font-medium mb-1">Login Sessions</h2>
                                 <p className="text-sm text-muted-foreground mb-6">Places where you&apos;re currently logged into Praxis.</p>
 
