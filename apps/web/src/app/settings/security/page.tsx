@@ -38,6 +38,7 @@ export default function SecurityPage() {
         confirmPassword: '',
         email: '',
     });
+    const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false);
 
     // Fetch user data on mount
     useEffect(() => {
@@ -254,7 +255,7 @@ export default function SecurityPage() {
                         <nav className="flex flex-col gap-1">
                             <Link
                                 href="/settings/profile"
-                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent transition-all group"
+                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group"
                             >
                                 <div className="h-5 w-5 flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
@@ -272,7 +273,7 @@ export default function SecurityPage() {
                                 <span className="text-sm font-medium">Security</span>
                             </Link>
 
-                            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent transition-all group cursor-not-allowed opacity-60">
+                            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group cursor-not-allowed opacity-60">
                                 <div className="h-5 w-5 flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
                                 </div>
@@ -308,99 +309,111 @@ export default function SecurityPage() {
 
                             {/* Password Section */}
                             <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
-                                <h2 className="text-lg font-medium mb-4">
-                                    {user?.has_password ? 'Update Password' : 'Set Password'}
-                                </h2>
-
-                                {!user?.has_password && (
-                                    <p className="text-sm text-muted-foreground mb-4">
-                                        Add a password to your account so you can also log in with email and password.
-                                    </p>
-                                )}
-
-                                <form onSubmit={user?.has_password ? handleChangePassword : handleSetPassword} className="space-y-4">
-                                    {/* Email field only for Set Password (OAuth users) */}
-                                    {!user?.has_password && (
-                                        <div>
-                                            <FloatingLabelInput
-                                                id="email"
-                                                type="email"
-                                                label="Email Address"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                error={errors.email}
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Current password only for Change Password */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-medium">
+                                        Password
+                                    </h2>
                                     {user?.has_password && (
-                                        <div>
-                                            <FloatingLabelInput
-                                                id="currentPassword"
-                                                type={showCurrentPassword ? "text" : "password"}
-                                                label="Current Password"
-                                                value={currentPassword}
-                                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                                error={errors.currentPassword}
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <FloatingLabelInput
-                                            id="newPassword"
-                                            type={showNewPassword ? "text" : "password"}
-                                            label={user?.has_password ? "New Password" : "Password"}
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            error={errors.newPassword}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <FloatingLabelInput
-                                            id="confirmPassword"
-                                            type={showConfirmPassword ? "text" : "password"}
-                                            label={user?.has_password ? "Confirm New Password" : "Confirm Password"}
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            error={errors.confirmPassword}
-                                        />
-                                    </div>
-
-                                    <div className="flex items-center gap-4">
                                         <button
-                                            type="submit"
-                                            disabled={updating}
-                                            className="cursor-pointer w-1/2 py-1.5 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            onClick={() => setIsPasswordFormOpen(!isPasswordFormOpen)}
+                                            className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                                         >
-
-                                            {updating ? (
-                                                <>
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                    {user?.has_password ? 'Changing Password...' : 'Setting Password...'}
-                                                </>
-                                            ) : (
-                                                user?.has_password ? 'Update Password' : 'Set Password'
-                                            )}
+                                            {isPasswordFormOpen ? 'Hide' : 'Change Password'}
                                         </button>
+                                    )}
+                                </div>
 
-                                        {/* Forgot Password Link - Disabled */}
-                                        {user?.has_password && (
-                                            <button
-                                                type="button"
-                                                disabled
-                                                className="text-sm text-muted-foreground underline decoration-muted-foreground/30 underline-offset-4 opacity-50 cursor-not-allowed"
-                                            >
-                                                I forgot my password
-                                            </button>
+                                {(isPasswordFormOpen || !user?.has_password) && (
+                                    <>
+                                        {!user?.has_password && (
+                                            <p className="text-sm text-muted-foreground mb-4">
+                                                Add a password to your account so you can also log in with email and password.
+                                            </p>
                                         )}
-                                    </div>
 
-                                </form>
+                                        <form onSubmit={user?.has_password ? handleChangePassword : handleSetPassword} className="space-y-4">
+                                            {/* Email field only for Set Password (OAuth users) */}
+                                            {!user?.has_password && (
+                                                <div>
+                                                    <FloatingLabelInput
+                                                        id="email"
+                                                        type="email"
+                                                        label="Email Address"
+                                                        value={email}
+                                                        onChange={(e) => setEmail(e.target.value)}
+                                                        error={errors.email}
+                                                    />
+                                                </div>
+                                            )}
 
+                                            {/* Current password only for Change Password */}
+                                            {user?.has_password && (
+                                                <div>
+                                                    <FloatingLabelInput
+                                                        id="currentPassword"
+                                                        type={showCurrentPassword ? "text" : "password"}
+                                                        label="Current Password"
+                                                        value={currentPassword}
+                                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                                        error={errors.currentPassword}
+                                                    />
+                                                </div>
+                                            )}
 
+                                            <div>
+                                                <FloatingLabelInput
+                                                    id="newPassword"
+                                                    type={showNewPassword ? "text" : "password"}
+                                                    label={user?.has_password ? "New Password" : "Password"}
+                                                    value={newPassword}
+                                                    onChange={(e) => setNewPassword(e.target.value)}
+                                                    error={errors.newPassword}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <FloatingLabelInput
+                                                    id="confirmPassword"
+                                                    type={showConfirmPassword ? "text" : "password"}
+                                                    label={user?.has_password ? "Confirm New Password" : "Confirm Password"}
+                                                    value={confirmPassword}
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    error={errors.confirmPassword}
+                                                />
+                                            </div>
+
+                                            <div className="flex items-center gap-4">
+                                                <button
+                                                    type="submit"
+                                                    disabled={updating}
+                                                    className="cursor-pointer w-1/2 py-1.5 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                                >
+
+                                                    {updating ? (
+                                                        <>
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                            {user?.has_password ? 'Changing Password...' : 'Setting Password...'}
+                                                        </>
+                                                    ) : (
+                                                        user?.has_password ? 'Update Password' : 'Set Password'
+                                                    )}
+                                                </button>
+
+                                                {/* Forgot Password Link - Disabled */}
+                                                {user?.has_password && (
+                                                    <button
+                                                        type="button"
+                                                        disabled
+                                                        className="text-sm text-foreground underline decoration-muted-foreground/30 underline-offset-4 opacity-50 cursor-not-allowed"
+                                                    >
+                                                        I forgot my password
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                        </form>
+                                    </>
+                                )}
                             </div>
 
 
