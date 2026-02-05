@@ -282,7 +282,7 @@ export default function SecurityPage() {
 
                     {/* Main Content */}
                     <main className="md:col-span-9 bg-card">
-                        <div className="space-y-6">
+                        <div className="space-y-6 mb-6">
                             <div className="max-w-[700px] mb-6">
                                 <h1 className="text-3xl font-semibold tracking-tight">Security</h1>
                             </div>
@@ -350,31 +350,34 @@ export default function SecurityPage() {
                                         />
                                     </div>
 
-                                    <button
-                                        type="submit"
-                                        disabled={updating}
-                                        className="cursor-pointer w-full py-2 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        {updating ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                {user?.has_password ? 'Changing Password...' : 'Setting Password...'}
-                                            </>
-                                        ) : (
-                                            user?.has_password ? 'Change Password' : 'Set Password'
-                                        )}
-                                    </button>
-
-                                    {/* Forgot Password Link - Disabled */}
-                                    {user?.has_password && (
+                                    <div className="flex items-center gap-4">
                                         <button
-                                            type="button"
-                                            disabled
-                                            className="text-sm text-muted-foreground underline decoration-muted-foreground/30 underline-offset-4 opacity-50 cursor-not-allowed"
+                                            type="submit"
+                                            disabled={updating}
+                                            className="cursor-pointer w-1/2 py-1.5 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
-                                            I forgot my password
+                                            {updating ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    {user?.has_password ? 'Changing Password...' : 'Setting Password...'}
+                                                </>
+                                            ) : (
+                                                user?.has_password ? 'Change Password' : 'Set Password'
+                                            )}
                                         </button>
-                                    )}
+
+                                        {/* Forgot Password Link - Disabled */}
+                                        {user?.has_password && (
+                                            <button
+                                                type="button"
+                                                disabled
+                                                className="text-sm text-muted-foreground underline decoration-muted-foreground/30 underline-offset-4 opacity-50 cursor-not-allowed"
+                                            >
+                                                I forgot my password
+                                            </button>
+                                        )}
+                                    </div>
+                                    
                                 </form>
 
                                 <p className="text-xs text-muted-foreground mt-4">
