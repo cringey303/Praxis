@@ -32,6 +32,7 @@ pub struct UserProfile {
     pub verified: Option<bool>,
     pub pronouns: Option<String>,
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub has_password: bool,
 }
 
 #[derive(Serialize)]
@@ -116,7 +117,7 @@ pub async fn get_me(
             id: u.id,
             username: u.username,
             display_name: u.display_name,
-            email: u.email,
+            email: u.email.clone(),
             avatar_url: u.avatar_url,
             role: u.role,
             bio: u.bio,
@@ -134,6 +135,7 @@ pub async fn get_me(
             verified: u.verified,
             pronouns: u.pronouns,
             created_at: u.created_at,
+            has_password: u.email.is_some(),
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
@@ -326,28 +328,32 @@ pub async fn get_all(
 
     let profiles = users
         .into_iter()
-        .map(|u| UserProfile {
-            id: u.id,
-            username: u.username,
-            display_name: u.display_name,
-            email: u.email,
-            avatar_url: u.avatar_url,
-            role: u.role,
-            bio: u.bio,
-            location: u.location,
-            website: u.website,
-            banner_url: u.banner_url,
-            avatar_original_url: u.avatar_original_url,
-            banner_original_url: u.banner_original_url,
-            avatar_crop_x: u.avatar_crop_x,
-            avatar_crop_y: u.avatar_crop_y,
-            avatar_zoom: u.avatar_zoom,
-            banner_crop_x: u.banner_crop_x,
-            banner_crop_y: u.banner_crop_y,
-            banner_zoom: u.banner_zoom,
-            verified: u.verified,
-            pronouns: u.pronouns,
-            created_at: u.created_at,
+        .map(|u| {
+            let has_pw = u.email.is_some();
+            UserProfile {
+                id: u.id,
+                username: u.username,
+                display_name: u.display_name,
+                email: u.email,
+                avatar_url: u.avatar_url,
+                role: u.role,
+                bio: u.bio,
+                location: u.location,
+                website: u.website,
+                banner_url: u.banner_url,
+                avatar_original_url: u.avatar_original_url,
+                banner_original_url: u.banner_original_url,
+                avatar_crop_x: u.avatar_crop_x,
+                avatar_crop_y: u.avatar_crop_y,
+                avatar_zoom: u.avatar_zoom,
+                banner_crop_x: u.banner_crop_x,
+                banner_crop_y: u.banner_crop_y,
+                banner_zoom: u.banner_zoom,
+                verified: u.verified,
+                pronouns: u.pronouns,
+                created_at: u.created_at,
+                has_password: has_pw,
+            }
         })
         .collect();
 
@@ -510,5 +516,6 @@ pub async fn create_test_user(
         verified: Some(false),
         pronouns: None,
         created_at: Some(chrono::Utc::now()),
+        has_password: true,
     }))
 }

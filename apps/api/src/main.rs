@@ -106,6 +106,7 @@ async fn main() {
         .route("/auth/verify", post(auth::verify_email))
         .route("/auth/resend-verification", post(auth::resend_verification))
         .route("/auth/change-password", post(auth::change_password))
+        .route("/auth/set-password", post(auth::set_password))
         .route("/auth/logout", post(auth::logout))
         .route("/user/me", get(user::get_me))
         .route("/user/profile", post(user::update_profile))

@@ -431,23 +431,7 @@ pub async fn google_callback(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .id;
 
-        // insert into local_auths with dummy password (randomly generated)
-        let salt = SaltString::generate(&mut OsRng);
-        let dummy_pwd = Uuid::new_v4().to_string();
-        let dummy_hash = Argon2::default()
-            .hash_password(dummy_pwd.as_bytes(), &salt)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-            .to_string();
-
-        sqlx::query!(
-            "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
-            new_user_id,
-            google_user.email,
-            dummy_hash
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        // No local_auth record for OAuth users - they can set a password later
 
         tx.commit()
             .await
@@ -632,23 +616,7 @@ pub async fn github_callback(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .id;
 
-        // insert into local_auths with dummy password (randomly generated)
-        let salt = SaltString::generate(&mut OsRng);
-        let dummy_pwd = Uuid::new_v4().to_string();
-        let dummy_hash = Argon2::default()
-            .hash_password(dummy_pwd.as_bytes(), &salt)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-            .to_string();
-
-        sqlx::query!(
-            "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
-            new_user_id,
-            email,
-            dummy_hash
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        // No local_auth record for OAuth users - they can set a password later
 
         tx.commit()
             .await
@@ -725,10 +693,10 @@ pub async fn change_password(
         })?;
 
     // Validate new password (minimum length)
-    if payload.new_password.len() < 8 {
+    if payload.new_password.len() < 6 {
         return Err((
             StatusCode::BAD_REQUEST,
-            "New password must be at least 8 characters".to_string(),
+            "New password must be at least 6 characters".to_string(),
         ));
     }
 
@@ -752,6 +720,85 @@ pub async fn change_password(
     tracing::info!("Password changed for user_id: {}", user_id);
 
     Ok((StatusCode::OK, "Password changed successfully".to_string()))
+}
+
+#[derive(Deserialize)]
+pub struct SetPasswordRequest {
+    pub email: String,
+    pub new_password: String,
+}
+
+/// Set password for OAuth-only users (creates local_auth record)
+pub async fn set_password(
+    State(pool): State<PgPool>,
+    session: Session,
+    Json(payload): Json<SetPasswordRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // Get user_id from session
+    let user_id: Uuid = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::UNAUTHORIZED, "Not logged in".to_string()))?;
+
+    // Check if user already has a password
+    let existing = sqlx::query!(
+        "SELECT user_id FROM local_auths WHERE user_id = $1",
+        user_id
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if existing.is_some() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Password already set. Use change-password instead.".to_string(),
+        ));
+    }
+
+    // Check email isn't already used
+    let email_exists = sqlx::query!(
+        "SELECT user_id FROM local_auths WHERE email = $1",
+        payload.email
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if email_exists.is_some() {
+        return Err((StatusCode::BAD_REQUEST, "Email already in use".to_string()));
+    }
+
+    // Validate new password
+    if payload.new_password.len() < 6 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Password must be at least 6 characters".to_string(),
+        ));
+    }
+
+    // Hash new password
+    let salt = SaltString::generate(&mut OsRng);
+    let password_hash = Argon2::default()
+        .hash_password(payload.new_password.as_bytes(), &salt)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .to_string();
+
+    // Create local_auth record
+    sqlx::query!(
+        "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
+        user_id,
+        payload.email,
+        password_hash
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    tracing::info!("Password set for OAuth user_id: {}", user_id);
+
+    Ok((StatusCode::OK, "Password set successfully".to_string()))
 }
 
 async fn async_http_client_logging(

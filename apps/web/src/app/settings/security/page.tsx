@@ -13,6 +13,7 @@ interface UserProfile {
     username: string;
     display_name: string;
     avatar_url?: string;
+    has_password: boolean;
 }
 
 export default function SecurityPage() {
@@ -26,6 +27,7 @@ export default function SecurityPage() {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [email, setEmail] = useState('');
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -33,6 +35,7 @@ export default function SecurityPage() {
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
+        email: '',
     });
 
     // Fetch user data on mount
@@ -81,6 +84,7 @@ export default function SecurityPage() {
             currentPassword: '',
             newPassword: '',
             confirmPassword: '',
+            email: '',
         };
 
         if (!currentPassword) {
@@ -89,8 +93,8 @@ export default function SecurityPage() {
 
         if (!newPassword) {
             newErrors.newPassword = 'New password is required';
-        } else if (newPassword.length < 8) {
-            newErrors.newPassword = 'Password must be at least 8 characters';
+        } else if (newPassword.length < 6) {
+            newErrors.newPassword = 'Password must be at least 6 characters';
         }
 
         if (!confirmPassword) {
@@ -101,6 +105,34 @@ export default function SecurityPage() {
 
         setErrors(newErrors);
         return !newErrors.currentPassword && !newErrors.newPassword && !newErrors.confirmPassword;
+    };
+
+    const validateSetPassword = () => {
+        const newErrors = {
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
+            email: '',
+        };
+
+        if (!email || !email.includes('@')) {
+            newErrors.email = 'Valid email is required';
+        }
+
+        if (!newPassword) {
+            newErrors.newPassword = 'Password is required';
+        } else if (newPassword.length < 6) {
+            newErrors.newPassword = 'Password must be at least 6 characters';
+        }
+
+        if (!confirmPassword) {
+            newErrors.confirmPassword = 'Please confirm your password';
+        } else if (newPassword !== confirmPassword) {
+            newErrors.confirmPassword = 'Passwords do not match';
+        }
+
+        setErrors(newErrors);
+        return !newErrors.email && !newErrors.newPassword && !newErrors.confirmPassword;
     };
 
     const handleChangePassword = async (e: React.FormEvent) => {
@@ -139,6 +171,52 @@ export default function SecurityPage() {
 
             if (errorMessage.includes('incorrect')) {
                 setErrors(prev => ({ ...prev, currentPassword: 'Current password is incorrect' }));
+            } else {
+                showToast(errorMessage, 'error');
+            }
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleSetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!validateSetPassword()) return;
+
+        setUpdating(true);
+
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/set-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: email,
+                    new_password: newPassword,
+                }),
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text || 'Failed to set password');
+            }
+
+            showToast('Password set successfully! You can now log in with email/password.', 'success');
+            setEmail('');
+            setNewPassword('');
+            setConfirmPassword('');
+            // Refresh user data to update has_password
+            setUser(prev => prev ? { ...prev, has_password: true } : null);
+        } catch (err: unknown) {
+            console.error(err);
+            let errorMessage = 'Failed to set password';
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            }
+
+            if (errorMessage.includes('Email already in use')) {
+                setErrors(prev => ({ ...prev, email: 'This email is already in use' }));
             } else {
                 showToast(errorMessage, 'error');
             }
@@ -193,27 +271,52 @@ export default function SecurityPage() {
                                 <h1 className="text-3xl font-semibold tracking-tight">Security</h1>
                             </div>
 
-                            {/* Password Change Section */}
+                            {/* Password Section */}
                             <div className="max-w-[500px]">
-                                <h2 className="text-lg font-medium mb-4">Change Password</h2>
+                                <h2 className="text-lg font-medium mb-4">
+                                    {user?.has_password ? 'Change Password' : 'Set Password'}
+                                </h2>
 
-                                <form onSubmit={handleChangePassword} className="space-y-4">
-                                    <div>
-                                        <FloatingLabelInput
-                                            id="currentPassword"
-                                            type={showCurrentPassword ? "text" : "password"}
-                                            label="Current Password"
-                                            value={currentPassword}
-                                            onChange={(e) => setCurrentPassword(e.target.value)}
-                                            error={errors.currentPassword}
-                                        />
-                                    </div>
+                                {!user?.has_password && (
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                        Add a password to your account so you can also log in with email and password.
+                                    </p>
+                                )}
+
+                                <form onSubmit={user?.has_password ? handleChangePassword : handleSetPassword} className="space-y-4">
+                                    {/* Email field only for Set Password (OAuth users) */}
+                                    {!user?.has_password && (
+                                        <div>
+                                            <FloatingLabelInput
+                                                id="email"
+                                                type="email"
+                                                label="Email Address"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                error={errors.email}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Current password only for Change Password */}
+                                    {user?.has_password && (
+                                        <div>
+                                            <FloatingLabelInput
+                                                id="currentPassword"
+                                                type={showCurrentPassword ? "text" : "password"}
+                                                label="Current Password"
+                                                value={currentPassword}
+                                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                                error={errors.currentPassword}
+                                            />
+                                        </div>
+                                    )}
 
                                     <div>
                                         <FloatingLabelInput
                                             id="newPassword"
                                             type={showNewPassword ? "text" : "password"}
-                                            label="New Password"
+                                            label={user?.has_password ? "New Password" : "Password"}
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
                                             error={errors.newPassword}
@@ -224,7 +327,7 @@ export default function SecurityPage() {
                                         <FloatingLabelInput
                                             id="confirmPassword"
                                             type={showConfirmPassword ? "text" : "password"}
-                                            label="Confirm New Password"
+                                            label={user?.has_password ? "Confirm New Password" : "Confirm Password"}
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             error={errors.confirmPassword}
@@ -239,16 +342,16 @@ export default function SecurityPage() {
                                         {updating ? (
                                             <>
                                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                                Changing Password...
+                                                {user?.has_password ? 'Changing Password...' : 'Setting Password...'}
                                             </>
                                         ) : (
-                                            'Change Password'
+                                            user?.has_password ? 'Change Password' : 'Set Password'
                                         )}
                                     </button>
                                 </form>
 
                                 <p className="text-xs text-muted-foreground mt-4">
-                                    Password must be at least 8 characters long.
+                                    Password must be at least 6 characters long.
                                 </p>
                             </div>
                         </div>
