@@ -200,7 +200,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                                 <button
                                     onClick={handlePost}
                                     disabled={isPosting || !newAnnouncement.trim()}
-                                    className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/80 px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isPosting ? 'Posting...' : 'Post'}
                                 </button>

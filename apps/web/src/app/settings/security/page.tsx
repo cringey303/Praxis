@@ -316,7 +316,7 @@ export default function SecurityPage() {
                                     {user?.has_password && (
                                         <button
                                             onClick={() => setIsPasswordFormOpen(!isPasswordFormOpen)}
-                                            className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                            className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                                         >
                                             {isPasswordFormOpen ? 'Hide' : 'Change Password'}
                                         </button>
