@@ -316,7 +316,7 @@ export default function SecurityPage() {
                                     {user?.has_password && (
                                         <button
                                             onClick={() => setIsPasswordFormOpen(!isPasswordFormOpen)}
-                                            className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                            className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-sm text-sm hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                                         >
                                             {isPasswordFormOpen ? 'Hide' : 'Change Password'}
                                         </button>
@@ -386,7 +386,7 @@ export default function SecurityPage() {
                                                 <button
                                                     type="submit"
                                                     disabled={updating}
-                                                    className="cursor-pointer w-1/2 py-1.5 px-4 bg-primary text-primary-foreground rounded-lg font-small hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                                    className="cursor-pointer w-auto py-1.5 px-4 bg-primary text-primary-foreground rounded-sm font-small hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                                 >
 
                                                     {updating ? (
