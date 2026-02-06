@@ -1033,10 +1033,19 @@ export default function SecurityPage() {
                                         <div className="flex gap-2 mb-3">
                                             <button
                                                 onClick={() => copyToClipboard(backupCodes.join('\n'))}
-                                                className="cursor-pointer flex-1 py-2 px-4 border border-border rounded-sm text-sm font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2"
+                                                className="cursor-pointer flex-1 py-2 px-4 border border-border rounded-sm text-sm font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2 min-w-[160px]"
                                             >
-                                                <Copy className="h-4 w-4" />
-                                                Copy all codes
+                                                {copiedCode === backupCodes.join('\n') ? (
+                                                    <>
+                                                        <Check className="h-4 w-4 text-green-500" />
+                                                        <span className="text-green-500">All codes copied</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Copy className="h-4 w-4" />
+                                                        Copy all codes
+                                                    </>
+                                                )}
                                             </button>
                                             <button
                                                 onClick={() => {
