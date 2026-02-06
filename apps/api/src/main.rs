@@ -1,6 +1,6 @@
 use axum::{
     http::{header, Method},
-    routing::{get, post},
+    routing::{delete, get, post},
     Router,
 };
 use dotenvy::dotenv;
@@ -13,7 +13,9 @@ use tower_sessions_sqlx_store::PostgresStore;
 
 mod announcements;
 mod auth;
+mod passkey;
 mod r2;
+mod totp;
 mod upload;
 mod user;
 
@@ -119,6 +121,35 @@ async fn main() {
         .route("/announcement", post(announcements::create))
         .route("/announcements/recent", get(announcements::get_recent))
         .route("/announcements", get(announcements::get_all))
+        // Passkeys
+        .route(
+            "/auth/passkey/register/start",
+            post(passkey::start_registration),
+        )
+        .route(
+            "/auth/passkey/register/finish",
+            post(passkey::finish_registration),
+        )
+        .route(
+            "/auth/passkey/auth/start",
+            post(passkey::start_authentication),
+        )
+        .route(
+            "/auth/passkey/auth/finish",
+            post(passkey::finish_authentication),
+        )
+        .route("/auth/passkey/list", get(passkey::list_passkeys))
+        .route("/auth/passkey/:id", delete(passkey::delete_passkey))
+        // TOTP 2FA
+        .route("/auth/totp/setup", post(totp::setup_totp))
+        .route("/auth/totp/enable", post(totp::enable_totp))
+        .route("/auth/totp/disable", post(totp::disable_totp))
+        .route("/auth/totp/verify", post(totp::verify_totp))
+        .route("/auth/totp/status", get(totp::get_totp_status))
+        .route(
+            "/auth/totp/backup-codes",
+            post(totp::regenerate_backup_codes),
+        )
         // Images are now served directly from Cloudflare R2
         .layer(session_layer)
         .layer(cors)

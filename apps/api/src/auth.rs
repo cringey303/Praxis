@@ -321,7 +321,25 @@ pub async fn login(
             )
         })?;
 
-    // Set Session
+    // Check if user has 2FA enabled
+    let has_2fa = crate::totp::has_2fa_enabled(&pool, user.user_id).await?;
+
+    if has_2fa {
+        // Store pending 2FA verification in session
+        session
+            .insert("pending_2fa_user_id", user.user_id)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        tracing::info!("2FA required for user_id: {}", user.user_id);
+
+        return Ok(Json(serde_json::json!({
+            "requires_2fa": true,
+            "message": "2FA verification required"
+        })));
+    }
+
+    // No 2FA - complete login directly
     session
         .insert("user_id", user.user_id)
         .await
@@ -330,7 +348,10 @@ pub async fn login(
     tracing::info!("Login successful for user_id: {}", user.user_id);
 
     // return success
-    Ok((StatusCode::OK, "Login successful"))
+    Ok(Json(serde_json::json!({
+        "success": true,
+        "message": "Login successful"
+    })))
 }
 
 // google oauth handling
