@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Smartphone, Key, Trash2, Plus, Copy, Check } from 'lucide-react';
+import { Loader2, Smartphone, Key, Trash2, Plus, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { useToast } from "@/components/ui/Toast";
@@ -52,6 +52,7 @@ export default function SecurityPage() {
 
     // Passkey state
     const [passkeys, setPasskeys] = useState<PasskeyInfo[]>([]);
+    const [showPasskeys, setShowPasskeys] = useState(false);
     const [registeringPasskey, setRegisteringPasskey] = useState(false);
     const [deletingPasskeyId, setDeletingPasskeyId] = useState<string | null>(null);
     const [newPasskeyName, setNewPasskeyName] = useState('');
@@ -605,36 +606,48 @@ export default function SecurityPage() {
 
                                 {passkeys.length > 0 ? (
                                     <div className="space-y-3">
-                                        {passkeys.map((passkey) => (
-                                            <div
-                                                key={passkey.id}
-                                                className="flex items-center justify-between p-4 rounded-sm border border-border bg-secondary/20"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className="p-2 bg-secondary rounded-sm">
-                                                        <Key className="h-5 w-5" />
+                                        <button
+                                            onClick={() => setShowPasskeys(!showPasskeys)}
+                                            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer mb-2"
+                                        >
+                                            {showPasskeys ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                            {showPasskeys ? 'Hide Passkeys' : 'View Passkeys'}
+                                        </button>
+
+                                        {showPasskeys && (
+                                            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                                                {passkeys.map((passkey) => (
+                                                    <div
+                                                        key={passkey.id}
+                                                        className="flex items-center justify-between p-4 rounded-sm border border-border bg-secondary/20"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="p-2 bg-secondary rounded-sm">
+                                                                <Key className="h-5 w-5" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-medium">{passkey.name}</p>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    Added {formatDate(passkey.created_at)}
+                                                                    {passkey.last_used_at && ` • Last used ${formatDate(passkey.last_used_at)}`}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleDeletePasskey(passkey.id)}
+                                                            disabled={deletingPasskeyId === passkey.id}
+                                                            className="cursor-pointer p-2 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
+                                                        >
+                                                            {deletingPasskeyId === passkey.id ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <Trash2 className="h-4 w-4" />
+                                                            )}
+                                                        </button>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium">{passkey.name}</p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            Added {formatDate(passkey.created_at)}
-                                                            {passkey.last_used_at && ` • Last used ${formatDate(passkey.last_used_at)}`}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleDeletePasskey(passkey.id)}
-                                                    disabled={deletingPasskeyId === passkey.id}
-                                                    className="cursor-pointer p-2 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
-                                                >
-                                                    {deletingPasskeyId === passkey.id ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                    ) : (
-                                                        <Trash2 className="h-4 w-4" />
-                                                    )}
-                                                </button>
+                                                ))}
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="text-center py-8 text-muted-foreground">
