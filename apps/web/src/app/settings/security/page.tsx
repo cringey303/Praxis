@@ -836,7 +836,7 @@ export default function SecurityPage() {
                                         <button
                                             onClick={handleSetupTotp}
                                             disabled={settingUpTotp}
-                                            className="cursor-pointer shrink-0 border border-border bg-background text-foreground font-medium py-2 px-4 rounded-sm text-sm hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            className="cursor-pointer shrink-0 border border-border bg-background text-foreground font-medium py-1.5 px-4 rounded-sm text-sm hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
                                             {settingUpTotp && <Loader2 className="h-4 w-4 animate-spin" />}
                                             Enable 2FA
@@ -861,11 +861,24 @@ export default function SecurityPage() {
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="text-center">
-                                                <p className="text-xs text-muted-foreground mb-1">Or enter this code manually:</p>
-                                                <code className="text-sm font-mono bg-secondary px-3 py-1 rounded">
-                                                    {totpSetupData.secret}
-                                                </code>
+                                            <div className="flex flex-col items-center gap-2">
+                                                <p className="text-xs text-muted-foreground">Or enter this code manually:</p>
+                                                <div className="flex items-center gap-2">
+                                                    <code className="text-sm font-mono bg-secondary px-3 py-1 rounded-sm border border-border">
+                                                        {totpSetupData.secret}
+                                                    </code>
+                                                    <button
+                                                        onClick={() => copyToClipboard(totpSetupData.secret)}
+                                                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-sm transition-colors cursor-pointer"
+                                                        title="Copy code"
+                                                    >
+                                                        {copiedCode === totpSetupData.secret ? (
+                                                            <Check className="h-4 w-4 text-green-500" />
+                                                        ) : (
+                                                            <Copy className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
 
