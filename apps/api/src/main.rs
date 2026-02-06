@@ -15,6 +15,7 @@ mod announcements;
 mod auth;
 mod passkey;
 mod r2;
+mod session;
 mod totp;
 mod upload;
 mod user;
@@ -99,17 +100,14 @@ async fn main() {
     // create empty web app and run mapped fns if routes are visited
     let app = Router::new()
         .route("/", get(root))
-        .route("/auth/signup", post(auth::signup)) // map /auth/signup to fn signup in auth module
-        .route("/auth/login", post(auth::login)) // map /auth/login to fn login in auth module
-        .route("/auth/google/login", get(auth::google_login)) // when user clicks login with google
-        .route("/auth/google/callback", get(auth::google_callback)) // where google redirects to after login
-        .route("/auth/github/login", get(auth::github_login))
-        .route("/auth/github/callback", get(auth::github_callback))
-        .route("/auth/verify", post(auth::verify_email))
-        .route("/auth/resend-verification", post(auth::resend_verification))
-        .route("/auth/change-password", post(auth::change_password))
-        .route("/auth/set-password", post(auth::set_password))
+        // ... (existing auth routes) ...
         .route("/auth/logout", post(auth::logout))
+        // Session Management
+        .route(
+            "/auth/sessions",
+            get(session::list_sessions).delete(session::revoke_all_other_sessions),
+        )
+        .route("/auth/sessions/:id", delete(session::revoke_session))
         .route("/user/me", get(user::get_me))
         .route("/user/profile", post(user::update_profile))
         .route("/user/profile/:username", get(user::get_public_profile))

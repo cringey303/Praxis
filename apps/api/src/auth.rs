@@ -90,6 +90,7 @@ pub struct AuthRequest {
 pub async fn signup(
     State(pool): State<PgPool>,
     session: Session,
+    headers: axum::http::HeaderMap,
     Json(payload): Json<SignupRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // check if email already exists
@@ -180,6 +181,27 @@ pub async fn signup(
         .insert("user_id", user_id)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Create Active Session
+    if let Some(session_id) = session.id() {
+        // Default expiry (e.g., 24h from now, or whatever session manager uses)
+        // ideally match session store config. For now using 24 hours.
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+
+        // This is async but not critical path for response success, but good to await
+        crate::session::create_session(
+            &pool,
+            user_id,
+            session_id.to_string(),
+            &headers,
+            expires_at,
+        )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to track session: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+    }
 
     tracing::info!("Signup successful for user_id: {}", user_id);
 
@@ -276,6 +298,7 @@ pub async fn resend_verification(
 pub async fn login(
     State(pool): State<PgPool>,
     session: Session,
+    headers: axum::http::HeaderMap,
     Json(payload): Json<LoginRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // find user by email
@@ -338,12 +361,28 @@ pub async fn login(
             "message": "2FA verification required"
         })));
     }
-
     // No 2FA - complete login directly
     session
         .insert("user_id", user.user_id)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Create Active Session
+    if let Some(session_id) = session.id() {
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+        crate::session::create_session(
+            &pool,
+            user.user_id,
+            session_id.to_string(),
+            &headers,
+            expires_at,
+        )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to track session: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+    }
 
     tracing::info!("Login successful for user_id: {}", user.user_id);
 
@@ -395,6 +434,7 @@ pub async fn google_login() -> impl IntoResponse {
 pub async fn google_callback(
     State(pool): State<PgPool>,
     session: Session,
+    headers: axum::http::HeaderMap,
     Query(query): Query<AuthRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let client = oauth_client();
@@ -467,6 +507,23 @@ pub async fn google_callback(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    // Create Active Session
+    if let Some(session_id) = session.id() {
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+        crate::session::create_session(
+            &pool,
+            user_id,
+            session_id.to_string(),
+            &headers,
+            expires_at,
+        )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to track session: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+    }
+
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
     let frontend_url = frontend_url
@@ -516,6 +573,7 @@ pub async fn github_login() -> impl IntoResponse {
 pub async fn github_callback(
     State(pool): State<PgPool>,
     session: Session,
+    headers: axum::http::HeaderMap,
     Query(query): Query<AuthRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let client = github_oauth_client();
@@ -651,6 +709,23 @@ pub async fn github_callback(
         .insert("user_id", user_id)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Create Active Session
+    if let Some(session_id) = session.id() {
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+        crate::session::create_session(
+            &pool,
+            user_id,
+            session_id.to_string(),
+            &headers,
+            expires_at,
+        )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to track session: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+    }
 
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());

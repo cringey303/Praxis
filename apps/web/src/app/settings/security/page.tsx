@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Smartphone, Key, Trash2, Plus, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Smartphone, Key, Trash2, Plus, Copy, Check, ChevronDown, ChevronUp, Laptop, LogOut, Globe } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { useToast } from "@/components/ui/Toast";
@@ -25,6 +25,15 @@ interface PasskeyInfo {
     name: string;
     created_at: string;
     last_used_at: string | null;
+}
+
+interface ActiveSession {
+    id: string;
+    user_agent: string;
+    ip_address: string;
+    last_active_at: string;
+    expires_at: string;
+    is_current: boolean;
 }
 
 export default function SecurityPage() {
@@ -71,6 +80,10 @@ export default function SecurityPage() {
     const [backupCodes, setBackupCodes] = useState<string[]>([]);
     const [showBackupCodes, setShowBackupCodes] = useState(false);
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+    // Session state
+    const [sessions, setSessions] = useState<ActiveSession[]>([]);
+    const [loadingSessions, setLoadingSessions] = useState(true);
 
     // Fetch user data
     const fetchUser = useCallback(async () => {
@@ -125,11 +138,29 @@ export default function SecurityPage() {
         }
     }, []);
 
+    // Fetch sessions
+    const fetchSessions = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_URL}/auth/sessions`, {
+                credentials: 'include',
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setSessions(data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch sessions', err);
+        } finally {
+            setLoadingSessions(false);
+        }
+    }, []);
+
     useEffect(() => {
         fetchUser();
         fetchPasskeys();
         fetchTotpStatus();
-    }, [fetchUser, fetchPasskeys, fetchTotpStatus]);
+        fetchSessions();
+    }, [fetchUser, fetchPasskeys, fetchTotpStatus, fetchSessions]);
 
     const handleLogout = async () => {
         setLoading(true);
@@ -508,17 +539,68 @@ export default function SecurityPage() {
         }
     };
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        setCopiedCode(text);
-        setTimeout(() => setCopiedCode(null), 2000);
+    const copyToClipboard = async (text: string) => {
+        if (!navigator.clipboard) return;
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedCode(text);
+            setTimeout(() => setCopiedCode(null), 2000);
+            showToast('Copied to clipboard', 'success');
+        } catch (err) {
+            console.error('Failed to copy', err);
+            showToast('Failed to copy to clipboard', 'error');
+        }
+    };
+
+    const handleRevokeSession = async (sessionId: string) => {
+        if (!confirm('Are you sure you want to log out this session?')) return;
+
+        try {
+            const res = await fetch(`${API_URL}/auth/sessions/${sessionId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+
+            if (res.ok) {
+                setSessions(sessions.filter(s => s.id !== sessionId));
+                showToast('Session revoked successfully', 'success');
+            } else {
+                showToast('Failed to revoke session', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('An error occurred', 'error');
+        }
+    };
+
+    const handleRevokeAllOtherSessions = async () => {
+        if (!confirm('Are you sure you want to log out all other devices?')) return;
+
+        try {
+            const res = await fetch(`${API_URL}/auth/sessions`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+
+            if (res.ok) {
+                setSessions(sessions.filter(s => s.is_current));
+                showToast('All other sessions logged out', 'success');
+            } else {
+                showToast('Failed to log out sessions', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('An error occurred', 'error');
+        }
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+        return new Date(dateString).toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
         });
     };
 
@@ -597,9 +679,10 @@ export default function SecurityPage() {
                                         {registeringPasskey ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                         ) : (
-                                            <Plus className="h-4 w-4" />
+                                            <>
+                                                + Add Passkey
+                                            </>
                                         )}
-                                        Add Passkey
                                     </button>
                                 </div>
 
@@ -800,19 +883,32 @@ export default function SecurityPage() {
 
                             {/* Two-Factor Authentication Section */}
                             <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div>
-                                        <h2 className="text-lg font-medium">Two-Factor Authentication</h2>
-                                        <p className="text-sm text-muted-foreground">
+                                        <div className="flex items-center gap-3">
+                                            <h2 className="text-lg font-medium">Two-Factor Authentication</h2>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${totpEnabled
+                                                ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                                : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                                }`}>
+                                                {totpEnabled ? 'Enabled' : 'Disabled'}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground mt-1">
                                             Add an extra layer of security when logging in with password.
                                         </p>
                                     </div>
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${totpEnabled
-                                        ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                                        }`}>
-                                        {totpEnabled ? 'Enabled' : 'Disabled'}
-                                    </span>
+                                    {totpEnabled && !totpSetupData && !isDisableTotpOpen && (
+                                        <button
+                                            onClick={() => {
+                                                setIsDisableTotpOpen(true);
+                                                setTotpCode('');
+                                            }}
+                                            className="cursor-pointer px-3 py-1.5 border border-border rounded-sm text-sm font-medium hover:bg-secondary/30 transition-colors text-red-500 hover:text-red-600 self-start sm:self-center"
+                                        >
+                                            Disable 2FA
+                                        </button>
+                                    )}
                                 </div>
 
                                 {!totpEnabled && !totpSetupData && (
@@ -937,63 +1033,43 @@ export default function SecurityPage() {
                                     </div>
                                 )}
 
-                                {/* 2FA Enabled State */}
-                                {totpEnabled && !totpSetupData && (
-                                    <div className="space-y-4 pt-4 border-t border-border">
-                                        {!isDisableTotpOpen ? (
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-sm font-medium">2FA is enabled</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        Your account is protected with two-factor authentication.
-                                                    </p>
-                                                </div>
+                                {/* 2FA Enabled State - Disable Form */}
+                                {totpEnabled && !totpSetupData && isDisableTotpOpen && (
+                                    <div className="space-y-4 pt-4 border-t border-border mt-4">
+                                        <div className="bg-secondary/5 rounded-sm p-4 border border-border animate-in fade-in slide-in-from-top-2">
+                                            <h3 className="text-sm font-medium mb-3">Disable 2FA</h3>
+                                            <p className="text-xs text-muted-foreground mb-4">
+                                                Enter your current 2FA code to disable two-factor authentication.
+                                            </p>
+                                            <div className="flex gap-3">
+                                                <input
+                                                    type="text"
+                                                    value={totpCode}
+                                                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                    placeholder="000000"
+                                                    className="flex-1 px-3 py-1.5 bg-background border border-border rounded-sm text-center text-md font-mono tracking-widest"
+                                                    maxLength={6}
+                                                    autoFocus
+                                                />
                                                 <button
-                                                    onClick={() => {
-                                                        setIsDisableTotpOpen(true);
-                                                        setTotpCode('');
-                                                    }}
-                                                    className="cursor-pointer px-3 py-1.5 border border-border rounded-sm text-sm font-medium hover:bg-secondary/30 transition-colors text-red-500 hover:text-red-600"
+                                                    onClick={handleDisableTotp}
+                                                    disabled={disablingTotp || totpCode.length !== 6}
+                                                    className="cursor-pointer px-3 py-1.5 bg-red-500 text-white rounded-sm text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                 >
-                                                    Disable 2FA
+                                                    {disablingTotp && <Loader2 className="h-4 w-4 animate-spin" />}
+                                                    Confirm Disable
                                                 </button>
                                             </div>
-                                        ) : (
-                                            <div className="bg-secondary/5 rounded-sm p-4 border border-border animate-in fade-in slide-in-from-top-2">
-                                                <h3 className="text-sm font-medium mb-3">Disable 2FA</h3>
-                                                <p className="text-xs text-muted-foreground mb-4">
-                                                    Enter your current 2FA code to disable two-factor authentication.
-                                                </p>
-                                                <div className="flex gap-3">
-                                                    <input
-                                                        type="text"
-                                                        value={totpCode}
-                                                        onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                                        placeholder="000000"
-                                                        className="flex-1 px-3 py-1.5 bg-background border border-border rounded-sm text-center text-md font-mono tracking-widest"
-                                                        maxLength={6}
-                                                        autoFocus
-                                                    />
-                                                    <button
-                                                        onClick={handleDisableTotp}
-                                                        disabled={disablingTotp || totpCode.length !== 6}
-                                                        className="cursor-pointer px-3 py-1.5 bg-red-500 text-white rounded-sm text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                                    >
-                                                        {disablingTotp && <Loader2 className="h-4 w-4 animate-spin" />}
-                                                        Confirm Disable
-                                                    </button>
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        setIsDisableTotpOpen(false);
-                                                        setTotpCode('');
-                                                    }}
-                                                    className="mt-3 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        )}
+                                            <button
+                                                onClick={() => {
+                                                    setIsDisableTotpOpen(false);
+                                                    setTotpCode('');
+                                                }}
+                                                className="mt-3 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -1083,49 +1159,70 @@ export default function SecurityPage() {
                             {/* Login Sessions Section */}
                             <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
                                 <h2 className="text-lg font-medium mb-1">Login Sessions</h2>
-                                <p className="text-sm text-muted-foreground mb-6">Places where you&apos;re currently logged into Praxis.</p>
 
                                 <div className="space-y-4">
-                                    {/* Current Device */}
-                                    <div className="flex items-start gap-4 p-4 rounded-sm border border-primary/30 bg-primary/5">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                                            <rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" />
-                                        </svg>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-sm font-medium">Your Current Browser</h3>
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary text-primary-foreground">
-                                                    Current Device
-                                                </span>
+                                    {loadingSessions ? (
+                                        <div className="flex justify-center p-4">
+                                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                        </div>
+                                    ) : sessions.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">No active sessions found.</p>
+                                    ) : (
+                                        sessions.map((session) => (
+                                            <div
+                                                key={session.id}
+                                                className={`flex items-start gap-4 p-4 rounded-sm border ${session.is_current
+                                                    ? 'border-primary/30 bg-primary/5'
+                                                    : 'border-border bg-card'
+                                                    }`}
+                                            >
+                                                <div className={`mt-1 ${session.is_current ? 'text-primary' : 'text-muted-foreground'}`}>
+                                                    <Laptop className="h-6 w-6" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="text-sm font-medium">
+                                                            {session.user_agent.includes('Mozilla') ? 'Browser Session' : session.user_agent}
+                                                        </h3>
+                                                        {session.is_current && (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary text-primary-foreground">
+                                                                Current Device
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1" title={session.user_agent}>
+                                                        {session.ip_address} • {formatDate(session.last_active_at)}
+                                                    </p>
+                                                    {session.is_current ? (
+                                                        <p className="text-xs text-primary mt-1 font-medium">Active now</p>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleRevokeSession(session.id)}
+                                                            className="text-xs text-red-500 hover:text-red-600 mt-2 font-medium flex items-center gap-1 transition-colors"
+                                                        >
+                                                            <LogOut className="h-3 w-3" />
+                                                            Log out
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <p className="text-xs text-muted-foreground mt-0.5">Location unavailable • IP hidden</p>
-                                            <p className="text-xs text-primary mt-1 font-medium">Active now</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Example Other Device - Placeholder */}
-                                    <div className="flex items-start gap-4 p-4 rounded-sm border border-border opacity-50">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-                                            <rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" />
-                                        </svg>
-                                        <div className="flex-1">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Other devices will appear here</h3>
-                                            <p className="text-xs text-muted-foreground mt-0.5">No other active sessions</p>
-                                        </div>
-                                    </div>
+                                        ))
+                                    )}
                                 </div>
 
-                                <div className="mt-6">
-                                    <button
-                                        disabled
-                                        className="text-red-500 text-sm font-medium flex items-center gap-2 opacity-50 cursor-not-allowed"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" />
-                                        </svg>
-                                        Log out all other sessions
-                                    </button>
-                                </div>
+                                {sessions.length > 1 && (
+                                    <div className="mt-6">
+                                        <button
+                                            onClick={handleRevokeAllOtherSessions}
+                                            className="text-red-500 text-sm font-medium flex items-center gap-2 hover:text-red-600 transition-colors"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" />
+                                            </svg>
+                                            Log out all other sessions
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </main>
