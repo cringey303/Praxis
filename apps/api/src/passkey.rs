@@ -1,3 +1,7 @@
+use argon2::{
+    password_hash::{PasswordHash, PasswordVerifier},
+    Argon2,
+};
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use base64::Engine;
 use oauth2::url::Url;
@@ -40,10 +44,16 @@ pub struct FinishAuthRequest {
     pub credential: PublicKeyCredential,
 }
 
+#[derive(Deserialize)]
+pub struct StartRegistrationRequest {
+    pub password: Option<String>,
+}
+
 // Start passkey registration (user must be logged in)
 pub async fn start_registration(
     State(pool): State<PgPool>,
     session: Session,
+    Json(payload): Json<StartRegistrationRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let user_id: Uuid = session
         .get("user_id")
@@ -58,6 +68,37 @@ pub async fn start_registration(
     .fetch_one(&pool)
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Verify Password if user has one
+    let auth = sqlx::query!(
+        "SELECT password_hash FROM local_auths WHERE user_id = $1",
+        user_id
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if let Some(auth_rec) = auth {
+        // User has a local_auth record (email/password or email verified)
+        // If they have a password hash, we must verify it.
+        if !auth_rec.password_hash.is_empty() {
+            let password = payload
+                .password
+                .ok_or((StatusCode::UNAUTHORIZED, "Password required".to_string()))?;
+
+            let parsed_hash = PasswordHash::new(&auth_rec.password_hash).map_err(|e| {
+                tracing::error!("Corrupted password hash for user {}: {}", user_id, e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Internal Error".to_string(),
+                )
+            })?;
+
+            Argon2::default()
+                .verify_password(password.as_bytes(), &parsed_hash)
+                .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid password".to_string()))?;
+        }
+    }
 
     // Get existing passkeys to exclude from registration
     let existing: Vec<Passkey> = get_user_passkeys(&pool, user_id).await?;

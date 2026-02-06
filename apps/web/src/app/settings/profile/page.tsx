@@ -477,7 +477,7 @@ export default function ProfilePage() {
                         {/* Sidebar Skeleton */}
                         <aside className="md:col-span-3 space-y-4">
                             <nav className="flex flex-col gap-1">
-                                <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/5 border border-primary/10">
+                                <div className="flex items-center gap-3 px-4 py-3 rounded-sm bg-primary/5 border border-primary/10">
                                     <Skeleton className="h-5 w-5 rounded-full" />
                                     <Skeleton className="h-4 w-24" />
                                 </div>
@@ -591,7 +591,7 @@ export default function ProfilePage() {
                         <nav className="flex flex-col gap-1">
                             <Link
                                 href="/settings/profile"
-                                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 border border-primary/20 text-primary transition-all group"
+                                className="flex items-center gap-3 px-4 py-3 rounded-sm bg-primary/10 border border-primary/20 text-primary transition-all group"
                             >
                                 <div className="h-5 w-5 flex items-center justify-center">
                                     {/* User Icon */}
@@ -602,7 +602,7 @@ export default function ProfilePage() {
 
                             <Link
                                 href="/settings/security"
-                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group"
+                                className="flex items-center gap-3 px-4 py-3 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group"
                             >
                                 <div className="h-5 w-5 flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
@@ -611,7 +611,7 @@ export default function ProfilePage() {
                             </Link>
 
 
-                            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group cursor-not-allowed opacity-60">
+                            <button className="flex items-center gap-3 px-4 py-3 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group cursor-not-allowed opacity-60">
                                 <div className="h-5 w-5 flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
                                 </div>

@@ -57,6 +57,8 @@ export default function SecurityPage() {
     const [newPasskeyName, setNewPasskeyName] = useState('');
     const [showPasskeyNameDialog, setShowPasskeyNameDialog] = useState(false);
     const [pendingCredential, setPendingCredential] = useState<unknown>(null);
+    const [showPasskeyPasswordDialog, setShowPasskeyPasswordDialog] = useState(false);
+    const [passkeyPassword, setPasskeyPassword] = useState('');
 
     // TOTP state
     const [totpEnabled, setTotpEnabled] = useState(false);
@@ -298,20 +300,43 @@ export default function SecurityPage() {
     };
 
     // Passkey handlers
-    const handleRegisterPasskey = async () => {
+    const initiatePasskeyRegistration = () => {
+        if (user?.has_password) {
+            setShowPasskeyPasswordDialog(true);
+        } else {
+            handleRegisterPasskey();
+        }
+    };
+
+    const handleRegisterPasskey = async (password?: string) => {
         setRegisteringPasskey(true);
         try {
             // Start registration
             const startRes = await fetch(`${API_URL}/auth/passkey/register/start`, {
                 method: 'POST',
                 credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ password }),
             });
 
             if (!startRes.ok) {
                 const errorText = await startRes.text();
+                // If unauthorized, it might be a bad password
+                if (startRes.status === 401 && password) {
+                    showToast('Incorrect password', 'error');
+                    setRegisteringPasskey(false); // Stop here so they can try again
+                    return;
+                }
+
                 console.error('Passkey start error:', startRes.status, errorText);
                 throw new Error(errorText || 'Failed to start passkey registration');
             }
+
+            // Close password dialog if it was open
+            setShowPasskeyPasswordDialog(false);
+            setPasskeyPassword('');
 
             const data = await startRes.json();
 
@@ -396,6 +421,9 @@ export default function SecurityPage() {
     const handleSetupTotp = async () => {
         setSettingUpTotp(true);
         try {
+            // Need to verify password first? 
+            // The requirement was for passkey creation. 
+            // let's stick to passkey for now as requested.
             const res = await fetch(`${API_URL}/auth/totp/setup`, {
                 method: 'POST',
                 credentials: 'include',
@@ -505,7 +533,7 @@ export default function SecurityPage() {
                         <nav className="flex flex-col gap-1">
                             <Link
                                 href="/settings/profile"
-                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group"
+                                className="flex items-center gap-3 px-4 py-3 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group"
                             >
                                 <div className="h-5 w-5 flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
@@ -515,7 +543,7 @@ export default function SecurityPage() {
 
                             <Link
                                 href="/settings/security"
-                                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 border border-primary/20 text-primary transition-all group"
+                                className="flex items-center gap-3 px-4 py-3 rounded-sm bg-primary/10 border border-primary/20 text-primary transition-all group"
                             >
                                 <div className="h-5 w-5 flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
@@ -523,7 +551,7 @@ export default function SecurityPage() {
                                 <span className="text-sm font-medium">Security</span>
                             </Link>
 
-                            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group cursor-not-allowed opacity-60">
+                            <button className="flex items-center gap-3 px-4 py-3 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group cursor-not-allowed opacity-60">
                                 <div className="h-5 w-5 flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
                                 </div>
@@ -561,7 +589,7 @@ export default function SecurityPage() {
                                         <h2 className="text-lg font-medium">Passkeys</h2>
                                     </div>
                                     <button
-                                        onClick={handleRegisterPasskey}
+                                        onClick={initiatePasskeyRegistration}
                                         disabled={registeringPasskey}
                                         className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                     >
@@ -579,10 +607,10 @@ export default function SecurityPage() {
                                         {passkeys.map((passkey) => (
                                             <div
                                                 key={passkey.id}
-                                                className="flex items-center justify-between p-4 rounded-lg border border-border bg-secondary/20"
+                                                className="flex items-center justify-between p-4 rounded-sm border border-border bg-secondary/20"
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className="p-2 bg-secondary rounded-lg">
+                                                    <div className="p-2 bg-secondary rounded-sm">
                                                         <Key className="h-5 w-5" />
                                                     </div>
                                                     <div>
@@ -629,7 +657,7 @@ export default function SecurityPage() {
                                             value={newPasskeyName}
                                             onChange={(e) => setNewPasskeyName(e.target.value)}
                                             placeholder="e.g., MacBook Pro, iPhone"
-                                            className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm mb-4"
+                                            className="w-full px-3 py-2 bg-secondary border border-border rounded-sm text-sm mb-4"
                                             autoFocus
                                         />
                                         <div className="flex gap-3">
@@ -778,8 +806,8 @@ export default function SecurityPage() {
                                 </div>
 
                                 {!totpEnabled && !totpSetupData && (
-                                    <div className="bg-secondary/30 rounded-lg p-4 border border-border flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                        <div className="p-2 bg-secondary rounded-lg relative">
+                                    <div className="bg-secondary/30 rounded-sm p-4 border border-border flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                        <div className="p-2 bg-secondary rounded-sm relative">
                                             <Smartphone className="h-6 w-6" />
                                             <div className="absolute bottom-3 left-1 bg-secondary rounded-sm p-0.5">
                                                 <svg
@@ -808,7 +836,7 @@ export default function SecurityPage() {
                                         <button
                                             onClick={handleSetupTotp}
                                             disabled={settingUpTotp}
-                                            className="cursor-pointer shrink-0 border border-border bg-background text-foreground font-medium py-2 px-4 rounded-lg text-sm hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            className="cursor-pointer shrink-0 border border-border bg-background text-foreground font-medium py-2 px-4 rounded-sm text-sm hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
                                             {settingUpTotp && <Loader2 className="h-4 w-4 animate-spin" />}
                                             Enable 2FA
@@ -819,13 +847,13 @@ export default function SecurityPage() {
                                 {/* TOTP Setup Flow */}
                                 {totpSetupData && (
                                     <div className="space-y-6">
-                                        <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+                                        <div className="bg-secondary/30 rounded-sm p-4 border border-border">
                                             <h3 className="text-sm font-medium mb-3">1. Scan QR Code</h3>
                                             <p className="text-xs text-muted-foreground mb-4">
                                                 Use an authenticator app like Google Authenticator, Authy, or 1Password to scan this QR code.
                                             </p>
                                             <div className="flex justify-center mb-4">
-                                                <div className="bg-white p-4 rounded-lg">
+                                                <div className="bg-white p-4 rounded-sm">
                                                     <img
                                                         src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(totpSetupData.qr_code_url)}`}
                                                         alt="TOTP QR Code"
@@ -841,7 +869,7 @@ export default function SecurityPage() {
                                             </div>
                                         </div>
 
-                                        <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+                                        <div className="bg-secondary/30 rounded-sm p-4 border border-border">
                                             <h3 className="text-sm font-medium mb-3">2. Enter verification code</h3>
                                             <p className="text-xs text-muted-foreground mb-4">
                                                 Enter the 6-digit code from your authenticator app to verify setup.
@@ -852,13 +880,13 @@ export default function SecurityPage() {
                                                     value={totpCode}
                                                     onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                                     placeholder="000000"
-                                                    className="flex-1 px-4 py-2 bg-secondary border border-border rounded-lg text-center text-lg font-mono tracking-widest"
+                                                    className="flex-1 px-4 py-2 bg-secondary border border-border rounded-sm text-center text-lg font-mono tracking-widest"
                                                     maxLength={6}
                                                 />
                                                 <button
                                                     onClick={handleEnableTotp}
                                                     disabled={settingUpTotp || totpCode.length !== 6}
-                                                    className="cursor-pointer px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    className="cursor-pointer px-6 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                 >
                                                     {settingUpTotp && <Loader2 className="h-4 w-4 animate-spin" />}
                                                     Verify
@@ -882,7 +910,7 @@ export default function SecurityPage() {
                                 {/* 2FA Enabled State */}
                                 {totpEnabled && !totpSetupData && (
                                     <div className="space-y-4">
-                                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-center gap-3">
+                                        <div className="bg-green-500/10 border border-green-500/20 rounded-sm p-4 flex items-center gap-3">
                                             <Check className="h-5 w-5 text-green-500" />
                                             <div>
                                                 <p className="text-sm font-medium text-green-500">2FA is enabled</p>
@@ -892,7 +920,7 @@ export default function SecurityPage() {
                                             </div>
                                         </div>
 
-                                        <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+                                        <div className="bg-secondary/30 rounded-sm p-4 border border-border">
                                             <h3 className="text-sm font-medium mb-3">Disable 2FA</h3>
                                             <p className="text-xs text-muted-foreground mb-4">
                                                 Enter your current 2FA code to disable two-factor authentication.
@@ -903,13 +931,13 @@ export default function SecurityPage() {
                                                     value={totpCode}
                                                     onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                                     placeholder="000000"
-                                                    className="flex-1 px-4 py-2 bg-secondary border border-border rounded-lg text-center text-lg font-mono tracking-widest"
+                                                    className="flex-1 px-4 py-2 bg-secondary border border-border rounded-sm text-center text-lg font-mono tracking-widest"
                                                     maxLength={6}
                                                 />
                                                 <button
                                                     onClick={handleDisableTotp}
                                                     disabled={disablingTotp || totpCode.length !== 6}
-                                                    className="cursor-pointer px-6 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    className="cursor-pointer px-6 py-2 bg-red-500 text-white rounded-sm text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                 >
                                                     {disablingTotp && <Loader2 className="h-4 w-4 animate-spin" />}
                                                     Disable
@@ -929,7 +957,7 @@ export default function SecurityPage() {
                                             These codes can be used to access your account if you lose your authenticator device.
                                             <strong className="text-foreground"> Save them in a secure location.</strong>
                                         </p>
-                                        <div className="bg-secondary rounded-lg p-4 mb-4 grid grid-cols-2 gap-2">
+                                        <div className="bg-secondary rounded-sm p-4 mb-4 grid grid-cols-2 gap-2">
                                             {backupCodes.map((code, index) => (
                                                 <div
                                                     key={index}
@@ -951,7 +979,7 @@ export default function SecurityPage() {
                                         </div>
                                         <button
                                             onClick={() => copyToClipboard(backupCodes.join('\n'))}
-                                            className="cursor-pointer w-full mb-3 py-2 px-4 border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2"
+                                            className="cursor-pointer w-full mb-3 py-2 px-4 border border-border rounded-sm text-sm font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2"
                                         >
                                             <Copy className="h-4 w-4" />
                                             Copy all codes
@@ -961,7 +989,7 @@ export default function SecurityPage() {
                                                 setShowBackupCodes(false);
                                                 setBackupCodes([]);
                                             }}
-                                            className="cursor-pointer w-full py-2 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                                            className="cursor-pointer w-full py-2 px-4 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors"
                                         >
                                             I&apos;ve saved my codes
                                         </button>
@@ -976,7 +1004,7 @@ export default function SecurityPage() {
 
                                 <div className="space-y-4">
                                     {/* Current Device */}
-                                    <div className="flex items-start gap-4 p-4 rounded-lg border border-primary/30 bg-primary/5">
+                                    <div className="flex items-start gap-4 p-4 rounded-sm border border-primary/30 bg-primary/5">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
                                             <rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" />
                                         </svg>
@@ -993,7 +1021,7 @@ export default function SecurityPage() {
                                     </div>
 
                                     {/* Example Other Device - Placeholder */}
-                                    <div className="flex items-start gap-4 p-4 rounded-lg border border-border opacity-50">
+                                    <div className="flex items-start gap-4 p-4 rounded-sm border border-border opacity-50">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
                                             <rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" />
                                         </svg>
@@ -1020,6 +1048,91 @@ export default function SecurityPage() {
                     </main>
                 </div>
             </div>
-        </div>
+
+
+            {/* Passkey Password Prompt Modal */}
+            {
+                showPasskeyPasswordDialog && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md mx-4">
+                            <h3 className="text-lg font-medium mb-2">Verify it's you</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                                Please enter your password to continue adding a passkey.
+                            </p>
+                            <FloatingLabelInput
+                                id="passkey-password"
+                                label="Password"
+                                type="password"
+                                value={passkeyPassword}
+                                onChange={(e) => setPasskeyPassword(e.target.value)}
+                                className="mb-4"
+                            />
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowPasskeyPasswordDialog(false);
+                                        setPasskeyPassword('');
+                                        setRegisteringPasskey(false);
+                                    }}
+                                    className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => handleRegisterPasskey(passkeyPassword)}
+                                    disabled={!passkeyPassword || registeringPasskey}
+                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    Continue
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Name Passkey Modal */}
+            {
+                showPasskeyNameDialog && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md mx-4">
+                            <h3 className="text-lg font-medium mb-2">Name your passkey</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                                Give this passkey a name to help you identify it later (e.g. &quot;MacBook Pro&quot;, &quot;iPhone&quot;).
+                            </p>
+                            <FloatingLabelInput
+                                id="passkey-name"
+                                label="Passkey Name"
+                                value={newPasskeyName}
+                                onChange={(e) => setNewPasskeyName(e.target.value)}
+                                className="mb-4"
+                                autoFocus
+                            />
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowPasskeyNameDialog(false);
+                                        setNewPasskeyName('');
+                                        setPendingCredential(null);
+                                    }}
+                                    className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleFinishPasskeyRegistration}
+                                    disabled={registeringPasskey}
+                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    Save Passkey
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }
