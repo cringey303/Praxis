@@ -1,4 +1,5 @@
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use base64::Engine;
 use oauth2::url::Url;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -206,7 +207,39 @@ pub async fn finish_authentication(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // Look up the credential using the raw bytes
-    let cred_id_bytes: Vec<u8> = payload.credential.id.clone().into();
+    // The ID from webauthn-rs might be the raw bytes OR the base64url string bytes depending on how it was deserialized
+    // The logs showed it was the base64url string bytes
+    let cred_id_raw: Vec<u8> = payload.credential.id.clone().into();
+
+    // Try to treat it as a base64url string first (because that's what we saw in the logs)
+    let cred_id_bytes = if let Ok(s) = String::from_utf8(cred_id_raw.clone()) {
+        if let Ok(decoded) = base64::prelude::BASE64_URL_SAFE_NO_PAD.decode(&s) {
+            tracing::info!(
+                "Decoded credential ID from Base64URL: {}",
+                hex::encode(&decoded)
+            );
+            decoded
+        } else {
+            // Try standard base64url safe
+            if let Ok(decoded) = base64::prelude::BASE64_URL_SAFE.decode(&s) {
+                tracing::info!(
+                    "Decoded credential ID from Base64URL (padded): {}",
+                    hex::encode(&decoded)
+                );
+                decoded
+            } else {
+                tracing::warn!("Could not base64 decode credential ID, using raw bytes");
+                cred_id_raw
+            }
+        }
+    } else {
+        cred_id_raw
+    };
+
+    tracing::info!(
+        "Authenticating with credential ID (hex used for query): {}",
+        hex::encode(&cred_id_bytes)
+    );
 
     let stored = sqlx::query!(
         "SELECT id, user_id, public_key FROM passkey_credentials WHERE credential_id = $1",
@@ -214,8 +247,14 @@ pub async fn finish_authentication(
     )
     .fetch_optional(&pool)
     .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-    .ok_or((StatusCode::UNAUTHORIZED, "Unknown credential".to_string()))?;
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if stored.is_none() {
+        tracing::error!("Credential not found: {}", hex::encode(&cred_id_bytes));
+        return Err((StatusCode::UNAUTHORIZED, "Unknown credential".to_string()));
+    }
+
+    let stored = stored.unwrap();
 
     let mut passkey: Passkey = serde_json::from_slice(&stored.public_key)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;

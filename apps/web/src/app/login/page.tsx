@@ -136,7 +136,10 @@ export default function LoginPage() {
                 throw new Error('Failed to start passkey authentication');
             }
 
-            const options = await startRes.json();
+            const data = await startRes.json();
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const options = (data as any).publicKey || (data as any).public_key || data;
 
             // Use browser API
             const credential = await startAuthentication(options);
@@ -150,7 +153,9 @@ export default function LoginPage() {
             });
 
             if (!finishRes.ok) {
-                throw new Error('Authentication failed');
+                const errorText = await finishRes.text();
+                console.error('Passkey authentication finish error:', finishRes.status, errorText);
+                throw new Error(errorText || 'Authentication failed');
             }
 
             showToast('Login successful! Redirecting...', 'success');

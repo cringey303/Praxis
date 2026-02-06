@@ -308,10 +308,17 @@ export default function SecurityPage() {
             });
 
             if (!startRes.ok) {
-                throw new Error('Failed to start passkey registration');
+                const errorText = await startRes.text();
+                console.error('Passkey start error:', startRes.status, errorText);
+                throw new Error(errorText || 'Failed to start passkey registration');
             }
 
-            const options = await startRes.json();
+            const data = await startRes.json();
+
+            // webauthn-rs returns options wrapped in 'publicKey' or 'public_key'
+            // @simplewebauthn/browser expects the inner options object
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const options = (data as any).publicKey || (data as any).public_key || data;
 
             // Use browser API to create credential
             const credential = await startRegistration(options);
@@ -556,7 +563,7 @@ export default function SecurityPage() {
                                     <button
                                         onClick={handleRegisterPasskey}
                                         disabled={registeringPasskey}
-                                        className="cursor-pointer py-2 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                        className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                     >
                                         {registeringPasskey ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -632,14 +639,14 @@ export default function SecurityPage() {
                                                     setPendingCredential(null);
                                                     setNewPasskeyName('');
                                                 }}
-                                                className="cursor-pointer flex-1 py-2 px-4 border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors"
+                                                className="cursor-pointer flex-1 py-2 px-4 border border-border rounded-sm text-sm font-medium hover:bg-secondary transition-colors"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 onClick={handleFinishPasskeyRegistration}
                                                 disabled={registeringPasskey}
-                                                className="cursor-pointer flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                                className="cursor-pointer flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                             >
                                                 {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
                                                 Save
@@ -763,8 +770,8 @@ export default function SecurityPage() {
                                         </p>
                                     </div>
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${totpEnabled
-                                            ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                            : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                        ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
                                         }`}>
                                         {totpEnabled ? 'Enabled' : 'Disabled'}
                                     </span>

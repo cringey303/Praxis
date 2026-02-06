@@ -56,3 +56,4 @@ webauthn-rs-proto = "0.5"
 totp-rs = { version = "5.0", features = ["gen_secret", "otpauth"] }
 base64 = "0.22"
 rand = "0.8"
+hex = "0.4.3"
