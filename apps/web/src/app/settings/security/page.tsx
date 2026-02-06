@@ -610,7 +610,7 @@ export default function SecurityPage() {
                                             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer mb-2"
                                         >
                                             {showPasskeys ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                            {showPasskeys ? 'Hide Passkeys' : 'View Passkeys'}
+                                            {showPasskeys ? `Hide ${passkeys.length} passkeys` : `Show ${passkeys.length} passkeys`}
                                         </button>
 
                                         {showPasskeys && (
@@ -618,12 +618,9 @@ export default function SecurityPage() {
                                                 {passkeys.map((passkey) => (
                                                     <div
                                                         key={passkey.id}
-                                                        className="flex items-center justify-between p-4 rounded-sm border border-border bg-secondary/20"
+                                                        className="flex items-center justify-between p-4 rounded-sm border border-border bg-primary/5"
                                                     >
                                                         <div className="flex items-center gap-3">
-                                                            <div className="p-2 bg-secondary rounded-sm">
-                                                                <Key className="h-5 w-5" />
-                                                            </div>
                                                             <div>
                                                                 <p className="text-sm font-medium">{passkey.name}</p>
                                                                 <p className="text-xs text-muted-foreground">
