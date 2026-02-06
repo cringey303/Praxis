@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Smartphone, Lock } from 'lucide-react';
+import { Loader2, Smartphone, Key, Trash2, Plus, Copy, Check } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { useToast } from "@/components/ui/Toast";
+import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface UserProfile {
     id: string;
@@ -15,6 +18,13 @@ interface UserProfile {
     avatar_url?: string;
     email?: string;
     has_password: boolean;
+}
+
+interface PasskeyInfo {
+    id: string;
+    name: string;
+    created_at: string;
+    last_used_at: string | null;
 }
 
 export default function SecurityPage() {
@@ -40,37 +50,87 @@ export default function SecurityPage() {
     });
     const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false);
 
-    // Fetch user data on mount
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/me`, {
-                    credentials: 'include',
-                });
-                if (!res.ok) {
-                    if (res.status === 401) {
-                        router.push('/login');
-                        return;
-                    }
-                    throw new Error('Failed to load profile');
-                }
-                const data = await res.json();
-                setUser(data);
-            } catch (err) {
-                console.error(err);
-                showToast('Could not load profile data.', 'error');
-            } finally {
-                setLoading(false);
-            }
-        };
+    // Passkey state
+    const [passkeys, setPasskeys] = useState<PasskeyInfo[]>([]);
+    const [registeringPasskey, setRegisteringPasskey] = useState(false);
+    const [deletingPasskeyId, setDeletingPasskeyId] = useState<string | null>(null);
+    const [newPasskeyName, setNewPasskeyName] = useState('');
+    const [showPasskeyNameDialog, setShowPasskeyNameDialog] = useState(false);
+    const [pendingCredential, setPendingCredential] = useState<unknown>(null);
 
+    // TOTP state
+    const [totpEnabled, setTotpEnabled] = useState(false);
+    const [totpSetupData, setTotpSetupData] = useState<{ secret: string; qr_code_url: string } | null>(null);
+    const [totpCode, setTotpCode] = useState('');
+    const [settingUpTotp, setSettingUpTotp] = useState(false);
+    const [disablingTotp, setDisablingTotp] = useState(false);
+    const [backupCodes, setBackupCodes] = useState<string[]>([]);
+    const [showBackupCodes, setShowBackupCodes] = useState(false);
+    const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+    // Fetch user data
+    const fetchUser = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_URL}/user/me`, {
+                credentials: 'include',
+            });
+            if (!res.ok) {
+                if (res.status === 401) {
+                    router.push('/login');
+                    return;
+                }
+                throw new Error('Failed to load profile');
+            }
+            const data = await res.json();
+            setUser(data);
+        } catch (err) {
+            console.error(err);
+            showToast('Could not load profile data.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    }, [router, showToast]);
+
+    // Fetch passkeys
+    const fetchPasskeys = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_URL}/auth/passkey/list`, {
+                credentials: 'include',
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setPasskeys(data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch passkeys:', err);
+        }
+    }, []);
+
+    // Fetch TOTP status
+    const fetchTotpStatus = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_URL}/auth/totp/status`, {
+                credentials: 'include',
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setTotpEnabled(data.enabled);
+            }
+        } catch (err) {
+            console.error('Failed to fetch TOTP status:', err);
+        }
+    }, []);
+
+    useEffect(() => {
         fetchUser();
-    }, [router]);
+        fetchPasskeys();
+        fetchTotpStatus();
+    }, [fetchUser, fetchPasskeys, fetchTotpStatus]);
 
     const handleLogout = async () => {
         setLoading(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/logout`, {
+            await fetch(`${API_URL}/auth/logout`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -81,6 +141,7 @@ export default function SecurityPage() {
         }
     };
 
+    // Password validation and handlers (keeping existing implementation)
     const validatePassword = () => {
         const newErrors = {
             currentPassword: '',
@@ -109,7 +170,6 @@ export default function SecurityPage() {
 
         setErrors(newErrors);
 
-        // Show toasts for each error with slight delays to ensure unique IDs
         const errorMessages = [newErrors.currentPassword, newErrors.newPassword, newErrors.confirmPassword].filter(Boolean);
         errorMessages.forEach((msg, index) => {
             setTimeout(() => showToast(msg, 'error'), index * 50);
@@ -144,7 +204,6 @@ export default function SecurityPage() {
 
         setErrors(newErrors);
 
-        // Show toasts for each error with slight delays to ensure unique IDs
         const errorMessages = [newErrors.email, newErrors.newPassword, newErrors.confirmPassword].filter(Boolean);
         errorMessages.forEach((msg, index) => {
             setTimeout(() => showToast(msg, 'error'), index * 50);
@@ -155,13 +214,11 @@ export default function SecurityPage() {
 
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!validatePassword()) return;
 
         setUpdating(true);
-
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/change-password`, {
+            const res = await fetch(`${API_URL}/auth/change-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -199,13 +256,11 @@ export default function SecurityPage() {
 
     const handleSetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!validateSetPassword()) return;
 
         setUpdating(true);
-
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/set-password`, {
+            const res = await fetch(`${API_URL}/auth/set-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -220,11 +275,10 @@ export default function SecurityPage() {
                 throw new Error(text || 'Failed to set password');
             }
 
-            showToast('Password set successfully! You can now log in with email/password.', 'success');
+            showToast('Password set successfully!', 'success');
             setEmail('');
             setNewPassword('');
             setConfirmPassword('');
-            // Refresh user data to update has_password
             setUser(prev => prev ? { ...prev, has_password: true } : null);
         } catch (err: unknown) {
             console.error(err);
@@ -241,6 +295,195 @@ export default function SecurityPage() {
         } finally {
             setUpdating(false);
         }
+    };
+
+    // Passkey handlers
+    const handleRegisterPasskey = async () => {
+        setRegisteringPasskey(true);
+        try {
+            // Start registration
+            const startRes = await fetch(`${API_URL}/auth/passkey/register/start`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            if (!startRes.ok) {
+                throw new Error('Failed to start passkey registration');
+            }
+
+            const options = await startRes.json();
+
+            // Use browser API to create credential
+            const credential = await startRegistration(options);
+
+            // Store credential and show name dialog
+            setPendingCredential(credential);
+            setShowPasskeyNameDialog(true);
+        } catch (err: unknown) {
+            console.error('Passkey registration error:', err);
+            if (err instanceof Error && err.name === 'NotAllowedError') {
+                showToast('Passkey registration was cancelled.', 'error');
+            } else {
+                showToast('Failed to register passkey. Please try again.', 'error');
+            }
+        } finally {
+            setRegisteringPasskey(false);
+        }
+    };
+
+    const handleFinishPasskeyRegistration = async () => {
+        if (!pendingCredential) return;
+
+        setRegisteringPasskey(true);
+        try {
+            const finishRes = await fetch(`${API_URL}/auth/passkey/register/finish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    credential: pendingCredential,
+                    name: newPasskeyName || 'Passkey',
+                }),
+            });
+
+            if (!finishRes.ok) {
+                throw new Error('Failed to finish passkey registration');
+            }
+
+            showToast('Passkey registered successfully!', 'success');
+            setShowPasskeyNameDialog(false);
+            setNewPasskeyName('');
+            setPendingCredential(null);
+            fetchPasskeys();
+        } catch (err) {
+            console.error('Passkey finish error:', err);
+            showToast('Failed to complete passkey registration.', 'error');
+        } finally {
+            setRegisteringPasskey(false);
+        }
+    };
+
+    const handleDeletePasskey = async (passkeyId: string) => {
+        setDeletingPasskeyId(passkeyId);
+        try {
+            const res = await fetch(`${API_URL}/auth/passkey/${passkeyId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to delete passkey');
+            }
+
+            showToast('Passkey deleted successfully.', 'success');
+            fetchPasskeys();
+        } catch (err) {
+            console.error('Failed to delete passkey:', err);
+            showToast('Failed to delete passkey.', 'error');
+        } finally {
+            setDeletingPasskeyId(null);
+        }
+    };
+
+    // TOTP handlers
+    const handleSetupTotp = async () => {
+        setSettingUpTotp(true);
+        try {
+            const res = await fetch(`${API_URL}/auth/totp/setup`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to setup TOTP');
+            }
+
+            const data = await res.json();
+            setTotpSetupData(data);
+        } catch (err) {
+            console.error('TOTP setup error:', err);
+            showToast('Failed to setup 2FA. Please try again.', 'error');
+            setSettingUpTotp(false);
+        }
+    };
+
+    const handleEnableTotp = async () => {
+        if (!totpCode || totpCode.length !== 6) {
+            showToast('Please enter a valid 6-digit code.', 'error');
+            return;
+        }
+
+        setSettingUpTotp(true);
+        try {
+            const res = await fetch(`${API_URL}/auth/totp/enable`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ code: totpCode }),
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text || 'Invalid code');
+            }
+
+            const data = await res.json();
+            showToast('Two-factor authentication enabled!', 'success');
+            setTotpEnabled(true);
+            setTotpSetupData(null);
+            setTotpCode('');
+            setBackupCodes(data.backup_codes || []);
+            setShowBackupCodes(true);
+        } catch (err: unknown) {
+            console.error('TOTP enable error:', err);
+            showToast('Invalid code. Please try again.', 'error');
+        } finally {
+            setSettingUpTotp(false);
+        }
+    };
+
+    const handleDisableTotp = async () => {
+        if (!totpCode || totpCode.length !== 6) {
+            showToast('Please enter your current 2FA code to disable.', 'error');
+            return;
+        }
+
+        setDisablingTotp(true);
+        try {
+            const res = await fetch(`${API_URL}/auth/totp/disable`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ code: totpCode }),
+            });
+
+            if (!res.ok) {
+                throw new Error('Invalid code');
+            }
+
+            showToast('Two-factor authentication disabled.', 'success');
+            setTotpEnabled(false);
+            setTotpCode('');
+        } catch (err) {
+            console.error('TOTP disable error:', err);
+            showToast('Invalid code. Please try again.', 'error');
+        } finally {
+            setDisablingTotp(false);
+        }
+    };
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedCode(text);
+        setTimeout(() => setCopiedCode(null), 2000);
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
     };
 
     return (
@@ -301,11 +544,110 @@ export default function SecurityPage() {
                                         disabled
                                         className="cursor-not-allowed opacity-60"
                                     />
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        Your email address is used for logging in and sending security alerts.
-                                    </p>
                                 </div>
                             </div>
+
+                            {/* Passkeys Section */}
+                            <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h2 className="text-lg font-medium">Passkeys</h2>
+                                    </div>
+                                    <button
+                                        onClick={handleRegisterPasskey}
+                                        disabled={registeringPasskey}
+                                        className="cursor-pointer py-2 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {registeringPasskey ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Plus className="h-4 w-4" />
+                                        )}
+                                        Add Passkey
+                                    </button>
+                                </div>
+
+                                {passkeys.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {passkeys.map((passkey) => (
+                                            <div
+                                                key={passkey.id}
+                                                className="flex items-center justify-between p-4 rounded-lg border border-border bg-secondary/20"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-secondary rounded-lg">
+                                                        <Key className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium">{passkey.name}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Added {formatDate(passkey.created_at)}
+                                                            {passkey.last_used_at && ` • Last used ${formatDate(passkey.last_used_at)}`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDeletePasskey(passkey.id)}
+                                                    disabled={deletingPasskeyId === passkey.id}
+                                                    className="cursor-pointer p-2 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
+                                                >
+                                                    {deletingPasskeyId === passkey.id ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="h-4 w-4" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <Key className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                                        <p className="text-sm">No passkeys registered yet.</p>
+                                        <p className="text-xs mt-1">Add a passkey to enable passwordless sign-in.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Passkey Name Dialog */}
+                            {showPasskeyNameDialog && (
+                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                                    <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md mx-4">
+                                        <h3 className="text-lg font-medium mb-4">Name your passkey</h3>
+                                        <p className="text-sm text-muted-foreground mb-4">
+                                            Give this passkey a name so you can identify it later.
+                                        </p>
+                                        <input
+                                            type="text"
+                                            value={newPasskeyName}
+                                            onChange={(e) => setNewPasskeyName(e.target.value)}
+                                            placeholder="e.g., MacBook Pro, iPhone"
+                                            className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm mb-4"
+                                            autoFocus
+                                        />
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => {
+                                                    setShowPasskeyNameDialog(false);
+                                                    setPendingCredential(null);
+                                                    setNewPasskeyName('');
+                                                }}
+                                                className="cursor-pointer flex-1 py-2 px-4 border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={handleFinishPasskeyRegistration}
+                                                disabled={registeringPasskey}
+                                                className="cursor-pointer flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                            >
+                                                {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Password Section */}
                             <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
@@ -332,7 +674,6 @@ export default function SecurityPage() {
                                         )}
 
                                         <form onSubmit={user?.has_password ? handleChangePassword : handleSetPassword} className="space-y-4">
-                                            {/* Email field only for Set Password (OAuth users) */}
                                             {!user?.has_password && (
                                                 <div>
                                                     <FloatingLabelInput
@@ -346,7 +687,6 @@ export default function SecurityPage() {
                                                 </div>
                                             )}
 
-                                            {/* Current password only for Change Password */}
                                             {user?.has_password && (
                                                 <div>
                                                     <FloatingLabelInput
@@ -388,7 +728,6 @@ export default function SecurityPage() {
                                                     disabled={updating}
                                                     className="cursor-pointer w-auto py-1.5 px-4 bg-primary text-primary-foreground rounded-sm font-small hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                                 >
-
                                                     {updating ? (
                                                         <>
                                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -399,7 +738,6 @@ export default function SecurityPage() {
                                                     )}
                                                 </button>
 
-                                                {/* Forgot Password Link - Disabled */}
                                                 {user?.has_password && (
                                                     <button
                                                         type="button"
@@ -410,64 +748,219 @@ export default function SecurityPage() {
                                                     </button>
                                                 )}
                                             </div>
-
                                         </form>
                                     </>
                                 )}
                             </div>
-
-
 
                             {/* Two-Factor Authentication Section */}
                             <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                     <div>
                                         <h2 className="text-lg font-medium">Two-Factor Authentication</h2>
-                                        <p className="text-sm text-muted-foreground">Add an extra layer of security to your account.</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Add an extra layer of security when logging in with password.
+                                        </p>
                                     </div>
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-500 border border-red-500/20">
-                                        Disabled
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${totpEnabled
+                                            ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                            : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                        }`}>
+                                        {totpEnabled ? 'Enabled' : 'Disabled'}
                                     </span>
                                 </div>
 
-                                <div className="bg-secondary/30 rounded-lg p-4 border border-border flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                    <div className="p-2 bg-secondary rounded-lg relative">
-                                        {/* Smartphone + Lock 2FA Icon Combo */}
-                                        <Smartphone className="h-6 w-6 white" />
-                                        <div className="absolute bottom-3 left-1 bg-secondary rounded-sm p-0.5">
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="24"
-                                                height="24"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                className="h-3 w-3"
-                                            >
-                                                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" fill="currentColor" />
-                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                            </svg>
+                                {!totpEnabled && !totpSetupData && (
+                                    <div className="bg-secondary/30 rounded-lg p-4 border border-border flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                        <div className="p-2 bg-secondary rounded-lg relative">
+                                            <Smartphone className="h-6 w-6" />
+                                            <div className="absolute bottom-3 left-1 bg-secondary rounded-sm p-0.5">
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="24"
+                                                    height="24"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className="h-3 w-3"
+                                                >
+                                                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" fill="currentColor" />
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium">Protect your account with 2FA</p>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Use an authenticator app to generate one-time codes for login.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={handleSetupTotp}
+                                            disabled={settingUpTotp}
+                                            className="cursor-pointer shrink-0 border border-border bg-background text-foreground font-medium py-2 px-4 rounded-lg text-sm hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                        >
+                                            {settingUpTotp && <Loader2 className="h-4 w-4 animate-spin" />}
+                                            Enable 2FA
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* TOTP Setup Flow */}
+                                {totpSetupData && (
+                                    <div className="space-y-6">
+                                        <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+                                            <h3 className="text-sm font-medium mb-3">1. Scan QR Code</h3>
+                                            <p className="text-xs text-muted-foreground mb-4">
+                                                Use an authenticator app like Google Authenticator, Authy, or 1Password to scan this QR code.
+                                            </p>
+                                            <div className="flex justify-center mb-4">
+                                                <div className="bg-white p-4 rounded-lg">
+                                                    <img
+                                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(totpSetupData.qr_code_url)}`}
+                                                        alt="TOTP QR Code"
+                                                        className="w-48 h-48"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-xs text-muted-foreground mb-1">Or enter this code manually:</p>
+                                                <code className="text-sm font-mono bg-secondary px-3 py-1 rounded">
+                                                    {totpSetupData.secret}
+                                                </code>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+                                            <h3 className="text-sm font-medium mb-3">2. Enter verification code</h3>
+                                            <p className="text-xs text-muted-foreground mb-4">
+                                                Enter the 6-digit code from your authenticator app to verify setup.
+                                            </p>
+                                            <div className="flex gap-3">
+                                                <input
+                                                    type="text"
+                                                    value={totpCode}
+                                                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                    placeholder="000000"
+                                                    className="flex-1 px-4 py-2 bg-secondary border border-border rounded-lg text-center text-lg font-mono tracking-widest"
+                                                    maxLength={6}
+                                                />
+                                                <button
+                                                    onClick={handleEnableTotp}
+                                                    disabled={settingUpTotp || totpCode.length !== 6}
+                                                    className="cursor-pointer px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                >
+                                                    {settingUpTotp && <Loader2 className="h-4 w-4 animate-spin" />}
+                                                    Verify
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => {
+                                                setTotpSetupData(null);
+                                                setTotpCode('');
+                                                setSettingUpTotp(false);
+                                            }}
+                                            className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                            Cancel setup
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* 2FA Enabled State */}
+                                {totpEnabled && !totpSetupData && (
+                                    <div className="space-y-4">
+                                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-center gap-3">
+                                            <Check className="h-5 w-5 text-green-500" />
+                                            <div>
+                                                <p className="text-sm font-medium text-green-500">2FA is enabled</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Your account is protected with two-factor authentication.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+                                            <h3 className="text-sm font-medium mb-3">Disable 2FA</h3>
+                                            <p className="text-xs text-muted-foreground mb-4">
+                                                Enter your current 2FA code to disable two-factor authentication.
+                                            </p>
+                                            <div className="flex gap-3">
+                                                <input
+                                                    type="text"
+                                                    value={totpCode}
+                                                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                    placeholder="000000"
+                                                    className="flex-1 px-4 py-2 bg-secondary border border-border rounded-lg text-center text-lg font-mono tracking-widest"
+                                                    maxLength={6}
+                                                />
+                                                <button
+                                                    onClick={handleDisableTotp}
+                                                    disabled={disablingTotp || totpCode.length !== 6}
+                                                    className="cursor-pointer px-6 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                >
+                                                    {disablingTotp && <Loader2 className="h-4 w-4 animate-spin" />}
+                                                    Disable
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="text-sm font-medium">Protect your account with 2FA</p>
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            Configuring two-factor authentication adds an extra layer of security to your account by requiring more than just a password to log in.
-                                        </p>
-                                    </div>
-                                    <button
-                                        disabled
-                                        className="shrink-0 border border-border bg-background text-foreground font-medium py-2 px-4 rounded-lg text-sm opacity-50 cursor-not-allowed"
-                                    >
-                                        Enable 2FA
-                                    </button>
-                                </div>
+                                )}
                             </div>
 
-
+                            {/* Backup Codes Modal */}
+                            {showBackupCodes && backupCodes.length > 0 && (
+                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                                    <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md mx-4">
+                                        <h3 className="text-lg font-medium mb-2">Save your backup codes</h3>
+                                        <p className="text-sm text-muted-foreground mb-4">
+                                            These codes can be used to access your account if you lose your authenticator device.
+                                            <strong className="text-foreground"> Save them in a secure location.</strong>
+                                        </p>
+                                        <div className="bg-secondary rounded-lg p-4 mb-4 grid grid-cols-2 gap-2">
+                                            {backupCodes.map((code, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex items-center justify-between bg-background rounded px-3 py-2"
+                                                >
+                                                    <code className="text-sm font-mono">{code}</code>
+                                                    <button
+                                                        onClick={() => copyToClipboard(code)}
+                                                        className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                                                    >
+                                                        {copiedCode === code ? (
+                                                            <Check className="h-4 w-4 text-green-500" />
+                                                        ) : (
+                                                            <Copy className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <button
+                                            onClick={() => copyToClipboard(backupCodes.join('\n'))}
+                                            className="cursor-pointer w-full mb-3 py-2 px-4 border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                            Copy all codes
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setShowBackupCodes(false);
+                                                setBackupCodes([]);
+                                            }}
+                                            className="cursor-pointer w-full py-2 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                                        >
+                                            I&apos;ve saved my codes
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Login Sessions Section */}
                             <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
