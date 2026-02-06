@@ -77,7 +77,9 @@ pub async fn setup_totp(
     )
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    let qr_code_url = totp.get_url();
+    let qr_code = totp
+        .get_qr_base64()
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // Store the secret (not enabled yet)
     sqlx::query!(
@@ -95,7 +97,7 @@ pub async fn setup_totp(
 
     Ok(Json(TotpSetupResponse {
         secret: secret_base32,
-        qr_code_url,
+        qr_code_url: format!("data:image/png;base64,{}", qr_code),
     }))
 }
 

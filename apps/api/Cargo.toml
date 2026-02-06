@@ -53,7 +53,7 @@ webauthn-rs = { version = "0.5", features = ["danger-allow-state-serialisation"]
 webauthn-rs-proto = "0.5"
 
 # TOTP 2FA
-totp-rs = { version = "5.0", features = ["gen_secret", "otpauth"] }
+totp-rs = { version = "5.0", features = ["gen_secret", "otpauth", "qr"] }
 base64 = "0.22"
 rand = "0.8"
 hex = "0.4.3"

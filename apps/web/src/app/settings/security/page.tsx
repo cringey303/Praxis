@@ -67,6 +67,7 @@ export default function SecurityPage() {
     const [totpCode, setTotpCode] = useState('');
     const [settingUpTotp, setSettingUpTotp] = useState(false);
     const [disablingTotp, setDisablingTotp] = useState(false);
+    const [isDisableTotpOpen, setIsDisableTotpOpen] = useState(false);
     const [backupCodes, setBackupCodes] = useState<string[]>([]);
     const [showBackupCodes, setShowBackupCodes] = useState(false);
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -444,11 +445,9 @@ export default function SecurityPage() {
         }
     };
 
-    const handleEnableTotp = async () => {
-        if (!totpCode || totpCode.length !== 6) {
-            showToast('Please enter a valid 6-digit code.', 'error');
-            return;
-        }
+    const handleEnableTotp = async (codeArg?: string | React.MouseEvent) => {
+        const code = typeof codeArg === 'string' ? codeArg : totpCode;
+        if (!code || code.length !== 6) return;
 
         setSettingUpTotp(true);
         try {
@@ -456,7 +455,7 @@ export default function SecurityPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ code: totpCode }),
+                body: JSON.stringify({ code }),
             });
 
             if (!res.ok) {
@@ -869,7 +868,7 @@ export default function SecurityPage() {
                                             <div className="flex justify-center mb-4">
                                                 <div className="bg-white p-4 rounded-sm">
                                                     <img
-                                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(totpSetupData.qr_code_url)}`}
+                                                        src={totpSetupData.qr_code_url}
                                                         alt="TOTP QR Code"
                                                         className="w-48 h-48"
                                                     />
@@ -906,6 +905,13 @@ export default function SecurityPage() {
                                                     type="text"
                                                     value={totpCode}
                                                     onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                    onPaste={(e) => {
+                                                        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                                                        if (pasted.length === 6) {
+                                                            setTotpCode(pasted);
+                                                            handleEnableTotp(pasted);
+                                                        }
+                                                    }}
                                                     placeholder="000000"
                                                     className="flex-1 px-4 py-2 bg-secondary border border-border rounded-sm text-center text-lg font-mono tracking-widest"
                                                     maxLength={6}
@@ -936,41 +942,61 @@ export default function SecurityPage() {
 
                                 {/* 2FA Enabled State */}
                                 {totpEnabled && !totpSetupData && (
-                                    <div className="space-y-4">
-                                        <div className="bg-green-500/10 border border-green-500/20 rounded-sm p-4 flex items-center gap-3">
-                                            <Check className="h-5 w-5 text-green-500" />
-                                            <div>
-                                                <p className="text-sm font-medium text-green-500">2FA is enabled</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Your account is protected with two-factor authentication.
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-secondary/30 rounded-sm p-4 border border-border">
-                                            <h3 className="text-sm font-medium mb-3">Disable 2FA</h3>
-                                            <p className="text-xs text-muted-foreground mb-4">
-                                                Enter your current 2FA code to disable two-factor authentication.
-                                            </p>
-                                            <div className="flex gap-3">
-                                                <input
-                                                    type="text"
-                                                    value={totpCode}
-                                                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                                    placeholder="000000"
-                                                    className="flex-1 px-4 py-2 bg-secondary border border-border rounded-sm text-center text-lg font-mono tracking-widest"
-                                                    maxLength={6}
-                                                />
+                                    <div className="space-y-4 pt-4 border-t border-border">
+                                        {!isDisableTotpOpen ? (
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-sm font-medium">2FA is enabled</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Your account is protected with two-factor authentication.
+                                                    </p>
+                                                </div>
                                                 <button
-                                                    onClick={handleDisableTotp}
-                                                    disabled={disablingTotp || totpCode.length !== 6}
-                                                    className="cursor-pointer px-6 py-2 bg-red-500 text-white rounded-sm text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    onClick={() => {
+                                                        setIsDisableTotpOpen(true);
+                                                        setTotpCode('');
+                                                    }}
+                                                    className="cursor-pointer px-3 py-1.5 border border-border rounded-sm text-sm font-medium hover:bg-secondary/30 transition-colors text-red-500 hover:text-red-600"
                                                 >
-                                                    {disablingTotp && <Loader2 className="h-4 w-4 animate-spin" />}
-                                                    Disable
+                                                    Disable 2FA
                                                 </button>
                                             </div>
-                                        </div>
+                                        ) : (
+                                            <div className="bg-secondary/30 rounded-sm p-4 border border-border animate-in fade-in slide-in-from-top-2">
+                                                <h3 className="text-sm font-medium mb-3">Disable 2FA</h3>
+                                                <p className="text-xs text-muted-foreground mb-4">
+                                                    Enter your current 2FA code to disable two-factor authentication.
+                                                </p>
+                                                <div className="flex gap-3">
+                                                    <input
+                                                        type="text"
+                                                        value={totpCode}
+                                                        onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                        placeholder="000000"
+                                                        className="flex-1 px-3 py-1.5 bg-secondary border border-border rounded-sm text-center text-md font-mono tracking-widest"
+                                                        maxLength={6}
+                                                        autoFocus
+                                                    />
+                                                    <button
+                                                        onClick={handleDisableTotp}
+                                                        disabled={disablingTotp || totpCode.length !== 6}
+                                                        className="cursor-pointer px-3 py-1.5 bg-red-500 text-white rounded-sm text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    >
+                                                        {disablingTotp && <Loader2 className="h-4 w-4 animate-spin" />}
+                                                        Confirm Disable
+                                                    </button>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        setIsDisableTotpOpen(false);
+                                                        setTotpCode('');
+                                                    }}
+                                                    className="mt-3 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -979,7 +1005,7 @@ export default function SecurityPage() {
                             {showBackupCodes && backupCodes.length > 0 && (
                                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                                     <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md mx-4">
-                                        <h3 className="text-lg font-medium mb-2">Save your backup codes</h3>
+                                        <h3 className="text-sm font-medium mb-2">Save your backup codes</h3>
                                         <p className="text-sm text-muted-foreground mb-4">
                                             These codes can be used to access your account if you lose your authenticator device.
                                             <strong className="text-foreground"> Save them in a secure location.</strong>
