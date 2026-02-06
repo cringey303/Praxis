@@ -962,7 +962,7 @@ export default function SecurityPage() {
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div className="bg-secondary/30 rounded-sm p-4 border border-border animate-in fade-in slide-in-from-top-2">
+                                            <div className="bg-secondary/5 rounded-sm p-4 border border-border animate-in fade-in slide-in-from-top-2">
                                                 <h3 className="text-sm font-medium mb-3">Disable 2FA</h3>
                                                 <p className="text-xs text-muted-foreground mb-4">
                                                     Enter your current 2FA code to disable two-factor authentication.
@@ -973,7 +973,7 @@ export default function SecurityPage() {
                                                         value={totpCode}
                                                         onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                                         placeholder="000000"
-                                                        className="flex-1 px-3 py-1.5 bg-secondary border border-border rounded-sm text-center text-md font-mono tracking-widest"
+                                                        className="flex-1 px-3 py-1.5 bg-background border border-border rounded-sm text-center text-md font-mono tracking-widest"
                                                         maxLength={6}
                                                         autoFocus
                                                     />
