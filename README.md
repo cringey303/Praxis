@@ -1,5 +1,6 @@
 # Praxis
 _**Please submit an issue if you find a bug!!**_
+Check it out at [https://praxis-lemon.vercel.app](https://praxis-lemon.vercel.app)
 
 
 (WIP)
