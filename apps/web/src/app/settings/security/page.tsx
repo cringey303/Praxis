@@ -1010,11 +1010,11 @@ export default function SecurityPage() {
                                             These codes can be used to access your account if you lose your authenticator device.
                                             <strong className="text-foreground"> Save them in a secure location.</strong>
                                         </p>
-                                        <div className="bg-secondary rounded-sm p-4 mb-4 grid grid-cols-2 gap-2">
+                                        <div className="bg-background rounded-sm p-4 mb-4 grid grid-cols-2 gap-2">
                                             {backupCodes.map((code, index) => (
                                                 <div
                                                     key={index}
-                                                    className="flex items-center justify-between bg-background rounded px-3 py-2"
+                                                    className="flex items-center justify-between bg-background rounded px-3 py-2 border border-border"
                                                 >
                                                     <code className="text-sm font-mono">{code}</code>
                                                     <button
@@ -1030,13 +1030,37 @@ export default function SecurityPage() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <button
-                                            onClick={() => copyToClipboard(backupCodes.join('\n'))}
-                                            className="cursor-pointer w-full mb-3 py-2 px-4 border border-border rounded-sm text-sm font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2"
-                                        >
-                                            <Copy className="h-4 w-4" />
-                                            Copy all codes
-                                        </button>
+                                        <div className="flex gap-2 mb-3">
+                                            <button
+                                                onClick={() => copyToClipboard(backupCodes.join('\n'))}
+                                                className="cursor-pointer flex-1 py-2 px-4 border border-border rounded-sm text-sm font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <Copy className="h-4 w-4" />
+                                                Copy all codes
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const content = backupCodes.join('\n');
+                                                    const blob = new Blob([content], { type: 'text/plain' });
+                                                    const url = URL.createObjectURL(blob);
+                                                    const a = document.createElement('a');
+                                                    a.href = url;
+                                                    a.download = 'praxis-backup-codes.txt';
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    document.body.removeChild(a);
+                                                    URL.revokeObjectURL(url);
+                                                }}
+                                                className="cursor-pointer flex-1 py-2 px-4 border border-border rounded-sm text-sm font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                                    <polyline points="7 10 12 15 17 10" />
+                                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                                </svg>
+                                                Download as .txt
+                                            </button>
+                                        </div>
                                         <button
                                             onClick={() => {
                                                 setShowBackupCodes(false);
