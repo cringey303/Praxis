@@ -438,6 +438,7 @@ export default function SecurityPage() {
         } catch (err) {
             console.error('TOTP setup error:', err);
             showToast('Failed to setup 2FA. Please try again.', 'error');
+        } finally {
             setSettingUpTotp(false);
         }
     };
