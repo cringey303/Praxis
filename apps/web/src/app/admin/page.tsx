@@ -187,11 +187,11 @@ export default function AdminPage() {
                         <table className="w-full text-sm text-left">
                             <thead className="bg-secondary/50 text-muted-foreground font-medium">
                                 <tr>
-                                    <th className="px-4 py-3">User</th>
-                                    <th className="px-4 py-3">Role</th>
-                                    <th className="px-4 py-3">Email</th>
-                                    <th className="px-4 py-3">Created</th>
-                                    <th className="px-4 py-3 text-right">Actions</th>
+                                    <th className="px-4 py-3 w-[30%]">User</th>
+                                    <th className="px-4 py-3 w-[10%]">Role</th>
+                                    <th className="px-4 py-3 w-[25%]">Email</th>
+                                    <th className="px-4 py-3 w-[15%]">Created</th>
+                                    <th className="px-4 py-3 w-[20%] text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
