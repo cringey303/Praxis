@@ -779,7 +779,7 @@ export default function SecurityPage() {
 
                             {/* Password Section */}
                             <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
-                                <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center justify-between">
                                     <h2 className="text-lg font-medium">
                                         Password
                                     </h2>
