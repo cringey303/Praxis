@@ -669,7 +669,7 @@ export default function SecurityPage() {
 
                             {/* Passkeys Section */}
                             <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
-                                <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center justify-between">
                                     <div>
                                         <h2 className="text-lg font-medium">Passkeys</h2>
                                     </div>
@@ -682,7 +682,7 @@ export default function SecurityPage() {
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                         ) : (
                                             <>
-                                                + Add Passkey
+                                                Add Passkey
                                             </>
                                         )}
                                     </button>
@@ -1191,7 +1191,7 @@ export default function SecurityPage() {
                                                         )}
                                                     </div>
                                                     <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1" title={session.user_agent}>
-                                                        {session.ip_address} • {formatDate(session.last_active_at)}
+                                                        {session.ip_address || 'Unknown IP'} • {formatDate(session.last_active_at)}
                                                     </p>
                                                     {session.is_current ? (
                                                         <p className="text-xs text-primary mt-1 font-medium">Active now</p>

@@ -3,7 +3,7 @@ use argon2::{
     Argon2,
 };
 use axum::{
-    extract::{Query, State},
+    extract::{ConnectInfo, Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect},
     Json,
@@ -14,6 +14,7 @@ use oauth2::{
 };
 use serde::Deserialize;
 use sqlx::PgPool;
+use std::net::SocketAddr;
 use tower_sessions::Session;
 use uuid::Uuid;
 
@@ -91,6 +92,7 @@ pub async fn signup(
     State(pool): State<PgPool>,
     session: Session,
     headers: axum::http::HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(payload): Json<SignupRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // check if email already exists
@@ -194,6 +196,7 @@ pub async fn signup(
             user_id,
             session_id.to_string(),
             &headers,
+            Some(addr.ip().to_string()),
             expires_at,
         )
         .await
@@ -299,6 +302,7 @@ pub async fn login(
     State(pool): State<PgPool>,
     session: Session,
     headers: axum::http::HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // find user by email
@@ -375,6 +379,7 @@ pub async fn login(
             user.user_id,
             session_id.to_string(),
             &headers,
+            Some(addr.ip().to_string()),
             expires_at,
         )
         .await
@@ -435,6 +440,7 @@ pub async fn google_callback(
     State(pool): State<PgPool>,
     session: Session,
     headers: axum::http::HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Query(query): Query<AuthRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let client = oauth_client();
@@ -515,6 +521,7 @@ pub async fn google_callback(
             user_id,
             session_id.to_string(),
             &headers,
+            Some(addr.ip().to_string()),
             expires_at,
         )
         .await
@@ -574,6 +581,7 @@ pub async fn github_callback(
     State(pool): State<PgPool>,
     session: Session,
     headers: axum::http::HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Query(query): Query<AuthRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let client = github_oauth_client();
@@ -718,6 +726,7 @@ pub async fn github_callback(
             user_id,
             session_id.to_string(),
             &headers,
+            Some(addr.ip().to_string()),
             expires_at,
         )
         .await

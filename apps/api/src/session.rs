@@ -1,11 +1,12 @@
 use axum::{
-    extract::{Path, State},
+    extract::{ConnectInfo, Path, State},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Json},
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use std::net::SocketAddr;
 use tower_sessions::Session;
 use uuid::Uuid;
 
@@ -28,6 +29,7 @@ pub async fn create_session(
     user_id: Uuid,
     session_id: String,
     headers: &HeaderMap,
+    ip_address: Option<String>,
     expires_at: DateTime<Utc>,
 ) -> Result<(), String> {
     let user_agent = headers
@@ -41,7 +43,8 @@ pub async fn create_session(
     let ip_address = headers
         .get("x-forwarded-for")
         .and_then(|h| h.to_str().ok())
-        .map(|s| s.split(',').next().unwrap_or(s).trim().to_string());
+        .map(|s| s.split(',').next().unwrap_or(s).trim().to_string())
+        .or(ip_address);
 
     sqlx::query!(
         r#"
@@ -68,6 +71,7 @@ pub async fn list_sessions(
     State(pool): State<PgPool>,
     session: Session,
     headers: HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let user_id: Uuid = session
         .get("user_id")
@@ -106,6 +110,7 @@ pub async fn list_sessions(
             user_id,
             current_session_id.clone(),
             &headers,
+            Some(addr.ip().to_string()),
             expires_at,
         )
         .await
