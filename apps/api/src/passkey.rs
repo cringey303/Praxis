@@ -90,7 +90,7 @@ pub async fn start_registration(
                 tracing::error!("Corrupted password hash for user {}: {}", user_id, e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    "Internal Error".to_string(),
+                    "Account password data is invalid. Please reset your password to fix this issue.".to_string(),
                 )
             })?;
 

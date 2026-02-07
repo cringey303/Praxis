@@ -388,6 +388,8 @@ export default function SecurityPage() {
             console.error('Passkey registration error:', err);
             if (err instanceof Error && err.name === 'NotAllowedError') {
                 showToast('Passkey registration was cancelled.', 'error');
+            } else if (err instanceof Error) {
+                showToast(err.message, 'error');
             } else {
                 showToast('Failed to register passkey. Please try again.', 'error');
             }
@@ -729,10 +731,8 @@ export default function SecurityPage() {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        <Key className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                                        <p className="text-sm">No passkeys registered yet.</p>
-                                        <p className="text-xs mt-1">Add a passkey to enable passwordless sign-in.</p>
+                                    <div className="text-muted-foreground">
+                                        <p className="text-sm">No passkeys registered yet. Add a passkey to enable passwordless sign-in.</p>
                                     </div>
                                 )}
                             </div>
@@ -1254,14 +1254,14 @@ export default function SecurityPage() {
                                         setPasskeyPassword('');
                                         setRegisteringPasskey(false);
                                     }}
-                                    className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                    className="cursor-pointer px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={() => handleRegisterPasskey(passkeyPassword)}
                                     disabled={!passkeyPassword || registeringPasskey}
-                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="cursor-pointer px-4 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
                                     Continue

@@ -12,6 +12,7 @@ interface User {
     avatar_url?: string;
     verified?: boolean;
     email?: string;
+    role?: string;
 }
 
 interface NavBarProps {
@@ -111,6 +112,17 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
                                 >
                                     Settings
                                 </Link>
+                                {user.role === 'admin' && (
+                                    <Link
+                                        href="/admin"
+                                        className={`flex items-end pb-3 h-full px-1 text-sm font-medium border-b-2 transition-colors ${pathname.startsWith('/admin')
+                                            ? 'border-primary text-primary'
+                                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                                            }`}
+                                    >
+                                        Admin
+                                    </Link>
+                                )}
                             </nav>
                         )}
 

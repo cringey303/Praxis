@@ -11,6 +11,7 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 
+mod admin;
 mod announcements;
 mod auth;
 mod passkey;
@@ -102,6 +103,11 @@ async fn main() {
         .route("/", get(root))
         // ... (existing auth routes) ...
         .route("/auth/logout", post(auth::logout))
+        // Admin Routes
+        .route(
+            "/admin/users/:id/reset-password",
+            post(admin::reset_user_password),
+        )
         // Session Management
         .route(
             "/auth/sessions",
