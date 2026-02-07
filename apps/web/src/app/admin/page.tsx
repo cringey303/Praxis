@@ -181,7 +181,7 @@ export default function AdminPage() {
                                 placeholder="Search users..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                className="w-full pl-9 pr-4 py-2 bg-transparent border border-border rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                             />
                         </div>
                     </div>
@@ -242,7 +242,7 @@ export default function AdminPage() {
                                             <td className="px-4 py-3 text-right">
                                                 <button
                                                     onClick={() => openResetDialog(u)}
-                                                    className="px-3 py-1.5 text-xs font-medium bg-secondary hover:bg-secondary/80 text-foreground rounded-md transition-colors inline-flex items-center gap-1"
+                                                    className="px-3 py-1.5 text-xs font-medium bg-secondary hover:bg-secondary/80 text-foreground rounded-sm transition-colors inline-flex items-center gap-1 cursor-pointer"
                                                 >
                                                     <RotateCcw className="h-3 w-3" />
                                                     Reset Password
@@ -271,8 +271,8 @@ export default function AdminPage() {
                             <div>
                                 <label className="block text-sm font-medium mb-1.5">New Password</label>
                                 <input
-                                    type="text"
-                                    className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                    type="password"
+                                    className="w-full px-3 py-2 bg-transparent border border-border rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                                     placeholder="Enter new password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
@@ -286,14 +286,14 @@ export default function AdminPage() {
                             <div className="flex gap-3 justify-end mt-6">
                                 <button
                                     onClick={() => setShowResetDialog(false)}
-                                    className="px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary rounded-md transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-white hover:bg-transparent rounded-sm transition-colors cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleResetPassword}
                                     disabled={!newPassword || newPassword.length < 6 || resettingId === selectedUser.id}
-                                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
                                 >
                                     {resettingId === selectedUser.id && <Loader2 className="h-4 w-4 animate-spin" />}
                                     Reset Password
