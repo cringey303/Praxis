@@ -803,7 +803,7 @@ export default function SecurityPage() {
                                             </p>
                                         )}
 
-                                        <form onSubmit={user?.has_password ? handleChangePassword : handleSetPassword} className="space-y-4">
+                                        <form onSubmit={user?.has_password ? handleChangePassword : handleSetPassword} className="space-y-4 mt-4">
                                             {!user?.has_password && (
                                                 <div>
                                                     <FloatingLabelInput
