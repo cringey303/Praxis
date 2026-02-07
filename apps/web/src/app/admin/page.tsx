@@ -4,14 +4,17 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { useToast } from "@/components/ui/Toast";
+import { getProfileImageUrl } from '@/lib/utils';
 import { Loader2, Search, RotateCcw, Shield } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface UserProfile {
     id: string;
+
     username: string;
     display_name: string;
+    avatar_url?: string;
     email?: string;
     role: string;
     created_at?: string;
@@ -161,12 +164,6 @@ export default function AdminPage() {
             <NavBar user={user} onLogout={handleLogout} isLoggingOut={false} />
 
             <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-                        <p className="text-muted-foreground mt-1">Manage users and system settings.</p>
-                    </div>
-                </div>
 
                 <div className="border border-border rounded-xl bg-card overflow-hidden">
                     <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 items-center justify-between">
@@ -216,8 +213,16 @@ export default function AdminPage() {
                                         <tr key={u.id} className="hover:bg-secondary/20 transition-colors">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium uppercase">
-                                                        {u.username[0]}
+                                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium uppercase overflow-hidden">
+                                                        {u.avatar_url ? (
+                                                            <img
+                                                                src={getProfileImageUrl(u.avatar_url)}
+                                                                alt={u.username}
+                                                                className="h-full w-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            u.username[0]
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <div className="font-medium text-foreground">{u.display_name}</div>
