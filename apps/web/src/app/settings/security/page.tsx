@@ -668,73 +668,75 @@ export default function SecurityPage() {
                             </div>
 
                             {/* Passkeys Section */}
-                            <div className={`max-w-[700px] border border-border rounded-xl p-6 bg-card ${!showPasskeys ? 'pb-5' : ''}`}>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h2 className="text-lg font-medium">Passkeys</h2>
-                                    </div>
-                                    <button
-                                        onClick={initiatePasskeyRegistration}
-                                        disabled={registeringPasskey}
-                                        className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                    >
-                                        {registeringPasskey ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <>
-                                                Add Passkey
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
+                            <div className={`max-w-[700px] border border-border rounded-xl p-6 bg-card`}>
+                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <h2 className="text-lg font-medium">Passkeys</h2>
+                                            <button
+                                                onClick={initiatePasskeyRegistration}
+                                                disabled={registeringPasskey}
+                                                className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            >
+                                                {registeringPasskey ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <>
+                                                        Add passkey
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
 
-                                {passkeys.length > 0 ? (
-                                    <div className="space-y-3">
-                                        <button
-                                            onClick={() => setShowPasskeys(!showPasskeys)}
-                                            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer mb-2"
-                                        >
-                                            {showPasskeys ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                            {showPasskeys ? `Hide ${passkeys.length} passkeys` : `Show ${passkeys.length} passkeys`}
-                                        </button>
+                                        {passkeys.length > 0 ? (
+                                            <div className="space-y-3">
+                                                <button
+                                                    onClick={() => setShowPasskeys(!showPasskeys)}
+                                                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                                >
+                                                    {showPasskeys ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                                    {showPasskeys ? `Hide ${passkeys.length} passkeys` : `Show ${passkeys.length} passkeys`}
+                                                </button>
 
-                                        {showPasskeys && (
-                                            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                                                {passkeys.map((passkey) => (
-                                                    <div
-                                                        key={passkey.id}
-                                                        className="flex items-center justify-between p-4 rounded-sm border border-border bg-primary/5"
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div>
-                                                                <p className="text-sm font-medium">{passkey.name}</p>
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    Added {formatDate(passkey.created_at)}
-                                                                    {passkey.last_used_at && ` • Last used ${formatDate(passkey.last_used_at)}`}
-                                                                </p>
+                                                {showPasskeys && (
+                                                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 mt-2">
+                                                        {passkeys.map((passkey) => (
+                                                            <div
+                                                                key={passkey.id}
+                                                                className="flex items-center justify-between p-4 rounded-sm border border-border bg-primary/5"
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <div>
+                                                                        <p className="text-sm font-medium">{passkey.name}</p>
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            Added {formatDate(passkey.created_at)}
+                                                                            {passkey.last_used_at && ` • Last used ${formatDate(passkey.last_used_at)}`}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleDeletePasskey(passkey.id)}
+                                                                    disabled={deletingPasskeyId === passkey.id}
+                                                                    className="cursor-pointer p-2 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
+                                                                >
+                                                                    {deletingPasskeyId === passkey.id ? (
+                                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                                    ) : (
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    )}
+                                                                </button>
                                                             </div>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => handleDeletePasskey(passkey.id)}
-                                                            disabled={deletingPasskeyId === passkey.id}
-                                                            className="cursor-pointer p-2 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
-                                                        >
-                                                            {deletingPasskeyId === passkey.id ? (
-                                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                            ) : (
-                                                                <Trash2 className="h-4 w-4" />
-                                                            )}
-                                                        </button>
+                                                        ))}
                                                     </div>
-                                                ))}
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="text-muted-foreground">
+                                                <p className="text-sm">No passkeys registered yet. Add a passkey to enable passwordless sign-in.</p>
                                             </div>
                                         )}
                                     </div>
-                                ) : (
-                                    <div className="text-muted-foreground">
-                                        <p className="text-sm">No passkeys registered yet. Add a passkey to enable passwordless sign-in.</p>
-                                    </div>
-                                )}
+                                </div>
                             </div>
 
                             {/* Passkey Name Dialog */}
@@ -786,9 +788,9 @@ export default function SecurityPage() {
                                     {user?.has_password && (
                                         <button
                                             onClick={() => setIsPasswordFormOpen(!isPasswordFormOpen)}
-                                            className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-sm text-sm hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                            className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                                         >
-                                            {isPasswordFormOpen ? 'Hide' : 'Change Password'}
+                                            {isPasswordFormOpen ? 'Hide' : 'Change password'}
                                         </button>
                                     )}
                                 </div>
@@ -820,7 +822,7 @@ export default function SecurityPage() {
                                                     <FloatingLabelInput
                                                         id="currentPassword"
                                                         type={showCurrentPassword ? "text" : "password"}
-                                                        label="Current Password"
+                                                        label="Current password"
                                                         value={currentPassword}
                                                         onChange={(e) => setCurrentPassword(e.target.value)}
                                                         error={errors.currentPassword}
@@ -832,7 +834,7 @@ export default function SecurityPage() {
                                                 <FloatingLabelInput
                                                     id="newPassword"
                                                     type={showNewPassword ? "text" : "password"}
-                                                    label={user?.has_password ? "New Password" : "Password"}
+                                                    label={user?.has_password ? "New password" : "Password"}
                                                     value={newPassword}
                                                     onChange={(e) => setNewPassword(e.target.value)}
                                                     error={errors.newPassword}
@@ -843,7 +845,7 @@ export default function SecurityPage() {
                                                 <FloatingLabelInput
                                                     id="confirmPassword"
                                                     type={showConfirmPassword ? "text" : "password"}
-                                                    label={user?.has_password ? "Confirm New Password" : "Confirm Password"}
+                                                    label={user?.has_password ? "Confirm new password" : "Confirm password"}
                                                     value={confirmPassword}
                                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                                     error={errors.confirmPassword}
@@ -859,10 +861,10 @@ export default function SecurityPage() {
                                                     {updating ? (
                                                         <>
                                                             <Loader2 className="h-4 w-4 animate-spin" />
-                                                            {user?.has_password ? 'Changing Password...' : 'Setting Password...'}
+                                                            {user?.has_password ? 'Changing password...' : 'Setting password...'}
                                                         </>
                                                     ) : (
-                                                        user?.has_password ? 'Update Password' : 'Set Password'
+                                                        user?.has_password ? 'Update password' : 'Set password'
                                                     )}
                                                 </button>
 
@@ -1296,17 +1298,17 @@ export default function SecurityPage() {
                                         setNewPasskeyName('');
                                         setPendingCredential(null);
                                     }}
-                                    className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                    className="cursor-pointer px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleFinishPasskeyRegistration}
                                     disabled={registeringPasskey}
-                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="cursor-pointer px-4 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
-                                    Save Passkey
+                                    Save passkey
                                 </button>
                             </div>
                         </div>
