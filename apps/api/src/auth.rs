@@ -185,6 +185,11 @@ pub async fn signup(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // Create Active Session
+    session
+        .save()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
     if let Some(session_id) = session.id() {
         // Default expiry (e.g., 24h from now, or whatever session manager uses)
         // ideally match session store config. For now using 24 hours.
@@ -372,6 +377,11 @@ pub async fn login(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // Create Active Session
+    session
+        .save()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
     if let Some(session_id) = session.id() {
         let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
         crate::session::create_session(
@@ -514,6 +524,11 @@ pub async fn google_callback(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // Create Active Session
+    session
+        .save()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
     if let Some(session_id) = session.id() {
         let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
         crate::session::create_session(
@@ -719,6 +734,11 @@ pub async fn github_callback(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // Create Active Session
+    session
+        .save()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
     if let Some(session_id) = session.id() {
         let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
         crate::session::create_session(

@@ -79,7 +79,21 @@ pub async fn list_sessions(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or((StatusCode::UNAUTHORIZED, "Not logged in".to_string()))?;
 
+    // Ensure session has an ID (save if needed)
+    if session.id().is_none() {
+        tracing::warn!("Session ID missing for user {}, forcing save", user_id);
+        session
+            .save()
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    }
+
     let current_session_id = session.id().map(|id| id.to_string()).unwrap_or_default();
+    tracing::debug!(
+        "Listing sessions for user_id: {}, current_session_id: {}",
+        user_id,
+        current_session_id
+    );
 
     let mut sessions = sqlx::query_as!(
         ActiveSession,
@@ -99,10 +113,13 @@ pub async fn list_sessions(
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    tracing::debug!("Found {} sessions initially", sessions.len());
+
     // If current session is not in the list (e.g. old session or first time tracking), add it
     let current_exists = sessions.iter().any(|s| s.session_id == current_session_id);
 
     if !current_exists && !current_session_id.is_empty() {
+        tracing::debug!("Current session missing, backfilling...");
         let expires_at = Utc::now() + chrono::Duration::hours(24);
         // Backfill current session
         create_session(
@@ -114,7 +131,10 @@ pub async fn list_sessions(
             expires_at,
         )
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+        .map_err(|e| {
+            tracing::error!("Failed to backfill session: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e)
+        })?;
 
         // Fetch again to include the new session
         sessions = sqlx::query_as!(
@@ -134,6 +154,8 @@ pub async fn list_sessions(
         .fetch_all(&pool)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        tracing::debug!("Found {} sessions after backfill", sessions.len());
     }
 
     Ok(Json(sessions))
