@@ -668,7 +668,7 @@ export default function SecurityPage() {
                             </div>
 
                             {/* Passkeys Section */}
-                            <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
+                            <div className={`max-w-[700px] border border-border rounded-xl p-6 bg-card ${!showPasskeys ? 'pb-5' : ''}`}>
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h2 className="text-lg font-medium">Passkeys</h2>
