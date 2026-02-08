@@ -114,6 +114,12 @@ async fn main() {
         .route("/auth/github", get(auth::github_login))
         .route("/auth/github/callback", get(auth::github_callback))
         .route("/auth/logout", post(auth::logout))
+        // Linked Accounts
+        .route("/auth/linked-accounts", get(auth::list_linked_accounts))
+        .route(
+            "/auth/linked-accounts/:provider",
+            delete(auth::unlink_account),
+        )
         // Admin Routes
         .route(
             "/admin/users/:id/reset-password",

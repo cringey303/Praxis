@@ -3,7 +3,7 @@ use argon2::{
     Argon2,
 };
 use axum::{
-    extract::{ConnectInfo, Query, State},
+    extract::{ConnectInfo, Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect},
     Json,
@@ -12,7 +12,7 @@ use oauth2::{
     basic::BasicClient, AuthUrl, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
     TokenResponse, TokenUrl,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use std::net::SocketAddr;
 use tower_sessions::Session;
@@ -58,6 +58,7 @@ pub struct LoginRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct GoogleUser {
+    pub sub: String,
     pub email: String,
     pub name: String,
     pub picture: String,
@@ -65,6 +66,7 @@ pub struct GoogleUser {
 
 #[derive(Debug, Deserialize)]
 pub struct GithubUser {
+    pub id: i64,
     pub email: Option<String>,
     pub name: Option<String>,
     pub login: String,
@@ -474,86 +476,147 @@ pub async fn google_callback(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // find user by email to see if they already exist
-    let user = sqlx::query!(
-        "SELECT user_id, password_hash FROM local_auths WHERE email = $1",
-        google_user.email
-    )
-    .fetch_optional(&pool)
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    let user_id = if let Some(u) = user {
-        // user exists, log them in
-        u.user_id
-    } else {
-        // if user not found, create new user
-        let mut tx = pool
-            .begin()
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        let new_user_id = sqlx::query!(
-            "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
-            google_user
-                .email
-                .split('@')
-                .next()
-                .unwrap_or("user")
-                .to_lowercase(),
-            google_user.name
-        )
-        .fetch_one(&mut *tx)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .id;
-
-        // No local_auth record for OAuth users - they can set a password later
-
-        tx.commit()
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        new_user_id
-    };
-
-    // Set Session
-    session
-        .insert("user_id", user_id)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    // Create Active Session
-    session
-        .save()
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    if let Some(session_id) = session.id() {
-        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
-        crate::session::create_session(
-            &pool,
-            user_id,
-            session_id.to_string(),
-            &headers,
-            Some(addr.ip().to_string()),
-            expires_at,
-        )
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to track session: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
-        })?;
-    }
-
+    // Get frontend URL for redirects
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
     let frontend_url = frontend_url
         .split(',')
         .next()
         .unwrap_or("http://localhost:3000")
-        .trim();
-    Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
+        .trim()
+        .to_string();
+
+    // Check if user is already logged in (linking flow from settings page)
+    let existing_session_user: Option<Uuid> = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Check if this Google account is already linked to a user
+    let oauth_user = sqlx::query!(
+        "SELECT user_id FROM oauth_connections WHERE provider = 'google' AND provider_id = $1",
+        google_user.sub
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let is_linking = existing_session_user.is_some();
+
+    let user_id = if let Some(existing_user_id) = existing_session_user {
+        // Linking flow: user is already logged in
+        if let Some(ref ou) = oauth_user {
+            if ou.user_id != Some(existing_user_id) {
+                // This Google account is already linked to a different user
+                return Ok(Redirect::to(&format!(
+                    "{}/settings/security?error=already_linked",
+                    frontend_url
+                )));
+            }
+        }
+        existing_user_id
+    } else if let Some(ou) = oauth_user {
+        // Login flow: found user by oauth_connection
+        ou.user_id.ok_or((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Invalid oauth connection".to_string(),
+        ))?
+    } else {
+        // Check local_auths by email
+        let local_user = sqlx::query!(
+            "SELECT user_id FROM local_auths WHERE email = $1",
+            google_user.email
+        )
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        if let Some(lu) = local_user {
+            lu.user_id
+        } else {
+            // Create new user
+            let mut tx = pool
+                .begin()
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            let new_user_id = sqlx::query!(
+                "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
+                google_user
+                    .email
+                    .split('@')
+                    .next()
+                    .unwrap_or("user")
+                    .to_lowercase(),
+                google_user.name
+            )
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+            .id;
+
+            // No local_auth record for OAuth users - they can set a password later
+
+            tx.commit()
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            new_user_id
+        }
+    };
+
+    // Upsert oauth_connection
+    sqlx::query!(
+        r#"INSERT INTO oauth_connections (user_id, provider, provider_id, access_token, provider_email)
+           VALUES ($1, 'google', $2, $3, $4)
+           ON CONFLICT (provider, provider_id) DO UPDATE SET access_token = $3, provider_email = $4"#,
+        user_id,
+        google_user.sub,
+        token.access_token().secret(),
+        google_user.email
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to upsert oauth_connection: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    // Set session and create active session (only for login, not linking)
+    if !is_linking {
+        session
+            .insert("user_id", user_id)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        session
+            .save()
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        if let Some(session_id) = session.id() {
+            let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+            crate::session::create_session(
+                &pool,
+                user_id,
+                session_id.to_string(),
+                &headers,
+                Some(addr.ip().to_string()),
+                expires_at,
+            )
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to track session: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+            })?;
+        }
+    }
+
+    if is_linking {
+        Ok(Redirect::to(&format!("{}/settings/security", frontend_url)))
+    } else {
+        Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
+    }
 }
 
 // github oauth handling
@@ -685,85 +748,147 @@ pub async fn github_callback(
             ))?
     };
 
-    // find user by email to see if they already exist
-    let user = sqlx::query!(
-        "SELECT user_id, password_hash FROM local_auths WHERE email = $1",
-        email
-    )
-    .fetch_optional(&pool)
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    let user_id = if let Some(u) = user {
-        // user exists, log them in
-        u.user_id
-    } else {
-        // if user not found, create new user
-        let mut tx = pool
-            .begin()
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        let display_name = github_user
-            .name
-            .unwrap_or_else(|| github_user.login.clone());
-
-        let new_user_id = sqlx::query!(
-            "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
-            github_user.login.to_lowercase(), // use github username (lowercase)
-            display_name
-        )
-        .fetch_one(&mut *tx)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .id;
-
-        // No local_auth record for OAuth users - they can set a password later
-
-        tx.commit()
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        new_user_id
-    };
-
-    // Set Session
-    session
-        .insert("user_id", user_id)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    // Create Active Session
-    session
-        .save()
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    if let Some(session_id) = session.id() {
-        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
-        crate::session::create_session(
-            &pool,
-            user_id,
-            session_id.to_string(),
-            &headers,
-            Some(addr.ip().to_string()),
-            expires_at,
-        )
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to track session: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
-        })?;
-    }
-
+    // Get frontend URL for redirects
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
     let frontend_url = frontend_url
         .split(',')
         .next()
         .unwrap_or("http://localhost:3000")
-        .trim();
-    Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
+        .trim()
+        .to_string();
+
+    // Check if user is already logged in (linking flow from settings page)
+    let existing_session_user: Option<Uuid> = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Check if this GitHub account is already linked to a user
+    let github_provider_id = github_user.id.to_string();
+    let oauth_user = sqlx::query!(
+        "SELECT user_id FROM oauth_connections WHERE provider = 'github' AND provider_id = $1",
+        github_provider_id
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let is_linking = existing_session_user.is_some();
+
+    let user_id = if let Some(existing_user_id) = existing_session_user {
+        // Linking flow: user is already logged in
+        if let Some(ref ou) = oauth_user {
+            if ou.user_id != Some(existing_user_id) {
+                // This GitHub account is already linked to a different user
+                return Ok(Redirect::to(&format!(
+                    "{}/settings/security?error=already_linked",
+                    frontend_url
+                )));
+            }
+        }
+        existing_user_id
+    } else if let Some(ou) = oauth_user {
+        // Login flow: found user by oauth_connection
+        ou.user_id.ok_or((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Invalid oauth connection".to_string(),
+        ))?
+    } else {
+        // Check local_auths by email
+        let local_user = sqlx::query!(
+            "SELECT user_id FROM local_auths WHERE email = $1",
+            email
+        )
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        if let Some(lu) = local_user {
+            lu.user_id
+        } else {
+            // Create new user
+            let mut tx = pool
+                .begin()
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            let display_name = github_user
+                .name
+                .unwrap_or_else(|| github_user.login.clone());
+
+            let new_user_id = sqlx::query!(
+                "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
+                github_user.login.to_lowercase(),
+                display_name
+            )
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+            .id;
+
+            // No local_auth record for OAuth users - they can set a password later
+
+            tx.commit()
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            new_user_id
+        }
+    };
+
+    // Upsert oauth_connection
+    sqlx::query!(
+        r#"INSERT INTO oauth_connections (user_id, provider, provider_id, access_token, provider_email)
+           VALUES ($1, 'github', $2, $3, $4)
+           ON CONFLICT (provider, provider_id) DO UPDATE SET access_token = $3, provider_email = $4"#,
+        user_id,
+        github_provider_id,
+        token.access_token().secret(),
+        email
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to upsert oauth_connection: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    // Set session and create active session (only for login, not linking)
+    if !is_linking {
+        session
+            .insert("user_id", user_id)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        session
+            .save()
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        if let Some(session_id) = session.id() {
+            let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+            crate::session::create_session(
+                &pool,
+                user_id,
+                session_id.to_string(),
+                &headers,
+                Some(addr.ip().to_string()),
+                expires_at,
+            )
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to track session: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+            })?;
+        }
+    }
+
+    if is_linking {
+        Ok(Redirect::to(&format!("{}/settings/security", frontend_url)))
+    } else {
+        Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
+    }
 }
 
 pub async fn logout(session: Session) -> impl IntoResponse {
@@ -971,4 +1096,110 @@ async fn async_http_client_logging(
         headers,
         body: body.to_vec(),
     })
+}
+
+// --- Linked Accounts ---
+
+#[derive(Serialize)]
+pub struct LinkedAccount {
+    pub provider: String,
+    pub provider_email: Option<String>,
+}
+
+pub async fn list_linked_accounts(
+    State(pool): State<PgPool>,
+    session: Session,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let user_id: Uuid = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::UNAUTHORIZED, "Not logged in".to_string()))?;
+
+    let accounts = sqlx::query!(
+        "SELECT provider, provider_email FROM oauth_connections WHERE user_id = $1",
+        user_id
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let result: Vec<LinkedAccount> = accounts
+        .into_iter()
+        .map(|a| LinkedAccount {
+            provider: a.provider,
+            provider_email: a.provider_email,
+        })
+        .collect();
+
+    Ok(Json(result))
+}
+
+pub async fn unlink_account(
+    State(pool): State<PgPool>,
+    session: Session,
+    Path(provider): Path<String>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let user_id: Uuid = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::UNAUTHORIZED, "Not logged in".to_string()))?;
+
+    // Safety check: user must have another auth method
+    let has_password = sqlx::query!(
+        "SELECT user_id FROM local_auths WHERE user_id = $1",
+        user_id
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .is_some();
+
+    let other_oauth_count = sqlx::query_scalar!(
+        "SELECT COUNT(*) FROM oauth_connections WHERE user_id = $1 AND provider != $2",
+        user_id,
+        provider
+    )
+    .fetch_one(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .unwrap_or(0);
+
+    let passkey_count = sqlx::query_scalar!(
+        "SELECT COUNT(*) FROM passkey_credentials WHERE user_id = $1",
+        user_id
+    )
+    .fetch_one(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .unwrap_or(0);
+
+    if !has_password && other_oauth_count == 0 && passkey_count == 0 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Cannot unlink your only sign-in method. Add a password or link another account first."
+                .to_string(),
+        ));
+    }
+
+    let result = sqlx::query!(
+        "DELETE FROM oauth_connections WHERE user_id = $1 AND provider = $2",
+        user_id,
+        provider
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if result.rows_affected() == 0 {
+        return Err((StatusCode::NOT_FOUND, "Account not linked".to_string()));
+    }
+
+    tracing::info!("User {} unlinked {} account", user_id, provider);
+
+    Ok((
+        StatusCode::OK,
+        format!("{} account unlinked successfully", provider),
+    ))
 }
