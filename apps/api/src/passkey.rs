@@ -2,7 +2,13 @@ use argon2::{
     password_hash::{PasswordHash, PasswordVerifier},
     Argon2,
 };
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum::{
+    extract::{ConnectInfo, State},
+    http::{HeaderMap, StatusCode},
+    response::IntoResponse,
+    Json,
+};
+use std::net::SocketAddr;
 use base64::Engine;
 use oauth2::url::Url;
 use serde::{Deserialize, Serialize};
@@ -233,6 +239,8 @@ pub async fn start_authentication(
 pub async fn finish_authentication(
     State(pool): State<PgPool>,
     session: Session,
+    headers: HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(payload): Json<FinishAuthRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let state_json: String = session
@@ -333,6 +341,29 @@ pub async fn finish_authentication(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     session.remove::<String>("passkey_auth_state").await.ok();
+
+    // Create Active Session
+    session
+        .save()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if let Some(session_id) = session.id() {
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+        crate::session::create_session(
+            &pool,
+            stored.user_id,
+            session_id.to_string(),
+            &headers,
+            Some(addr.ip().to_string()),
+            expires_at,
+        )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to track session after passkey auth: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+    }
 
     Ok(Json(serde_json::json!({
         "success": true,

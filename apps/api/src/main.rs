@@ -101,7 +101,18 @@ async fn main() {
     // create empty web app and run mapped fns if routes are visited
     let app = Router::new()
         .route("/", get(root))
-        // ... (existing auth routes) ...
+        // Auth Routes
+        .route("/auth/signup", post(auth::signup))
+        .route("/auth/login", post(auth::login))
+        .route("/auth/verify-email", post(auth::verify_email))
+        .route("/auth/resend-verification", post(auth::resend_verification))
+        .route("/auth/change-password", post(auth::change_password))
+        .route("/auth/set-password", post(auth::set_password))
+        // OAuth
+        .route("/auth/google", get(auth::google_login))
+        .route("/auth/google/callback", get(auth::google_callback))
+        .route("/auth/github", get(auth::github_login))
+        .route("/auth/github/callback", get(auth::github_callback))
         .route("/auth/logout", post(auth::logout))
         // Admin Routes
         .route(
@@ -183,7 +194,12 @@ async fn main() {
         }
     };
     //get requests and send it to app
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .unwrap();
 }
 
 async fn root() -> &'static str {

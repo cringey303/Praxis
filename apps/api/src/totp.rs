@@ -2,7 +2,13 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum::{
+    extract::{ConnectInfo, State},
+    http::{HeaderMap, StatusCode},
+    response::IntoResponse,
+    Json,
+};
+use std::net::SocketAddr;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use totp_rs::{Algorithm, Secret, TOTP};
@@ -191,6 +197,8 @@ pub async fn disable_totp(
 pub async fn verify_totp(
     State(pool): State<PgPool>,
     session: Session,
+    headers: HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(payload): Json<VerifyTotpRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Get pending 2FA user ID from session
@@ -220,6 +228,29 @@ pub async fn verify_totp(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     session.remove::<String>("pending_2fa_user_id").await.ok();
+
+    // Create Active Session
+    session
+        .save()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if let Some(session_id) = session.id() {
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+        crate::session::create_session(
+            &pool,
+            pending_user_id,
+            session_id.to_string(),
+            &headers,
+            Some(addr.ip().to_string()),
+            expires_at,
+        )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to track session after 2FA: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+    }
 
     Ok(Json(serde_json::json!({ "success": true })))
 }

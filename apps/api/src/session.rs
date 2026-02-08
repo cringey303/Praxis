@@ -46,6 +46,13 @@ pub async fn create_session(
         .map(|s| s.split(',').next().unwrap_or(s).trim().to_string())
         .or(ip_address);
 
+    tracing::debug!(
+        "Creating/Updating session for user {}. IP: {:?}, User-Agent: {:?}",
+        user_id,
+        ip_address,
+        user_agent
+    );
+
     sqlx::query!(
         r#"
         INSERT INTO active_sessions (user_id, session_id, user_agent, ip_address, expires_at)
@@ -61,7 +68,12 @@ pub async fn create_session(
     )
     .execute(pool)
     .await
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| {
+        tracing::error!("Failed to insert/update active_session: {}", e);
+        e.to_string()
+    })?;
+
+    tracing::debug!("Session {} tracked successfully", session_id);
 
     Ok(())
 }
@@ -81,11 +93,7 @@ pub async fn list_sessions(
 
     // Ensure session has an ID (save if needed)
     if session.id().is_none() {
-        tracing::warn!("Session ID missing for user {}, forcing save", user_id);
-        session
-            .save()
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        tracing::warn!("Session ID missing for user {} in list_sessions", user_id);
     }
 
     let current_session_id = session.id().map(|id| id.to_string()).unwrap_or_default();
@@ -119,7 +127,10 @@ pub async fn list_sessions(
     let current_exists = sessions.iter().any(|s| s.session_id == current_session_id);
 
     if !current_exists && !current_session_id.is_empty() {
-        tracing::debug!("Current session missing, backfilling...");
+        tracing::debug!(
+            "Current session missing (ID='{}'), backfilling...",
+            current_session_id
+        );
         let expires_at = Utc::now() + chrono::Duration::hours(24);
         // Backfill current session
         create_session(

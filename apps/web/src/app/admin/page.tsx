@@ -185,7 +185,7 @@ export default function AdminPage() {
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
-                            <thead className="bg-secondary/50 text-muted-foreground font-medium">
+                            <thead className="bg-background text-muted-foreground font-medium border-b border-border">
                                 <tr>
                                     <th className="px-4 py-3 w-[30%]">User</th>
                                     <th className="px-4 py-3 w-[10%]">Role</th>
