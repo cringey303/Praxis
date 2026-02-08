@@ -749,7 +749,7 @@ export default function SecurityPage() {
                                     {user?.has_password && (
                                         <button
                                             onClick={() => setIsPasswordFormOpen(!isPasswordFormOpen)}
-                                            className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                            className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
                                             {isPasswordFormOpen ? 'Hide' : 'Change password'}
                                         </button>
@@ -817,7 +817,7 @@ export default function SecurityPage() {
                                                 <button
                                                     type="submit"
                                                     disabled={updating}
-                                                    className="cursor-pointer w-auto py-1.5 px-4 border border-primary text-foreground bg-transparent rounded-sm font-small hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                                    className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                 >
                                                     {updating ? (
                                                         <>
@@ -927,14 +927,14 @@ export default function SecurityPage() {
                                                     setPendingCredential(null);
                                                     setNewPasskeyName('');
                                                 }}
-                                                className="cursor-pointer flex-1 py-2 px-4 border border-border rounded-sm text-sm font-medium hover:bg-secondary transition-colors"
+                                                className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 onClick={handleFinishPasskeyRegistration}
                                                 disabled={registeringPasskey}
-                                                className="cursor-pointer flex-1 py-2 px-4 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                                className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                             >
                                                 {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
                                                 Save
@@ -967,7 +967,7 @@ export default function SecurityPage() {
                                                 setIsDisableTotpOpen(true);
                                                 setTotpCode('');
                                             }}
-                                            className="cursor-pointer px-3 py-1.5 border border-border rounded-sm text-sm font-medium hover:bg-secondary/30 transition-colors text-red-500 hover:text-red-600 self-start sm:self-center"
+                                            className="cursor-pointer py-1.5 px-3 border border-red-500 text-red-500 bg-transparent rounded-sm text-sm font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
                                             Disable 2FA
                                         </button>
@@ -1005,7 +1005,7 @@ export default function SecurityPage() {
                                         <button
                                             onClick={handleSetupTotp}
                                             disabled={settingUpTotp}
-                                            className="cursor-pointer shrink-0 border border-border bg-background text-foreground font-medium py-1.5 px-4 rounded-sm text-sm hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
                                             {settingUpTotp && <Loader2 className="h-4 w-4 animate-spin" />}
                                             Enable 2FA
@@ -1075,7 +1075,7 @@ export default function SecurityPage() {
                                                 <button
                                                     onClick={handleEnableTotp}
                                                     disabled={settingUpTotp || totpCode.length !== 6}
-                                                    className="cursor-pointer px-6 py-2 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                 >
                                                     {settingUpTotp && <Loader2 className="h-4 w-4 animate-spin" />}
                                                     Verify
@@ -1117,7 +1117,7 @@ export default function SecurityPage() {
                                                 <button
                                                     onClick={handleDisableTotp}
                                                     disabled={disablingTotp || totpCode.length !== 6}
-                                                    className="cursor-pointer px-3 py-1.5 border border-red-500 text-red-500 bg-transparent rounded-sm text-sm font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    className="cursor-pointer py-1.5 px-3 border border-red-500 text-red-500 bg-transparent rounded-sm text-sm font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                 >
                                                     {disablingTotp && <Loader2 className="h-4 w-4 animate-spin" />}
                                                     Confirm Disable
@@ -1169,7 +1169,7 @@ export default function SecurityPage() {
                                         <div className="flex gap-2 mb-3">
                                             <button
                                                 onClick={() => copyToClipboard(backupCodes.join('\n'))}
-                                                className="cursor-pointer flex-1 py-2 px-4 border border-border rounded-sm text-sm font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2 min-w-[160px]"
+                                                className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                             >
                                                 {copiedCode === backupCodes.join('\n') ? (
                                                     <>
@@ -1196,7 +1196,7 @@ export default function SecurityPage() {
                                                     document.body.removeChild(a);
                                                     URL.revokeObjectURL(url);
                                                 }}
-                                                className="cursor-pointer flex-1 py-2 px-4 border border-border rounded-sm text-sm font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2"
+                                                className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -1211,7 +1211,7 @@ export default function SecurityPage() {
                                                 setShowBackupCodes(false);
                                                 setBackupCodes([]);
                                             }}
-                                            className="cursor-pointer w-full py-2 px-4 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors"
+                                            className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
                                             I&apos;ve saved my codes
                                         </button>
@@ -1357,7 +1357,7 @@ export default function SecurityPage() {
                                 <button
                                     onClick={() => handleRegisterPasskey(passkeyPassword)}
                                     disabled={!passkeyPassword || registeringPasskey}
-                                    className="cursor-pointer px-4 py-2 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
                                     Continue
@@ -1399,7 +1399,7 @@ export default function SecurityPage() {
                                 <button
                                     onClick={handleFinishPasskeyRegistration}
                                     disabled={registeringPasskey}
-                                    className="cursor-pointer px-4 py-2 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
                                     Save passkey
