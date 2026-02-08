@@ -1287,7 +1287,13 @@ export default function SecurityPage() {
                                                                 : session.ip_address || 'Unknown IP'}
                                                         </p>
                                                         {session.is_current ? (
-                                                            <p className="text-xs text-green-500 font-medium mt-0.5">Active now</p>
+                                                            <p className="text-xs text-green-500 font-medium mt-0.5 flex items-center gap-1.5">
+                                                                <span className="relative flex h-2 w-2">
+                                                                    <span className="animate-ping [animation-duration:3s] absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-50"></span>
+                                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                                                </span>
+                                                                Active now
+                                                            </p>
                                                         ) : (
                                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                                 Last active: {formatRelativeTime(session.last_active_at)}
