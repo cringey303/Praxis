@@ -717,7 +717,7 @@ export default function SecurityPage() {
                                     {user?.has_password && (
                                         <button
                                             onClick={() => setIsPasswordFormOpen(!isPasswordFormOpen)}
-                                            className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                            className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                                         >
                                             {isPasswordFormOpen ? 'Hide' : 'Change password'}
                                         </button>
@@ -785,7 +785,7 @@ export default function SecurityPage() {
                                                 <button
                                                     type="submit"
                                                     disabled={updating}
-                                                    className="cursor-pointer w-auto py-1.5 px-4 bg-primary text-primary-foreground rounded-sm font-small hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                                    className="cursor-pointer w-auto py-1.5 px-4 border border-primary text-foreground bg-transparent rounded-sm font-small hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                                 >
                                                     {updating ? (
                                                         <>
@@ -816,12 +816,12 @@ export default function SecurityPage() {
                             <div className={`max-w-[700px] border border-border rounded-xl p-6 bg-card`}>
                                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                                     <div className="flex-1">
-                                        <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center justify-between mb-3">
                                             <h2 className="text-lg font-medium">Passkeys</h2>
                                             <button
                                                 onClick={initiatePasskeyRegistration}
                                                 disabled={registeringPasskey}
-                                                className="cursor-pointer py-1.5 px-3 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                             >
                                                 {registeringPasskey ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -902,7 +902,7 @@ export default function SecurityPage() {
                                             <button
                                                 onClick={handleFinishPasskeyRegistration}
                                                 disabled={registeringPasskey}
-                                                className="cursor-pointer flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                                className="cursor-pointer flex-1 py-2 px-4 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                             >
                                                 {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
                                                 Save
@@ -1043,7 +1043,7 @@ export default function SecurityPage() {
                                                 <button
                                                     onClick={handleEnableTotp}
                                                     disabled={settingUpTotp || totpCode.length !== 6}
-                                                    className="cursor-pointer px-6 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    className="cursor-pointer px-6 py-2 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                 >
                                                     {settingUpTotp && <Loader2 className="h-4 w-4 animate-spin" />}
                                                     Verify
@@ -1085,7 +1085,7 @@ export default function SecurityPage() {
                                                 <button
                                                     onClick={handleDisableTotp}
                                                     disabled={disablingTotp || totpCode.length !== 6}
-                                                    className="cursor-pointer px-3 py-1.5 bg-red-500 text-white rounded-sm text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    className="cursor-pointer px-3 py-1.5 border border-red-500 text-red-500 bg-transparent rounded-sm text-sm font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                 >
                                                     {disablingTotp && <Loader2 className="h-4 w-4 animate-spin" />}
                                                     Confirm Disable
@@ -1179,7 +1179,7 @@ export default function SecurityPage() {
                                                 setShowBackupCodes(false);
                                                 setBackupCodes([]);
                                             }}
-                                            className="cursor-pointer w-full py-2 px-4 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors"
+                                            className="cursor-pointer w-full py-2 px-4 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors"
                                         >
                                             I&apos;ve saved my codes
                                         </button>
@@ -1323,7 +1323,7 @@ export default function SecurityPage() {
                                 <button
                                     onClick={() => handleRegisterPasskey(passkeyPassword)}
                                     disabled={!passkeyPassword || registeringPasskey}
-                                    className="cursor-pointer px-4 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="cursor-pointer px-4 py-2 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
                                     Continue
@@ -1365,7 +1365,7 @@ export default function SecurityPage() {
                                 <button
                                     onClick={handleFinishPasskeyRegistration}
                                     disabled={registeringPasskey}
-                                    className="cursor-pointer px-4 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="cursor-pointer px-4 py-2 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {registeringPasskey && <Loader2 className="h-4 w-4 animate-spin" />}
                                     Save passkey
