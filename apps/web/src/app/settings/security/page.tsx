@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Smartphone, Key, Trash2, Plus, Copy, Check, Laptop, LogOut, Globe } from 'lucide-react';
+import { Loader2, Smartphone, Key, Trash2, Plus, Copy, Check, Monitor, LogOut, Globe } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { useToast } from "@/components/ui/Toast";
@@ -605,6 +605,63 @@ export default function SecurityPage() {
         });
     };
 
+    const parseUserAgent = (ua: string): { browser: string; os: string; isMobile: boolean } => {
+        let browser = 'Unknown Browser';
+        let os = 'Unknown OS';
+        let isMobile = false;
+
+        // Detect browser
+        if (ua.includes('Firefox') && !ua.includes('Seamonkey')) {
+            browser = 'Firefox';
+        } else if (ua.includes('Edg')) {
+            browser = 'Edge';
+        } else if (ua.includes('OPR') || ua.includes('Opera')) {
+            browser = 'Opera';
+        } else if (ua.includes('Chrome') && !ua.includes('Edg') && !ua.includes('OPR')) {
+            browser = 'Chrome';
+        } else if (ua.includes('Safari') && !ua.includes('Chrome') && !ua.includes('Chromium')) {
+            browser = 'Safari';
+        }
+
+        // Detect OS
+        if (ua.includes('iPhone')) {
+            const match = ua.match(/iPhone\s*(?:OS\s*([\d_]+))?/);
+            os = match ? `iPhone ${match[1]?.replace(/_/g, '.') || ''}`.trim() : 'iPhone';
+            isMobile = true;
+        } else if (ua.includes('iPad')) {
+            os = 'iPad';
+            isMobile = true;
+        } else if (ua.includes('Android')) {
+            os = 'Android';
+            isMobile = true;
+        } else if (ua.includes('Mac OS X') || ua.includes('Macintosh')) {
+            os = 'macOS';
+        } else if (ua.includes('Windows')) {
+            os = 'Windows';
+        } else if (ua.includes('Linux')) {
+            os = 'Linux';
+        } else if (ua.includes('CrOS')) {
+            os = 'ChromeOS';
+        }
+
+        return { browser, os, isMobile };
+    };
+
+    const formatRelativeTime = (dateString: string): string => {
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+        if (diffDays < 30) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+        return formatDate(dateString);
+    };
+
     return (
         <div className="min-h-screen bg-background text-foreground">
             <NavBar user={user} onLogout={handleLogout} isLoggingOut={loading} />
@@ -1157,47 +1214,63 @@ export default function SecurityPage() {
                                     <p className="text-sm text-muted-foreground mt-2">No active sessions found.</p>
                                 ) : (
                                     <div className="space-y-3 mt-3">
-                                        {sessions.map((session) => (
-                                            <div
-                                                key={session.id}
-                                                className={`flex items-center gap-4 p-4 rounded-sm border ${session.is_current
-                                                    ? 'border-primary/30 bg-primary/5'
-                                                    : 'border-border bg-card'
+                                        {[...sessions].sort((a, b) => {
+                                            if (a.is_current && !b.is_current) return -1;
+                                            if (!a.is_current && b.is_current) return 1;
+                                            return new Date(b.last_active_at).getTime() - new Date(a.last_active_at).getTime();
+                                        }).map((session) => {
+                                            const { browser, os, isMobile } = parseUserAgent(session.user_agent);
+                                            return (
+                                                <div
+                                                    key={session.id}
+                                                    className={`flex items-center gap-4 p-4 rounded-lg border ${
+                                                        session.is_current
+                                                            ? 'border-green-500/30 bg-green-500/5'
+                                                            : 'border-border bg-card'
                                                     }`}
-                                            >
-                                                <div className={`${session.is_current ? 'text-primary' : 'text-muted-foreground'}`}>
-                                                    <Laptop className="h-6 w-6" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <h3 className="text-sm font-medium">
-                                                            {session.user_agent.includes('Mozilla') ? 'Browser Session' : session.user_agent}
-                                                        </h3>
-                                                        {session.is_current && (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary text-primary-foreground">
-                                                                Current Device
-                                                            </span>
+                                                >
+                                                    <div className={`${
+                                                        session.is_current ? 'text-green-500' : 'text-muted-foreground'
+                                                    }`}>
+                                                        {isMobile ? (
+                                                            <Smartphone className="h-6 w-6" />
+                                                        ) : (
+                                                            <Monitor className="h-6 w-6" />
                                                         )}
                                                     </div>
-                                                    <p className="text-xs text-muted-foreground mt-0.5" title={session.user_agent}>
-                                                        {session.ip_address || 'Unknown IP'} • {formatDate(session.last_active_at)}
-                                                    </p>
-                                                </div>
-                                                <div className="shrink-0">
-                                                    {session.is_current ? (
-                                                        <span className="text-xs text-primary font-medium">Active now</span>
-                                                    ) : (
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <h3 className="text-sm font-medium">
+                                                                {browser} on {os}
+                                                            </h3>
+                                                            {session.is_current && (
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-500 text-white">
+                                                                    Current Device
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-muted-foreground mt-0.5" title={session.user_agent}>
+                                                            {session.ip_address || 'Unknown IP'}
+                                                        </p>
+                                                        {session.is_current ? (
+                                                            <p className="text-xs text-green-500 font-medium mt-0.5">Active now</p>
+                                                        ) : (
+                                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                                Last active: {formatRelativeTime(session.last_active_at)}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    {!session.is_current && (
                                                         <button
                                                             onClick={() => handleRevokeSession(session.id)}
-                                                            className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                                                            className="cursor-pointer p-2 text-muted-foreground hover:text-red-500 transition-colors shrink-0"
                                                         >
-                                                            <LogOut className="h-3 w-3" />
-                                                            Log out
+                                                            <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     )}
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
 
                                         {sessions.length > 1 && (
                                             <div className="mt-2">
