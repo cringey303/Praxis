@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Smartphone, Key, Trash2, Plus, Copy, Check, ChevronDown, ChevronUp, Laptop, LogOut, Globe } from 'lucide-react';
+import { Loader2, Smartphone, Key, Trash2, Plus, Copy, Check, Laptop, LogOut, Globe } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { useToast } from "@/components/ui/Toast";
@@ -61,7 +61,6 @@ export default function SecurityPage() {
 
     // Passkey state
     const [passkeys, setPasskeys] = useState<PasskeyInfo[]>([]);
-    const [showPasskeys, setShowPasskeys] = useState(false);
     const [registeringPasskey, setRegisteringPasskey] = useState(false);
     const [deletingPasskeyId, setDeletingPasskeyId] = useState<string | null>(null);
     const [newPasskeyName, setNewPasskeyName] = useState('');
@@ -760,7 +759,7 @@ export default function SecurityPage() {
                             <div className={`max-w-[700px] border border-border rounded-xl p-6 bg-card`}>
                                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                                     <div className="flex-1">
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-center justify-between mb-2">
                                             <h2 className="text-lg font-medium">Passkeys</h2>
                                             <button
                                                 onClick={initiatePasskeyRegistration}
@@ -779,45 +778,33 @@ export default function SecurityPage() {
 
                                         {passkeys.length > 0 ? (
                                             <div className="space-y-3">
-                                                <button
-                                                    onClick={() => setShowPasskeys(!showPasskeys)}
-                                                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                                >
-                                                    {showPasskeys ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                                    {showPasskeys ? `Hide ${passkeys.length} passkeys` : `Show ${passkeys.length} passkeys`}
-                                                </button>
-
-                                                {showPasskeys && (
-                                                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 mt-2">
-                                                        {passkeys.map((passkey) => (
-                                                            <div
-                                                                key={passkey.id}
-                                                                className="flex items-center justify-between p-4 rounded-sm border border-border bg-primary/5"
-                                                            >
-                                                                <div className="flex items-center gap-3">
-                                                                    <div>
-                                                                        <p className="text-sm font-medium">{passkey.name}</p>
-                                                                        <p className="text-xs text-muted-foreground">
-                                                                            Added {formatDate(passkey.created_at)}
-                                                                            {passkey.last_used_at && ` • Last used ${formatDate(passkey.last_used_at)}`}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                                <button
-                                                                    onClick={() => handleDeletePasskey(passkey.id)}
-                                                                    disabled={deletingPasskeyId === passkey.id}
-                                                                    className="cursor-pointer p-2 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
-                                                                >
-                                                                    {deletingPasskeyId === passkey.id ? (
-                                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                                    ) : (
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    )}
-                                                                </button>
+                                                {passkeys.map((passkey) => (
+                                                    <div
+                                                        key={passkey.id}
+                                                        className="flex items-center justify-between p-4 rounded-sm border border-border bg-primary/5"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div>
+                                                                <p className="text-sm font-medium">{passkey.name}</p>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    Added {formatDate(passkey.created_at)}
+                                                                    {passkey.last_used_at && ` • Last used ${formatDate(passkey.last_used_at)}`}
+                                                                </p>
                                                             </div>
-                                                        ))}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleDeletePasskey(passkey.id)}
+                                                            disabled={deletingPasskeyId === passkey.id}
+                                                            className="cursor-pointer p-2 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
+                                                        >
+                                                            {deletingPasskeyId === passkey.id ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <Trash2 className="h-4 w-4" />
+                                                            )}
+                                                        </button>
                                                     </div>
-                                                )}
+                                                ))}
                                             </div>
                                         ) : (
                                             <div className="text-muted-foreground">
@@ -1160,28 +1147,28 @@ export default function SecurityPage() {
 
                             {/* Login Sessions Section */}
                             <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
-                                <h2 className="text-lg font-medium mb-1">Login Sessions</h2>
+                                <h2 className="text-lg font-medium">Login Sessions</h2>
 
-                                <div className="space-y-4">
-                                    {loadingSessions ? (
-                                        <div className="flex justify-center p-4">
-                                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                                        </div>
-                                    ) : sessions.length === 0 ? (
-                                        <p className="text-sm text-muted-foreground">No active sessions found.</p>
-                                    ) : (
-                                        sessions.map((session) => (
+                                {loadingSessions ? (
+                                    <div className="flex justify-center p-4">
+                                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                    </div>
+                                ) : sessions.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground mt-2">No active sessions found.</p>
+                                ) : (
+                                    <div className="space-y-3 mt-3">
+                                        {sessions.map((session) => (
                                             <div
                                                 key={session.id}
-                                                className={`flex items-start gap-4 p-4 rounded-sm border ${session.is_current
+                                                className={`flex items-center gap-4 p-4 rounded-sm border ${session.is_current
                                                     ? 'border-primary/30 bg-primary/5'
                                                     : 'border-border bg-card'
                                                     }`}
                                             >
-                                                <div className={`mt-1 ${session.is_current ? 'text-primary' : 'text-muted-foreground'}`}>
+                                                <div className={`${session.is_current ? 'text-primary' : 'text-muted-foreground'}`}>
                                                     <Laptop className="h-6 w-6" />
                                                 </div>
-                                                <div className="flex-1">
+                                                <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
                                                         <h3 className="text-sm font-medium">
                                                             {session.user_agent.includes('Mozilla') ? 'Browser Session' : session.user_agent}
@@ -1192,15 +1179,17 @@ export default function SecurityPage() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1" title={session.user_agent}>
+                                                    <p className="text-xs text-muted-foreground mt-0.5" title={session.user_agent}>
                                                         {session.ip_address || 'Unknown IP'} • {formatDate(session.last_active_at)}
                                                     </p>
+                                                </div>
+                                                <div className="shrink-0">
                                                     {session.is_current ? (
-                                                        <p className="text-xs text-primary mt-1 font-medium">Active now</p>
+                                                        <span className="text-xs text-primary font-medium">Active now</span>
                                                     ) : (
                                                         <button
                                                             onClick={() => handleRevokeSession(session.id)}
-                                                            className="text-xs text-red-500 hover:text-red-600 mt-2 font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                                                            className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors cursor-pointer"
                                                         >
                                                             <LogOut className="h-3 w-3" />
                                                             Log out
@@ -1208,21 +1197,19 @@ export default function SecurityPage() {
                                                     )}
                                                 </div>
                                             </div>
-                                        ))
-                                    )}
-                                </div>
+                                        ))}
 
-                                {sessions.length > 1 && (
-                                    <div className="mt-6">
-                                        <button
-                                            onClick={handleRevokeAllOtherSessions}
-                                            className="text-red-500 text-sm font-medium flex items-center gap-2 hover:text-red-600 transition-colors cursor-pointer"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" />
-                                            </svg>
-                                            Log out all other sessions
-                                        </button>
+                                        {sessions.length > 1 && (
+                                            <div className="mt-2">
+                                                <button
+                                                    onClick={handleRevokeAllOtherSessions}
+                                                    className="text-red-500 text-sm font-medium flex items-center gap-2 hover:text-red-600 transition-colors cursor-pointer"
+                                                >
+                                                    <LogOut className="h-4 w-4" />
+                                                    Log out all other sessions
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
