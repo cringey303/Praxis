@@ -1244,7 +1244,7 @@ export default function SecurityPage() {
                                                                 {browser} on {os}
                                                             </h3>
                                                             {session.is_current && (
-                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-500 text-white">
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/10 text-green-500 border border-green-500/20">
                                                                     Current Device
                                                                 </span>
                                                             )}
