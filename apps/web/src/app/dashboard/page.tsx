@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { UserListWidget } from '../../components/dashboard/UserListWidget';
 import { WelcomeWidget } from '../../components/dashboard/WelcomeWidget';
+import { FeedWidget } from '../../components/dashboard/FeedWidget';
 import { NavBar } from '@/components/dashboard/NavBar';
 
 export default function Dashboard() {
@@ -66,6 +67,12 @@ export default function Dashboard() {
                                 <UserListWidget currentUser={user} />
                             </div>
                         </div>
+                    </div>
+
+                    {/* Activity Feed */}
+                    <div className="max-w-2xl">
+                        <h2 className="text-xl font-semibold mb-4">Activity Feed</h2>
+                        <FeedWidget user={user} />
                     </div>
                 </div>
             </main>

@@ -1,0 +1,86 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            p.id,\n            'project' as \"item_type!\",\n            NULL::text as content,\n            p.title,\n            p.description,\n            p.image_url,\n            p.status,\n            p.created_at,\n            p.owner_id as author_id,\n            u.display_name as author_name,\n            u.username as author_username,\n            u.avatar_url as author_avatar\n        FROM projects p\n        JOIN users u ON p.owner_id = u.id\n        ORDER BY p.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "item_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "author_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "author_username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "author_avatar",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "c793fbb758f343221b9b2ca9caad91982da6f39a79723a7010e5a44b8ea23394"
+}

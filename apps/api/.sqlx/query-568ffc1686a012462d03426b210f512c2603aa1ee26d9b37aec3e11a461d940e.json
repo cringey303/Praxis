@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            p.id,\n            p.title,\n            p.description,\n            p.image_url,\n            p.status,\n            p.created_at,\n            p.owner_id,\n            u.display_name as owner_name,\n            u.username as owner_username,\n            u.avatar_url as owner_avatar\n        FROM projects p\n        JOIN users u ON p.owner_id = u.id\n        ORDER BY p.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "owner_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "owner_username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "owner_avatar",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "568ffc1686a012462d03426b210f512c2603aa1ee26d9b37aec3e11a461d940e"
+}
