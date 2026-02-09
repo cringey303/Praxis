@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X, LayoutDashboard, Settings, User, Sun, Moon, LogOut } from 'lucide-react';
+import { X, LayoutDashboard, Settings, User, Sun, Moon, LogOut, Shield } from 'lucide-react';
 
 import { useTheme } from 'next-themes';
 
@@ -10,6 +10,7 @@ interface User {
     display_name: string;
     username: string;
     avatar_url?: string;
+    role?: string;
 }
 
 interface SidebarProps {
@@ -79,6 +80,17 @@ export function Sidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: Sideb
                                 >
                                     <User className="h-[18px] w-[18px]" />
                                     Profile
+                                </Link>
+                            )}
+
+                            {user?.role === 'admin' && (
+                                <Link
+                                    href="/admin"
+                                    className="flex items-center gap-3 py-3 rounded-md text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
+                                    onClick={() => handleLinkClick('/admin')}
+                                >
+                                    <Shield className="h-[18px] w-[18px]" />
+                                    Admin
                                 </Link>
                             )}
 

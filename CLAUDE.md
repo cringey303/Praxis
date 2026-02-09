@@ -21,3 +21,6 @@ docker compose down
 - Backend `.env` is at `apps/api/.env`
 - Frontend `.env.local` is at `apps/web/.env.local`
 - Both are gitignored - each dev creates their own OAuth keys
+
+## UI Rules
+- Always add `cursor-pointer` to any clickable element (buttons, links, etc.)

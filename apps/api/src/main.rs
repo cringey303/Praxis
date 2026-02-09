@@ -1,6 +1,6 @@
 use axum::{
     http::{header, Method},
-    routing::{get, post},
+    routing::{delete, get, post},
     Router,
 };
 use dotenvy::dotenv;
@@ -11,12 +11,16 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 
+mod admin;
 mod announcements;
 mod auth;
 mod feed;
+mod passkey;
 mod posts;
 mod projects;
 mod r2;
+mod session;
+mod totp;
 mod upload;
 mod user;
 
@@ -100,17 +104,38 @@ async fn main() {
     // create empty web app and run mapped fns if routes are visited
     let app = Router::new()
         .route("/", get(root))
-        .route("/auth/signup", post(auth::signup)) // map /auth/signup to fn signup in auth module
-        .route("/auth/login", post(auth::login)) // map /auth/login to fn login in auth module
-        .route("/auth/google/login", get(auth::google_login)) // when user clicks login with google
-        .route("/auth/google/callback", get(auth::google_callback)) // where google redirects to after login
-        .route("/auth/github/login", get(auth::github_login))
-        .route("/auth/github/callback", get(auth::github_callback))
-        .route("/auth/verify", post(auth::verify_email))
+        // Auth Routes
+        .route("/auth/signup", post(auth::signup))
+        .route("/auth/login", post(auth::login))
+        .route("/auth/verify-email", post(auth::verify_email))
         .route("/auth/resend-verification", post(auth::resend_verification))
         .route("/auth/change-password", post(auth::change_password))
         .route("/auth/set-password", post(auth::set_password))
+        .route("/auth/forgot-password", post(auth::forgot_password))
+        .route("/auth/reset-password", post(auth::reset_password))
+        // OAuth
+        .route("/auth/google", get(auth::google_login))
+        .route("/auth/google/callback", get(auth::google_callback))
+        .route("/auth/github", get(auth::github_login))
+        .route("/auth/github/callback", get(auth::github_callback))
         .route("/auth/logout", post(auth::logout))
+        // Linked Accounts
+        .route("/auth/linked-accounts", get(auth::list_linked_accounts))
+        .route(
+            "/auth/linked-accounts/:provider",
+            delete(auth::unlink_account),
+        )
+        // Admin Routes
+        .route(
+            "/admin/users/:id/reset-password",
+            post(admin::reset_user_password),
+        )
+        // Session Management
+        .route(
+            "/auth/sessions",
+            get(session::list_sessions).delete(session::revoke_all_other_sessions),
+        )
+        .route("/auth/sessions/:id", delete(session::revoke_session))
         .route("/user/me", get(user::get_me))
         .route("/user/profile", post(user::update_profile))
         .route("/user/profile/:username", get(user::get_public_profile))
@@ -125,6 +150,35 @@ async fn main() {
         .route("/posts", get(posts::list).post(posts::create))
         .route("/projects", get(projects::list).post(projects::create))
         .route("/feed", get(feed::get_feed))
+        // Passkeys
+        .route(
+            "/auth/passkey/register/start",
+            post(passkey::start_registration),
+        )
+        .route(
+            "/auth/passkey/register/finish",
+            post(passkey::finish_registration),
+        )
+        .route(
+            "/auth/passkey/auth/start",
+            post(passkey::start_authentication),
+        )
+        .route(
+            "/auth/passkey/auth/finish",
+            post(passkey::finish_authentication),
+        )
+        .route("/auth/passkey/list", get(passkey::list_passkeys))
+        .route("/auth/passkey/:id", delete(passkey::delete_passkey))
+        // TOTP 2FA
+        .route("/auth/totp/setup", post(totp::setup_totp))
+        .route("/auth/totp/enable", post(totp::enable_totp))
+        .route("/auth/totp/disable", post(totp::disable_totp))
+        .route("/auth/totp/verify", post(totp::verify_totp))
+        .route("/auth/totp/status", get(totp::get_totp_status))
+        .route(
+            "/auth/totp/backup-codes",
+            post(totp::regenerate_backup_codes),
+        )
         // Images are now served directly from Cloudflare R2
         .layer(session_layer)
         .layer(cors)
@@ -154,7 +208,12 @@ async fn main() {
         }
     };
     //get requests and send it to app
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .unwrap();
 }
 
 async fn root() -> &'static str {
