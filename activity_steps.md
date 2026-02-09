@@ -157,3 +157,13 @@ role TEXT DEFAULT 'member'  -- 'owner', 'member'
 joined_at TIMESTAMPTZ DEFAULT NOW()
 PRIMARY KEY (project_id, user_id)
 ```
+
+
+
+## Final notes
+- Kanban board for tasks and other necessities on sidebar
+- Activity log done manually with an updates button
+    - Connect GitHub repo to view commits or google drive etc.
+- Quick links for project assets or important links
+- Interview different majors or send out google form for infomration on embeds and features
+- Url format .../username/projectname
