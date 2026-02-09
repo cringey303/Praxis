@@ -57,3 +57,4 @@ totp-rs = { version = "5.0", features = ["gen_secret", "otpauth", "qr"] }
 base64 = "0.22"
 rand = "0.8"
 hex = "0.4.3"
+resend = "0.1.4"

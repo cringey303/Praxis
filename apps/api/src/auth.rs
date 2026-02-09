@@ -79,6 +79,48 @@ pub struct AuthRequest {
     pub state: String,
 }
 
+#[derive(Serialize)]
+struct ResendEmailRequest {
+    from: String,
+    to: Vec<String>,
+    subject: String,
+    html: String,
+}
+
+async fn send_email(to: &str, subject: &str, html_body: &str) -> Result<(), String> {
+    let api_key =
+        std::env::var("RESEND_API_KEY").map_err(|_| "RESEND_API_KEY not set".to_string())?;
+    // Optionally allow configuring the FROM address, default to team@joinpraxis.me
+    let from_email =
+        std::env::var("MAIL_FROM").unwrap_or_else(|_| "team@joinpraxis.me".to_string());
+
+    let client = reqwest::Client::new();
+    let body = ResendEmailRequest {
+        from: from_email,
+        to: vec![to.to_string()],
+        subject: subject.to_string(),
+        html: html_body.to_string(),
+    };
+
+    let res = client
+        .post("https://api.resend.com/emails")
+        .bearer_auth(api_key)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to send email request: {}", e))?;
+
+    if !res.status().is_success() {
+        let text = res
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unknown error".to_string());
+        return Err(format!("Resend API error: {}", text));
+    }
+
+    Ok(())
+}
+
 /*
 * Function: signup
 * Description: takes SignupRequest and stores in DB
@@ -170,15 +212,35 @@ pub async fn signup(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // Mock Email Sending (SMTP integration pending domain setup)
+    // Send Verification Email via Resend
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
-    println!("--------------------------------------------------");
-    println!("EMAIL SENT TO: {}", payload.email);
-    println!("SUBJECT: Verify your email");
-    println!("BODY: Please click this link to verify your email:");
-    println!("{}/verify-email?token={}", frontend_url, verification_token);
-    println!("--------------------------------------------------");
+
+    let verify_link = format!("{}/verify-email?token={}", frontend_url, verification_token);
+    let email_body = format!(
+        r#"
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Welcome to Praxis!</h2>
+            <p>Please verify your email address by clicking the button below:</p>
+            <a href="{}" style="display: inline-block; background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 20px 0;">Verify Email</a>
+            <p>Or copy and paste this link into your browser:</p>
+            <p><a href="{}">{}</a></p>
+        </div>
+        "#,
+        verify_link, verify_link, verify_link
+    );
+
+    // We spawn this so it doesn't block the response, or we can await it if we want to ensure it sent.
+    // Awaiting is safer for now to report errors, but might slow down signup.
+    // Logging error if it fails but not failing the signup is a good middle ground.
+    if let Err(e) = send_email(&payload.email, "Verify your email", &email_body).await {
+        tracing::error!(
+            "Failed to send verification email to {}: {}",
+            payload.email,
+            e
+        );
+        // Note: User is created but email failed. They can use "Resend Verification" later.
+    }
 
     // Log the user in
     session
@@ -286,13 +348,29 @@ pub async fn resend_verification(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-        // Mock Email Sending (SMTP integration pending domain setup)
+        // Send Email via Resend
         let frontend_url =
             std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
-        println!("--------------------------------------------------");
-        println!("RESEND: Verification email to: {}", payload.email);
-        println!("{}/verify-email?token={}", frontend_url, verification_token);
-        println!("--------------------------------------------------");
+
+        let verify_link = format!("{}/verify-email?token={}", frontend_url, verification_token);
+        let email_body = format!(
+            r#"
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>Verify your email</h2>
+                <p>You requested a new verification link. Click below to verify:</p>
+                <a href="{}" style="display: inline-block; background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 20px 0;">Verify Email</a>
+            </div>
+            "#,
+            verify_link
+        );
+
+        if let Err(e) = send_email(&payload.email, "Verify your email", &email_body).await {
+            tracing::error!("Failed to resend verification email: {}", e);
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to send email".to_string(),
+            ));
+        }
 
         Ok((StatusCode::OK, "Verification email sent".to_string()))
     } else {
@@ -796,13 +874,10 @@ pub async fn github_callback(
         ))?
     } else {
         // Check local_auths by email
-        let local_user = sqlx::query!(
-            "SELECT user_id FROM local_auths WHERE email = $1",
-            email
-        )
-        .fetch_optional(&pool)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        let local_user = sqlx::query!("SELECT user_id FROM local_auths WHERE email = $1", email)
+            .fetch_optional(&pool)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
         if let Some(lu) = local_user {
             lu.user_id
@@ -978,6 +1053,155 @@ pub async fn change_password(
     tracing::info!("Password changed for user_id: {}", user_id);
 
     Ok((StatusCode::OK, "Password changed successfully".to_string()))
+}
+
+#[derive(Deserialize)]
+pub struct ForgotPasswordRequest {
+    pub email: String,
+}
+
+pub async fn forgot_password(
+    State(pool): State<PgPool>,
+    Json(payload): Json<ForgotPasswordRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // Check if user exists
+    let user = sqlx::query!(
+        "SELECT user_id FROM local_auths WHERE email = $1",
+        payload.email
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if let Some(u) = user {
+        // Generate reset token and expiry (1 hour)
+        let reset_token = Uuid::new_v4().to_string();
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(1);
+
+        sqlx::query!(
+            "UPDATE local_auths SET password_reset_token = $1, password_reset_expires_at = $2 WHERE user_id = $3",
+            reset_token,
+            expires_at,
+            u.user_id
+        )
+        .execute(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        // Send Email
+        let frontend_url =
+            std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+
+        let reset_link = format!("{}/reset-password?token={}", frontend_url, reset_token);
+        let email_body = format!(
+            r#"
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>Reset Your Password</h2>
+                <p>We received a request to reset your password. Click the link below to verify it's you:</p>
+                <a href="{}" style="display: inline-block; background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
+                <p>If you didn't request this, you can safely ignore this email.</p>
+                <p>Link expires in 1 hour.</p>
+            </div>
+            "#,
+            reset_link
+        );
+
+        if let Err(e) = send_email(&payload.email, "Reset your password", &email_body).await {
+            tracing::error!("Failed to send reset password email: {}", e);
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to send email".to_string(),
+            ));
+        }
+    }
+
+    // Always return OK to prevent email enumeration
+    Ok((
+        StatusCode::OK,
+        "If an account exists with that email, a reset link has been sent.".to_string(),
+    ))
+}
+
+#[derive(Deserialize)]
+pub struct ResetPasswordRequest {
+    pub token: String,
+    pub new_password: String,
+}
+
+pub async fn reset_password(
+    State(pool): State<PgPool>,
+    Json(payload): Json<ResetPasswordRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // Find user by token and check expiry
+    let record = sqlx::query!(
+        "SELECT user_id, password_reset_expires_at FROM local_auths WHERE password_reset_token = $1",
+        payload.token
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let record = match record {
+        Some(r) => r,
+        None => {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "Invalid or expired reset token".to_string(),
+            ))
+        }
+    };
+
+    if let Some(expires_at) = record.password_reset_expires_at {
+        if chrono::Utc::now() > expires_at {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "Reset token has expired".to_string(),
+            ));
+        }
+    } else {
+        // Should not happen if token exists, but fail safe
+        return Err((StatusCode::BAD_REQUEST, "Invalid token state".to_string()));
+    }
+
+    // Validate new password
+    if payload.new_password.len() < 6 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Password must be at least 6 characters".to_string(),
+        ));
+    }
+
+    // Hash new password
+    let salt = SaltString::generate(&mut OsRng);
+    let password_hash = Argon2::default()
+        .hash_password(payload.new_password.as_bytes(), &salt)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .to_string();
+
+    // Update password and clear token
+    // Using a transaction to be safe
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    sqlx::query!(
+        "UPDATE local_auths SET password_hash = $1, password_reset_token = NULL, password_reset_expires_at = NULL WHERE user_id = $2",
+        password_hash,
+        record.user_id
+    )
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    tx.commit()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok((
+        StatusCode::OK,
+        "Password has been reset successfully. You can now login.".to_string(),
+    ))
 }
 
 #[derive(Deserialize)]

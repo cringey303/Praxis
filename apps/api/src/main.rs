@@ -108,6 +108,8 @@ async fn main() {
         .route("/auth/resend-verification", post(auth::resend_verification))
         .route("/auth/change-password", post(auth::change_password))
         .route("/auth/set-password", post(auth::set_password))
+        .route("/auth/forgot-password", post(auth::forgot_password))
+        .route("/auth/reset-password", post(auth::reset_password))
         // OAuth
         .route("/auth/google", get(auth::google_login))
         .route("/auth/google/callback", get(auth::google_callback))

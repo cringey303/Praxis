@@ -236,7 +236,8 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-4">
 
-                        <div className="space-y-4">
+                        
+                        <div className="">
                             <FloatingLabelInput
                                 id="email"
                                 name="email"
@@ -247,7 +248,11 @@ export default function LoginPage() {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 error={errors.email}
+                                className="mb-4"
                             />
+
+                            
+
                             <FloatingLabelInput
                                 id="password"
                                 name="password"
@@ -259,6 +264,14 @@ export default function LoginPage() {
                                 onBlur={handleBlur}
                                 error={errors.password}
                             />
+                            <div className="flex justify-end mt-1">
+                                <a
+                                    href="/forgot-password"
+                                    className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+                                >
+                                    Forgot password?
+                                </a>
+                            </div>
                         </div>
                     </div>
 

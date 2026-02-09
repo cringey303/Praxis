@@ -78,6 +78,7 @@ dependencies = [
  "oauth2",
  "rand 0.8.5",
  "reqwest",
+ "resend",
  "serde",
  "serde_json",
  "sqlx",
@@ -2930,6 +2931,26 @@ dependencies = [
  "web-sys",
  "webpki-roots",
  "winreg",
+]
+
+[[package]]
+name = "resend"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8aeaf19f4a5f4271120140caf7658d55cae4bcddaa51c8e4e2d9f5d926224c3"
+dependencies = [
+ "resend_derive",
+]
+
+[[package]]
+name = "resend_derive"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "debe923eda28bce0e201d8c2c71bc6166f7368a4299a7e76e0b1124fad5dc65f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
