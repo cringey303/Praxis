@@ -13,6 +13,9 @@ use tower_sessions_sqlx_store::PostgresStore;
 
 mod announcements;
 mod auth;
+mod feed;
+mod posts;
+mod projects;
 mod r2;
 mod upload;
 mod user;
@@ -118,6 +121,9 @@ async fn main() {
         .route("/announcement", post(announcements::create))
         .route("/announcements/recent", get(announcements::get_recent))
         .route("/announcements", get(announcements::get_all))
+        .route("/posts", get(posts::list).post(posts::create))
+        .route("/projects", get(projects::list).post(projects::create))
+        .route("/feed", get(feed::get_feed))
         // Images are now served directly from Cloudflare R2
         .layer(session_layer)
         .layer(cors)
