@@ -150,13 +150,15 @@ export default function SecurityPage() {
     }, []);
 
     // Lookup location for an IP address
+    // Lookup location for an IP address
     const lookupIpLocation = useCallback(async (ip: string): Promise<string> => {
         // Skip private/local IPs
         if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
             return '';
         }
         try {
-            const res = await fetch(`http://ip-api.com/json/${ip}?fields=city,regionName,status`);
+            // Use our backend proxy to avoid mixed content (HTTPS -> HTTP) errors
+            const res = await fetch(`${API_URL}/geoip/${ip}`);
             if (res.ok) {
                 const data = await res.json();
                 if (data.status === 'success' && data.city) {

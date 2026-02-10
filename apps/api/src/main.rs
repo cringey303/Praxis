@@ -15,6 +15,7 @@ mod admin;
 mod announcements;
 mod auth;
 mod feed;
+mod geoip;
 mod passkey;
 mod posts;
 mod projects;
@@ -143,6 +144,7 @@ async fn main() {
         .route("/user/test", post(user::create_test_user))
         .route("/user/:id", axum::routing::delete(user::delete_user))
         .route("/upload", post(upload::upload_image))
+        .route("/geoip/:ip", get(geoip::get_geoip))
         .route("/announcement", get(announcements::get_latest))
         .route("/announcement", post(announcements::create))
         .route("/announcements/recent", get(announcements::get_recent))

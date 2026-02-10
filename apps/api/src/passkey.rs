@@ -8,24 +8,31 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use std::net::SocketAddr;
 use base64::Engine;
 use oauth2::url::Url;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use std::net::SocketAddr;
 use tower_sessions::Session;
 use uuid::Uuid;
 use webauthn_rs::prelude::*;
 
 // WebAuthn configuration builder
 fn create_webauthn() -> Result<Webauthn, WebauthnError> {
-    let rp_id = std::env::var("WEBAUTHN_RP_ID").unwrap_or_else(|_| "localhost".to_string());
     let rp_origin =
         std::env::var("WEBAUTHN_RP_ORIGIN").unwrap_or_else(|_| "http://localhost:3000".to_string());
 
-    let rp_origin = Url::parse(&rp_origin).expect("Invalid WEBAUTHN_RP_ORIGIN");
+    let rp_origin_url = Url::parse(&rp_origin).expect("Invalid WEBAUTHN_RP_ORIGIN");
 
-    let builder = WebauthnBuilder::new(&rp_id, &rp_origin)?.rp_name("Praxis");
+    // If WEBAUTHN_RP_ID is set, use it. Otherwise, try to derive it from the origin.
+    let rp_id = std::env::var("WEBAUTHN_RP_ID").unwrap_or_else(|_| {
+        rp_origin_url
+            .domain()
+            .expect("WEBAUTHN_RP_ORIGIN must have a domain")
+            .to_string()
+    });
+
+    let builder = WebauthnBuilder::new(&rp_id, &rp_origin_url)?.rp_name("Praxis");
 
     builder.build()
 }
