@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE local_auths SET password_reset_token = $1, password_reset_expires_at = $2 WHERE user_id = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b426ae010cc61277f4c22678232223b6bbe9dabce27ce5fbb5a0bdc3d9d0a677"
+}
