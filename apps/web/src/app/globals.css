@@ -1,86 +1,87 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
-@theme inline {
-  --color-brand: var(--brand);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-error: var(--error-text);
-  --color-error-outline: var(--error-outline);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @layer base {
   :root {
-    /* User Palette */
-    --text: #FDEBD0;
-    --brand: #766D61;
-    --error-text: #FF6467;
-    --error-outline: #461112;
-    --background-base: #0a0a0a;
-    /* Preserving dark canvas */
-
-    /* Core Layout */
-    --background: var(--background-base);
-    --foreground: var(--text);
-
-    /* Surfaces */
-    --card: var(--background-base);
-    --card-foreground: var(--text);
-    --popover: var(--background-base);
-    --popover-foreground: var(--text);
-
-    /* Brand / Primary */
-    --primary: var(--brand);
-    --primary-foreground: var(--text);
-
-    /* Secondary / Accents */
-    --secondary: var(--brand);
-    --secondary-foreground: var(--text);
-    --accent: var(--brand);
-    --accent-foreground: var(--text);
-
-    /* Muted */
-    --muted: var(--background-base);
-    --muted-foreground: var(--brand);
-
-    /* Error / Destructive */
-    --destructive: var(--error-text);
-    --destructive-foreground: var(--error-outline);
-
-    /* Borders & Inputs */
-    --border: color-mix(in srgb, var(--brand), transparent 70%);
-    --input: color-mix(in srgb, var(--brand), transparent 70%);
-    --ring: color-mix(in srgb, var(--brand), transparent 70%);
-
-    --radius: 0.75rem;
-
-    /* Legacy aliases for backwards compatibility if needed */
-    --brand-color: var(--brand);
-    --outline: var(--brand);
+    --background: oklch(0.147 0.004 49.25);
+    --foreground: oklch(1 0 0);
+    --card: oklch(0.216 0.006 56.043 / 0.6);
+    --card-foreground: oklch(1 0 0);
+    --popover: oklch(0.216 0.006 56.043);
+    --popover-foreground: oklch(1 0 0);
+    --primary: oklch(0.905 0.182 98.111);
+    --primary-foreground: oklch(0.216 0.006 56.043);
+    --secondary: oklch(1 0 0 / 0.1);
+    --secondary-foreground: oklch(1 0 0);
+    --muted: oklch(0.268 0.007 34.298);
+    --muted-foreground: oklch(0.97 0.001 106.424 / 0.7);
+    --accent: oklch(0.268 0.007 34.298);
+    --accent-foreground: oklch(1 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 0.125);
+    --input: oklch(1 0 0 / 0.2);
+    --ring: oklch(0.905 0.182 98.111);
+    --chart-1: oklch(0.905 0.182 98.111);
+    --chart-2: oklch(0.795 0.184 86.047);
+    --chart-3: oklch(0.871 0.15 154.449);
+    --chart-4: oklch(0.852 0.199 91.936);
+    --chart-5: oklch(0.685 0.169 237.323);
+    --sidebar: oklch(0.147 0.004 49.25);
+    --sidebar-foreground: oklch(1 0 0);
+    --sidebar-primary: oklch(1 0 0 / 0.85);
+    --sidebar-primary-foreground: oklch(0 0 0 / 0.85);
+    --sidebar-accent: oklch(1 0 0 / 0.1);
+    --sidebar-accent-foreground: oklch(1 0 0);
+    --sidebar-border: oklch(1 0 0 / 0.125);
+    --sidebar-ring: oklch(0.681 0.162 75.834);
+    --radius: 0.5rem;
+    --font-sans: 'Instrument Sans', sans-serif;
+    --font-serif: 'Playfair Display', serif;
+    --primary-light: oklch(0.945 0.129 101.54);
+    --primary-dark: oklch(0.905 0.182 98.111);
+    --primary-ring: oklch(0.852 0.199 91.936);
   }
 
-  /* Dark theme overrides (same as root for now but structured for future changes) */
-  :root[class="dark"] {
-    /* User Palette */
-    --text: #FDEBD0;
-    --brand: #766D61;
-    --error-text: #FF6467;
-    --error-outline: #461112;
-    --background-base: #0a0a0a;
-  }
-
-  /* Light theme overrides */
-  :root[class="light"] {
-    --text: #0a0a0a;
-    /* Dark text for light mode */
-    --brand: #aea69d;
-    /* Light brand color */
-    --error-text: #D32F2F;
-    --error-outline: #FFCDD2;
-    --background-base: #ffffff;
-    /* White background */
+  .dark {
+    --background: oklch(0.147 0.004 49.25);
+    --foreground: oklch(1 0 0);
+    --card: oklch(0.216 0.006 56.043 / 0.6);
+    --card-foreground: oklch(1 0 0);
+    --popover: oklch(0.216 0.006 56.043);
+    --popover-foreground: oklch(1 0 0);
+    --primary: oklch(0.905 0.182 98.111);
+    --primary-foreground: oklch(0.216 0.006 56.043);
+    --secondary: oklch(1 0 0 / 0.1);
+    --secondary-foreground: oklch(1 0 0);
+    --muted: oklch(0.268 0.007 34.298);
+    --muted-foreground: oklch(0.97 0.001 106.424 / 0.7);
+    --accent: oklch(0.268 0.007 34.298);
+    --accent-foreground: oklch(1 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 0.125);
+    --input: oklch(1 0 0 / 0.2);
+    --ring: oklch(0.905 0.182 98.111);
+    --chart-1: oklch(0.905 0.182 98.111);
+    --chart-2: oklch(0.795 0.184 86.047);
+    --chart-3: oklch(0.871 0.15 154.449);
+    --chart-4: oklch(0.852 0.199 91.936);
+    --chart-5: oklch(0.685 0.169 237.323);
+    --sidebar: oklch(0.147 0.004 49.25);
+    --sidebar-foreground: oklch(1 0 0);
+    --sidebar-primary: oklch(1 0 0 / 0.85);
+    --sidebar-primary-foreground: oklch(0 0 0 / 0.85);
+    --sidebar-accent: oklch(1 0 0 / 0.1);
+    --sidebar-accent-foreground: oklch(1 0 0);
+    --sidebar-border: oklch(1 0 0 / 0.125);
+    --sidebar-ring: oklch(0.681 0.162 75.834);
+    --radius: 0.5rem;
+    --font-sans: 'Instrument Sans', sans-serif;
+    --font-serif: 'Playfair Display', serif;
+    --primary-light: oklch(0.945 0.129 101.54);
+    --primary-dark: oklch(0.905 0.182 98.111);
+    --primary-ring: oklch(0.852 0.199 91.936);
   }
 }
 
@@ -91,39 +92,5 @@
 
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-@layer utilities {
-  .animate-toast-in {
-    animation: toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  .animate-toast-out {
-    animation: toast-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  @keyframes toast-in {
-    from {
-      opacity: 0;
-      transform: translateY(-1rem) translateX(-50%);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0) translateX(-50%);
-    }
-  }
-
-  @keyframes toast-out {
-    from {
-      opacity: 1;
-      transform: translateY(0) translateX(-50%);
-    }
-
-    to {
-      opacity: 0;
-      transform: translateY(-1rem) translateX(-50%);
-    }
   }
 }
