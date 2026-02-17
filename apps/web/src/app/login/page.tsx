@@ -236,7 +236,7 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-4">
 
-                        
+
                         <div className="">
                             <FloatingLabelInput
                                 id="email"
@@ -251,7 +251,7 @@ export default function LoginPage() {
                                 className="mb-4"
                             />
 
-                            
+
 
                             <FloatingLabelInput
                                 id="password"
@@ -313,7 +313,7 @@ export default function LoginPage() {
 
                     {/* Google Login Button */}
                     <a
-                        href={`${API_URL}/auth/google/login`}
+                        href={`${API_URL}/auth/google`}
                         className="flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                     >
                         <svg className="h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -323,7 +323,7 @@ export default function LoginPage() {
                     </a>
 
                     <a
-                        href={`${API_URL}/auth/github/login`}
+                        href={`${API_URL}/auth/github`}
                         className="flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                     >
                         <svg className="h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="github" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
