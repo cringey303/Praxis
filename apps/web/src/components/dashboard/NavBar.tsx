@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { getProfileImageUrl } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 interface User {
@@ -144,14 +145,13 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
                                 </div>
                                 <button
                                     onClick={() => setSidebarOpen(true)}
-                                    className="relative h-10 w-10 rounded-full border border-border bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-ring hover:ring-offset-2 transition-all cursor-pointer"
+                                    className="relative h-10 w-10 rounded-full flex items-center justify-center transition-all cursor-pointer ring-offset-background hover:ring-2 hover:ring-ring hover:ring-offset-2 focus:outline-none"
                                     aria-label="Open profile menu"
                                 >
-                                    {user.avatar_url ? (
-                                        <img src={getProfileImageUrl(user.avatar_url)} alt={user.username} className="h-full w-full object-cover" />
-                                    ) : (
-                                        <span className="font-semibold text-foreground">{user.display_name?.[0]?.toUpperCase() || '?'}</span>
-                                    )}
+                                    <Avatar>
+                                        <AvatarImage src={getProfileImageUrl(user.avatar_url)} alt={user.username} />
+                                        <AvatarFallback>{user.display_name?.[0]?.toUpperCase() || '?'}</AvatarFallback>
+                                    </Avatar>
                                 </button>
                             </div>
                         ) : (

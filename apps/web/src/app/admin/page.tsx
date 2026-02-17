@@ -6,6 +6,8 @@ import { NavBar } from '@/components/dashboard/NavBar';
 import { useToast } from "@/components/ui/Toast";
 import { getProfileImageUrl } from '@/lib/utils';
 import { Loader2, Search, RotateCcw, Shield } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -213,17 +215,10 @@ export default function AdminPage() {
                                         <tr key={u.id} className="hover:bg-secondary/20 transition-colors">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium uppercase overflow-hidden">
-                                                        {u.avatar_url ? (
-                                                            <img
-                                                                src={getProfileImageUrl(u.avatar_url)}
-                                                                alt={u.username}
-                                                                className="h-full w-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            u.username[0]
-                                                        )}
-                                                    </div>
+                                                    <Avatar>
+                                                        <AvatarImage src={getProfileImageUrl(u.avatar_url)} alt={u.username} />
+                                                        <AvatarFallback>{u.username[0]?.toUpperCase()}</AvatarFallback>
+                                                    </Avatar>
                                                     <div>
                                                         <div className="font-medium text-foreground">{u.display_name}</div>
                                                         <div className="text-xs text-muted-foreground">@{u.username}</div>
@@ -231,12 +226,9 @@ export default function AdminPage() {
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${u.role === 'admin'
-                                                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                                                    : 'bg-secondary text-foreground'
-                                                    }`}>
+                                                <Badge variant={u.role === 'admin' ? 'default' : 'secondary'}>
                                                     {u.role}
-                                                </span>
+                                                </Badge>
                                             </td>
                                             <td className="px-4 py-3 text-muted-foreground">
                                                 {u.email || '-'}
