@@ -132,14 +132,12 @@ Not comprehensive.
 Submit an issue if you find a bug!
 ```
 Known bugs:
-- Image cropping and uploading
+- 
 ```
 ```
 Other:
-- Create flowchart (Figma)
-- Create mockup UI (Excalidraw)
+- Modulize UI (make elements have a template)
 - Design home/landing page
-- Email verification (needs domain for SMTP)
 ```
 
 # Possible Domains
