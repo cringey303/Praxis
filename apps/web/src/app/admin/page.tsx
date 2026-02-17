@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { useToast } from "@/components/ui/Toast";
 import { getProfileImageUrl } from '@/lib/utils';
-import { Loader2, Search, RotateCcw, Shield } from 'lucide-react';
+import { Loader2, Search, RotateCcw, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useDebounce } from 'use-debounce';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -18,7 +19,6 @@ interface UserProfile {
     email?: string;
     role: string;
     created_at?: string;
-    has_password: boolean;
 }
 
 export default function AdminPage() {
@@ -26,9 +26,15 @@ export default function AdminPage() {
     const { showToast } = useToast();
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Search & Pagination State
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch] = useDebounce(searchTerm, 500);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const limit = 20;
 
     // Reset Password State
     const [resettingId, setResettingId] = useState<string | null>(null);
@@ -36,7 +42,7 @@ export default function AdminPage() {
     const [showResetDialog, setShowResetDialog] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
 
-    // Check if user is admin
+    // 1. Check Admin Status
     useEffect(() => {
         const checkAdmin = async () => {
             try {
@@ -54,7 +60,6 @@ export default function AdminPage() {
                     return;
                 }
                 setUser(data);
-                fetchUsers();
             } catch (err) {
                 console.error(err);
                 router.push('/login');
@@ -66,25 +71,48 @@ export default function AdminPage() {
         checkAdmin();
     }, [router, showToast]);
 
-    const fetchUsers = async () => {
-        setLoadingUsers(true);
-        try {
-            const res = await fetch(`${API_URL}/user/all`, {
-                credentials: 'include',
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setUsers(data);
-            } else {
+    // 2. Fetch Users (Server-Side Search & Pagination)
+    useEffect(() => {
+        if (!user) return; // Wait for admin check
+
+        const fetchUsers = async () => {
+            setLoadingUsers(true);
+            try {
+                const offset = page * limit;
+                const query = new URLSearchParams({
+                    start: offset.toString(),
+                    limit: limit.toString(),
+                    search: debouncedSearch,
+                });
+
+                const res = await fetch(`${API_URL}/admin/users?${query.toString()}`, {
+                    credentials: 'include',
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setUsers(data);
+                    // Simple logic: if we got less than limit, no more pages
+                    setHasMore(data.length === limit);
+                } else {
+                    showToast('Failed to load users', 'error');
+                }
+            } catch (err) {
+                console.error(err);
                 showToast('Failed to load users', 'error');
+            } finally {
+                setLoadingUsers(false);
             }
-        } catch (err) {
-            console.error(err);
-            showToast('Failed to load users', 'error');
-        } finally {
-            setLoadingUsers(false);
-        }
-    };
+        };
+
+        fetchUsers();
+    }, [user, page, debouncedSearch, showToast]);
+
+    // Reset page when search changes
+    useEffect(() => {
+        setPage(0);
+    }, [debouncedSearch]);
+
 
     const handleResetPassword = async () => {
         if (!selectedUser || !newPassword) return;
@@ -111,7 +139,6 @@ export default function AdminPage() {
             setShowResetDialog(false);
             setNewPassword('');
             setSelectedUser(null);
-            fetchUsers(); // Refresh to potentially update state if we added tracking later
         } catch (err: unknown) {
             console.error(err);
             let msg = 'Failed to reset password';
@@ -132,12 +159,6 @@ export default function AdminPage() {
         if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleDateString();
     };
-
-    const filteredUsers = users.filter(u =>
-        u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
 
     const handleLogout = async () => {
         try {
@@ -169,13 +190,13 @@ export default function AdminPage() {
                     <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 items-center justify-between">
                         <h2 className="text-lg font-medium flex items-center gap-2">
                             <Shield className="h-5 w-5 text-primary" />
-                            Users ({users.length})
+                            User Management
                         </h2>
                         <div className="relative w-full sm:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <input
                                 type="text"
-                                placeholder="Search users..."
+                                placeholder="Search by name, username, email..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-9 pr-4 py-2 bg-transparent border border-border rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -202,14 +223,14 @@ export default function AdminPage() {
                                             Loading users...
                                         </td>
                                     </tr>
-                                ) : filteredUsers.length === 0 ? (
+                                ) : users.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                                            No users found matching "{searchTerm}"
+                                            No users found.
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredUsers.map((u) => (
+                                    users.map((u) => (
                                         <tr key={u.id} className="hover:bg-secondary/20 transition-colors">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
@@ -250,7 +271,7 @@ export default function AdminPage() {
                                                     className="px-3 py-1.5 text-xs font-medium bg-secondary hover:bg-secondary/80 text-foreground rounded-sm transition-colors inline-flex items-center gap-1 cursor-pointer"
                                                 >
                                                     <RotateCcw className="h-3 w-3" />
-                                                    Reset Password
+                                                    Reset
                                                 </button>
                                             </td>
                                         </tr>
@@ -258,6 +279,31 @@ export default function AdminPage() {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <div className="p-4 border-t border-border flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">
+                            Page {page + 1}
+                        </span>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                                disabled={page === 0 || loadingUsers}
+                                className="px-3 py-1.5 text-xs font-medium bg-secondary hover:bg-secondary/80 text-foreground rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            >
+                                <ChevronLeft className="h-3 w-3" />
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={!hasMore || loadingUsers}
+                                className="px-3 py-1.5 text-xs font-medium bg-secondary hover:bg-secondary/80 text-foreground rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            >
+                                Next
+                                <ChevronRight className="h-3 w-3" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
