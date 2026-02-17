@@ -104,3 +104,85 @@ pub async fn reset_user_password(
 
     Ok((StatusCode::OK, "Password reset successfully".to_string()))
 }
+
+#[derive(Deserialize)]
+pub struct ListUsersRequest {
+    pub start: Option<i64>,
+    pub limit: Option<i64>,
+    pub search: Option<String>,
+}
+
+#[derive(serde::Serialize)]
+pub struct UserSummary {
+    pub id: Uuid,
+    pub username: String,
+    pub display_name: String,
+    pub email: Option<String>,
+    pub role: String,
+    pub created_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+pub async fn list_users(
+    State(pool): State<PgPool>,
+    session: Session,
+    axum::extract::Query(query): axum::extract::Query<ListUsersRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // 1. Check if logged in & admin
+    let user_id: Uuid = match session.get("user_id").await {
+        Ok(Some(id)) => id,
+        Ok(None) => return Err((StatusCode::UNAUTHORIZED, "Not logged in".to_string())),
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    };
+
+    let requester = sqlx::query!("SELECT role FROM users WHERE id = $1", user_id)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    match requester {
+        Some(u) if u.role == "admin" => {}
+        _ => return Err((StatusCode::FORBIDDEN, "Admins only".to_string())),
+    }
+
+    // 2. Build Query
+    let limit = query.limit.unwrap_or(20).clamp(1, 100);
+    let offset = query.start.unwrap_or(0).max(0);
+    let search_term = query.search.unwrap_or_default().to_lowercase();
+    let search_pattern = format!("%{}%", search_term);
+
+    // We join users with local_auths to get email.
+    // OAuth users might not have local_auths, so LEFT JOIN.
+    // Note: This query assumes one local_auth per user, which is true for now.
+    // If we support multiple emails, this might need adjustment (GROUP BY or array_agg).
+
+    let users = sqlx::query_as!(
+        UserSummary,
+        r#"
+        SELECT 
+            u.id, 
+            u.username, 
+            u.display_name, 
+            u.role, 
+            u.created_at,
+            l.email
+        FROM users u
+        LEFT JOIN local_auths l ON u.id = l.user_id
+        WHERE 
+            ($1 = '' OR 
+             u.username ILIKE $2 OR 
+             u.display_name ILIKE $2 OR 
+             l.email ILIKE $2)
+        ORDER BY u.created_at DESC
+        LIMIT $3 OFFSET $4
+        "#,
+        search_term,    // Used to check if empty
+        search_pattern, // Used for ILIKE
+        limit,
+        offset
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(users))
+}
