@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar, MapPin, Link as LinkIcon, Share2, Edit3, MessageSquare } from 'lucide-react';
+import { Calendar, MapPin, Link as LinkIcon, Share2, Edit3, MessageSquare, Briefcase, ChevronDown } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { useToast } from "@/components/ui/Toast";
 import { getProfileImageUrl } from '@/lib/utils';
 import { PostCard } from '@/components/dashboard/PostCard';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface PublicUserProfile {
     username: string;
@@ -19,6 +20,7 @@ interface PublicUserProfile {
     website?: string;
     banner_url?: string;
     pronouns?: string;
+    major?: string;
     created_at?: string;
 }
 
@@ -27,6 +29,7 @@ interface CurrentUser {
     username: string;
     display_name: string;
     avatar_url?: string;
+    major?: string;
 }
 
 interface Post {
@@ -40,6 +43,23 @@ interface Post {
     author_avatar: string | null;
 }
 
+interface Project {
+    id: string;
+    slug: string;
+    title: string;
+    description: string | null;
+    image_url: string | null;
+    status: string;
+    looking_for: string[];
+    created_at: string;
+}
+
+const statusColors: Record<string, string> = {
+    open: 'bg-green-500/20 text-green-400 border-green-500/30',
+    closed: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    completed: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+};
+
 export default function PublicProfilePage() {
     const params = useParams();
     const username = params.username as string;
@@ -50,17 +70,18 @@ export default function PublicProfilePage() {
     const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [posts, setPosts] = useState<Post[]>([])
-
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [visiblePostCount, setVisiblePostCount] = useState(5);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 // 1. Fetch Public Profile
-                const profileRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/profile/${username}`);
+                const profileRes = await fetch(`${API_URL}/user/profile/${username}`);
                 if (!profileRes.ok) {
                     if (profileRes.status === 404) {
-                        // Handle 404
+                        // Handle 404 — fall through, profile stays null
                     }
                     throw new Error('Profile not found');
                 }
@@ -68,24 +89,34 @@ export default function PublicProfilePage() {
                 setProfile(profileData);
 
                 // 2. Fetch Current User (for NavBar and Edit button)
-                const meRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/me`, {
+                const meRes = await fetch(`${API_URL}/user/me`, {
                     credentials: 'include',
                 });
                 if (meRes.ok) {
                     const meData = await meRes.json();
                     setCurrentUser(meData);
                 }
-                const postRes = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL || 
-                        'http://localhost:8080'}/posts/user/${username}`
-                );
-                if (postRes.ok){
+
+                // 3. Fetch posts
+                const postRes = await fetch(`${API_URL}/posts/user/${username}`, {
+                    credentials: 'include',
+                });
+                if (postRes.ok) {
                     const postsData = await postRes.json();
                     setPosts(postsData);
+                } else {
+                    console.error('Posts fetch failed:', postRes.status);
+                }
+
+                // 4. Fetch projects
+                const projectsRes = await fetch(`${API_URL}/user/${username}/projects`, {
+                    credentials: 'include',
+                });
+                if (projectsRes.ok) {
+                    setProjects(await projectsRes.json());
                 }
             } catch (err) {
                 console.error(err);
-                // showToast('Failed to load profile', 'error');
             } finally {
                 setLoading(false);
             }
@@ -99,7 +130,7 @@ export default function PublicProfilePage() {
     const handleLogout = async () => {
         setIsLoggingOut(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/logout`, {
+            await fetch(`${API_URL}/auth/logout`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -142,6 +173,9 @@ export default function PublicProfilePage() {
     }
 
     const isOwnProfile = currentUser?.username === profile.username;
+    const displayedPosts = posts.slice(0, visiblePostCount);
+    const displayedProjects = projects.slice(0, 4);
+    const hasMoreProjects = projects.length > 4;
 
     return (
         <div className="min-h-screen bg-background text-foreground pb-20">
@@ -225,7 +259,12 @@ export default function PublicProfilePage() {
                         {/* Left Column: Metadata */}
                         <div className="flex flex-col gap-6 shrink-0 w-full md:w-auto">
                             <div className="space-y-4 pt-1 whitespace-nowrap">
-
+                                {profile.major && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Briefcase className="h-4 w-4" />
+                                        <span>{profile.major}</span>
+                                    </div>
+                                )}
 
                                 {profile.location && (
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -277,22 +316,98 @@ export default function PublicProfilePage() {
                             </div>
                         </div>
 
-                        {/* Right Column: Posts */}
-                        <div className="flex-1 w-full max-w-full">
-                            <div className="space-y-4">
-                                {posts.length > 0 ? (
-                                    posts.map((post) => (
-                                        <PostCard key={post.id} post={post} />
-                                    ))
-                                ) : (
-                                    <div className="rounded-xl border border-border border-dashed p-12 flex flex-col items-center justify-center text-center text-muted-foreground bg-secondary/20">
-                                        <h3 className="text-lg font-medium text-foreground">No posts yet</h3>
-                                        <p className="text-sm max-w-sm mt-1">
-                                            {profile.display_name} hasn't published any content yet.
-                                        </p>
+                        {/* Right Column: Projects + Posts */}
+                        <div className="flex-1 w-full max-w-full space-y-8">
+
+                            {/* Projects Gallery */}
+                            {projects.length > 0 && (
+                                <section>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-lg font-semibold">Projects</h2>
+                                        {hasMoreProjects && (
+                                            <Link
+                                                href={`/${username}/projects`}
+                                                className="text-sm text-primary hover:underline"
+                                            >
+                                                View all →
+                                            </Link>
+                                        )}
                                     </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {displayedProjects.map((project) => (
+                                            <Link
+                                                key={project.id}
+                                                href={`/${username}/${project.slug}`}
+                                                className="rounded-xl border border-border p-4 bg-card hover:border-primary/30 transition-colors block"
+                                            >
+                                                {project.image_url && (
+                                                    <div className="relative rounded-lg overflow-hidden mb-3 aspect-video">
+                                                        <img
+                                                            src={project.image_url}
+                                                            alt={project.title}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${statusColors[project.status] || statusColors.open}`}>
+                                                        {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                                                    </span>
+                                                    {project.looking_for.slice(0, 2).map((major) => (
+                                                        <span key={major} className="px-2 py-0.5 rounded-full text-xs font-medium border bg-purple-500/10 text-purple-400 border-purple-500/30">
+                                                            {major}
+                                                        </span>
+                                                    ))}
+                                                    {project.looking_for.length > 2 && (
+                                                        <span className="text-xs text-muted-foreground">+{project.looking_for.length - 2}</span>
+                                                    )}
+                                                </div>
+                                                <h3 className="font-semibold mb-1">{project.title}</h3>
+                                                {project.description && (
+                                                    <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+                                                )}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {projects.length > 0 && posts.length > 0 && (
+                                <hr className="border-border" />
+                            )}
+
+                            {/* Posts */}
+                            <section>
+                                {posts.length > 0 && (
+                                    <h2 className="text-lg font-semibold mb-4">Posts</h2>
                                 )}
-                            </div>
+                                <div className="space-y-4">
+                                    {displayedPosts.length > 0 ? (
+                                        <>
+                                            {displayedPosts.map((post) => (
+                                                <PostCard key={post.id} post={post} />
+                                            ))}
+                                            {posts.length > visiblePostCount && (
+                                                <button
+                                                    onClick={() => setVisiblePostCount((c) => c + 5)}
+                                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors cursor-pointer"
+                                                >
+                                                    <ChevronDown className="h-4 w-4" />
+                                                    Show more posts
+                                                </button>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="rounded-xl border border-border border-dashed p-12 flex flex-col items-center justify-center text-center text-muted-foreground bg-secondary/20">
+                                            <h3 className="text-lg font-medium text-foreground">No posts yet</h3>
+                                            <p className="text-sm max-w-sm mt-1">
+                                                {profile.display_name} hasn't published any content yet.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+
                         </div>
                     </div>
                 </main>

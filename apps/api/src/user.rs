@@ -31,6 +31,7 @@ pub struct UserProfile {
     pub banner_zoom: Option<f64>,
     pub verified: Option<bool>,
     pub pronouns: Option<String>,
+    pub major: Option<String>,
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
@@ -52,7 +53,20 @@ pub struct PublicUserProfile {
     pub banner_crop_y: Option<f64>,
     pub banner_zoom: Option<f64>,
     pub pronouns: Option<String>,
+    pub major: Option<String>,
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+#[derive(Serialize)]
+pub struct UserProject {
+    pub id: uuid::Uuid,
+    pub slug: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub image_url: Option<String>,
+    pub status: String,
+    pub looking_for: Vec<String>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -73,6 +87,7 @@ pub struct UpdateProfileRequest {
     pub banner_crop_y: Option<f64>,
     pub banner_zoom: Option<f64>,
     pub pronouns: Option<String>,
+    pub major: Option<String>,
 }
 
 pub async fn get_me(
@@ -94,16 +109,16 @@ pub async fn get_me(
 
     let user = sqlx::query!(
         r#"
-        SELECT 
+        SELECT
             u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, u.banner_url,
             u.avatar_original_url, u.banner_original_url,
             u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,
             u.banner_crop_x, u.banner_crop_y, u.banner_zoom,
             l.email as "email?", l.verified as "verified?",
-            u.pronouns, u.created_at as "created_at?"
+            u.pronouns, u.major, u.created_at as "created_at?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
-        WHERE u.id = $1 
+        WHERE u.id = $1
         "#,
         user_id
     )
@@ -133,6 +148,7 @@ pub async fn get_me(
             banner_zoom: u.banner_zoom,
             verified: u.verified,
             pronouns: u.pronouns,
+            major: u.major,
             created_at: u.created_at,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
@@ -196,6 +212,7 @@ pub async fn update_profile(
     let safe_display_name = payload.display_name.as_ref();
     let safe_location = payload.location.as_ref();
     let safe_pronouns = payload.pronouns.as_ref();
+    let safe_major = payload.major.as_deref();
 
     let safe_website = if let Some(website) = &payload.website {
         if !website.trim().is_empty() {
@@ -247,7 +264,7 @@ pub async fn update_profile(
     sqlx::query!(
         r#"
         UPDATE users
-        SET 
+        SET
             username = COALESCE($1, username),
             display_name = COALESCE($2, display_name),
             bio = COALESCE($3, bio),
@@ -263,7 +280,8 @@ pub async fn update_profile(
             banner_crop_x = COALESCE($13, banner_crop_x),
             banner_crop_y = COALESCE($14, banner_crop_y),
             banner_zoom = COALESCE($15, banner_zoom),
-            pronouns = COALESCE($17, pronouns)
+            pronouns = COALESCE($17, pronouns),
+            major = COALESCE($18, major)
         WHERE id = $16
         "#,
         safe_username, // Username usually strict validation, but assuming alphanumeric elsewhere
@@ -282,7 +300,8 @@ pub async fn update_profile(
         payload.banner_crop_y,
         payload.banner_zoom,
         user_id,
-        safe_pronouns
+        safe_pronouns,
+        safe_major
     )
     .execute(&pool)
     .await
@@ -308,16 +327,16 @@ pub async fn get_all(
 ) -> Result<Json<Vec<UserProfile>>, (StatusCode, String)> {
     let users = sqlx::query!(
         r#"
-        SELECT 
+        SELECT
             u.id, u.username, u.display_name, u.avatar_url, u.role, u.bio, u.location, u.website, u.banner_url,
             u.avatar_original_url, u.banner_original_url,
             u.avatar_crop_x, u.avatar_crop_y, u.avatar_zoom,
             u.banner_crop_x, u.banner_crop_y, u.banner_zoom,
             l.email as "email?", l.verified as "verified?",
-            u.pronouns, u.created_at as "created_at?"
+            u.pronouns, u.major, u.created_at as "created_at?"
         FROM users u
         LEFT JOIN local_auths l ON u.id = l.user_id
-        ORDER BY u.created_at DESC 
+        ORDER BY u.created_at DESC
         "#
     )
     .fetch_all(&pool)
@@ -347,6 +366,7 @@ pub async fn get_all(
             banner_zoom: u.banner_zoom,
             verified: u.verified,
             pronouns: u.pronouns,
+            major: u.major,
             created_at: u.created_at,
         })
         .collect();
@@ -395,7 +415,7 @@ pub async fn get_public_profile(
     let user = sqlx::query!(
         r#"
         SELECT username, display_name, avatar_url, bio, location, website, banner_url, avatar_original_url, banner_original_url,
-        avatar_crop_x, avatar_crop_y, avatar_zoom, banner_crop_x, banner_crop_y, banner_zoom, pronouns, created_at
+        avatar_crop_x, avatar_crop_y, avatar_zoom, banner_crop_x, banner_crop_y, banner_zoom, pronouns, major, created_at
         FROM users
         WHERE username = $1
         "#,
@@ -423,10 +443,35 @@ pub async fn get_public_profile(
             banner_crop_y: u.banner_crop_y,
             banner_zoom: u.banner_zoom,
             pronouns: u.pronouns,
+            major: u.major,
             created_at: u.created_at,
         })),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
+}
+
+pub async fn list_projects(
+    Path(username): Path<String>,
+    State(pool): State<PgPool>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let projects = sqlx::query_as!(
+        UserProject,
+        r#"
+        SELECT p.id, p.slug, p.title, p.description, p.image_url, p.status,
+               p.looking_for as "looking_for!: Vec<String>", p.created_at
+        FROM projects p
+        JOIN users u ON p.owner_id = u.id
+        WHERE u.username = $1
+        ORDER BY p.created_at DESC
+        LIMIT 20
+        "#,
+        username.to_lowercase()
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(projects))
 }
 
 pub async fn create_test_user(
@@ -509,6 +554,7 @@ pub async fn create_test_user(
         banner_zoom: None,
         verified: Some(false),
         pronouns: None,
+        major: None,
         created_at: Some(chrono::Utc::now()),
     }))
 }

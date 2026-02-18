@@ -12,6 +12,7 @@ use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 
 mod announcements;
+mod applications;
 mod auth;
 mod feed;
 mod posts;
@@ -125,6 +126,8 @@ async fn main() {
         .route("/posts/user/:username", get(posts::list_by_user))
         .route("/projects/user/:username/:slug", get(projects::get_by_slug))
         .route("/projects", get(projects::list).post(projects::create))
+        .route("/projects/:id/apply", post(applications::apply))
+        .route("/user/:username/projects", get(user::list_projects))
         .route("/feed", get(feed::get_feed))
         // Images are now served directly from Cloudflare R2
         .layer(session_layer)
