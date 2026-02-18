@@ -123,6 +123,7 @@ async fn main() {
         .route("/announcements", get(announcements::get_all))
         .route("/posts", get(posts::list).post(posts::create))
         .route("/posts/user/:username", get(posts::list_by_user))
+        .route("/projects/user/:username/:slug", get(projects::get_by_slug))
         .route("/projects", get(projects::list).post(projects::create))
         .route("/feed", get(feed::get_feed))
         // Images are now served directly from Cloudflare R2
