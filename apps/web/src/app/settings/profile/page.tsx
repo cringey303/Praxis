@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/Toast";
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { getProfileImageUrl } from '@/lib/utils';
+import { MAJORS } from '@/lib/majors';
 
 
 interface UserProfile {
@@ -33,6 +34,7 @@ interface UserProfile {
     banner_crop_x?: number;
     banner_crop_y?: number;
     banner_zoom?: number;
+    major?: string;
     created_at?: string;
 }
 
@@ -51,6 +53,7 @@ export default function ProfilePage() {
         location: '',
         pronouns: '',
         website: '',
+        major: '',
         avatar_url: '',
         banner_url: '',
         avatar_original_url: '',
@@ -105,6 +108,7 @@ export default function ProfilePage() {
                     location: data.location || '',
                     pronouns: data.pronouns || '',
                     website: data.website || '',
+                    major: data.major || '',
                     avatar_url: data.avatar_url || '',
                     banner_url: data.banner_url || '',
                     avatar_original_url: data.avatar_original_url || '',
@@ -802,6 +806,39 @@ export default function ProfilePage() {
                                                 />
                                             </div>
 
+                                            <div className="space-y-1">
+                                                <label className="text-sm text-muted-foreground">Major / Field of Study</label>
+                                                <select
+                                                    id="major"
+                                                    value={formData.major}
+                                                    onChange={async (e) => {
+                                                        const newMajor = e.target.value;
+                                                        const updated = { ...formData, major: newMajor };
+                                                        setFormData(updated);
+                                                        setUpdating(true);
+                                                        try {
+                                                            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/user/profile`, {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                credentials: 'include',
+                                                                body: JSON.stringify(updated),
+                                                            });
+                                                            if (!res.ok) throw new Error('Update failed');
+                                                            setUser((prev) => prev ? { ...prev, major: newMajor } : null);
+                                                        } catch (err) {
+                                                            console.error(err);
+                                                        } finally {
+                                                            setUpdating(false);
+                                                        }
+                                                    }}
+                                                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                                >
+                                                    <option value="">Select your major (optional)</option>
+                                                    {MAJORS.map((m) => (
+                                                        <option key={m} value={m}>{m}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
 
                                         </div>
                                     </div>

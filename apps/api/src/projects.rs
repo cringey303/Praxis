@@ -11,6 +11,7 @@ pub struct ProjectWithOwner {
     pub description: Option<String>,
     pub image_url: Option<String>,
     pub status: String,
+    pub looking_for: Vec<String>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub owner_id: uuid::Uuid,
     pub owner_name: String,
@@ -23,6 +24,7 @@ pub struct CreateProjectRequest {
     pub title: String,
     pub description: Option<String>,
     pub image_url: Option<String>,
+    pub looking_for: Option<Vec<String>>,
 }
 
 /// Generate a URL slug from a title
@@ -55,6 +57,7 @@ pub async fn list(
             p.description,
             p.image_url,
             p.status,
+            p.looking_for as "looking_for!: Vec<String>",
             p.created_at,
             p.owner_id,
             u.display_name as owner_name,
@@ -87,6 +90,7 @@ pub async fn get_by_slug(
             p.description,
             p.image_url,
             p.status,
+            p.looking_for as "looking_for!: Vec<String>",
             p.created_at,
             p.owner_id,
             u.display_name as owner_name,
@@ -131,18 +135,21 @@ pub async fn create(
     let base_slug = slugify(&payload.title);
     let slug = find_unique_slug(&pool, user_id, &base_slug).await?;
 
+    let looking_for = payload.looking_for.unwrap_or_default();
+
     // Create project
     let project = sqlx::query!(
         r#"
-        INSERT INTO projects (owner_id, title, slug, description, image_url)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO projects (owner_id, title, slug, description, image_url, looking_for)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id, slug, created_at
         "#,
         user_id,
         payload.title,
         slug,
         payload.description,
-        payload.image_url
+        payload.image_url,
+        &looking_for
     )
     .fetch_one(&pool)
     .await

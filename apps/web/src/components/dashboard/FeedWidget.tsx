@@ -15,6 +15,7 @@ interface FeedItem {
     image_url: string | null;
     status: string | null;
     slug: string | null;
+    looking_for?: string[];
     created_at: string;
     author_id: string;
     author_name: string;
@@ -23,7 +24,7 @@ interface FeedItem {
 }
 
 interface FeedWidgetProps {
-    user: { display_name: string; username: string } | null;
+    user: { id?: string; display_name: string; username: string; major?: string } | null;
 }
 
 type FilterType = 'all' | 'posts' | 'projects';
@@ -60,6 +61,8 @@ export function FeedWidget({ user }: FeedWidgetProps) {
         { label: 'Posts', value: 'posts' },
         { label: 'Projects', value: 'projects' },
     ];
+
+    const currentUser = user?.id ? { id: user.id, major: user.major } : null;
 
     return (
         <div className="space-y-4">
@@ -120,12 +123,14 @@ export function FeedWidget({ user }: FeedWidgetProps) {
                                     description: item.description,
                                     image_url: item.image_url,
                                     status: item.status || 'open',
+                                    looking_for: item.looking_for,
                                     created_at: item.created_at,
                                     owner_id: item.author_id,
                                     owner_name: item.author_name,
                                     owner_username: item.author_username,
                                     owner_avatar: item.author_avatar,
                                 }}
+                                currentUser={currentUser}
                             />
                         )
                     )}

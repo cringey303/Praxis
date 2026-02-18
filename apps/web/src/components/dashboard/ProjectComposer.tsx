@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useToast } from '../ui/Toast';
 import { FloatingLabelInput } from '../ui/FloatingLabelInput';
 import { FloatingLabelTextarea } from '../ui/FloatingLabelTextarea';
-import { ImagePlus, X, Loader2 } from 'lucide-react';
+import { ImagePlus, X, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import Image from 'next/image';
+import { MAJORS } from '@/lib/majors';
 
 interface ProjectComposerProps {
     onClose: () => void;
@@ -16,6 +17,8 @@ export function ProjectComposer({ onClose, onCreated }: ProjectComposerProps) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [lookingFor, setLookingFor] = useState<string[]>([]);
+    const [showLookingFor, setShowLookingFor] = useState(false);
     const [isPosting, setIsPosting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const { showToast } = useToast();
@@ -27,6 +30,12 @@ export function ProjectComposer({ onClose, onCreated }: ProjectComposerProps) {
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [onClose]);
+
+    const toggleMajor = (major: string) => {
+        setLookingFor((prev) =>
+            prev.includes(major) ? prev.filter((m) => m !== major) : [...prev, major]
+        );
+    };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -81,6 +90,7 @@ export function ProjectComposer({ onClose, onCreated }: ProjectComposerProps) {
                     title: title.trim(),
                     description: description.trim() || null,
                     image_url: imageUrl,
+                    looking_for: lookingFor,
                 }),
             });
 
@@ -105,9 +115,9 @@ export function ProjectComposer({ onClose, onCreated }: ProjectComposerProps) {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
             onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
-            <div className="relative w-full max-w-lg bg-card rounded-xl border border-border shadow-xl">
+            <div className="relative w-full max-w-lg bg-card rounded-xl border border-border shadow-xl max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
                     <h2 className="text-lg font-semibold">New Project</h2>
                     <button
                         onClick={onClose}
@@ -118,7 +128,7 @@ export function ProjectComposer({ onClose, onCreated }: ProjectComposerProps) {
                 </div>
 
                 {/* Body */}
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-4 overflow-y-auto">
                     <FloatingLabelInput
                         id="project-title"
                         label="Project title (required)"
@@ -133,6 +143,42 @@ export function ProjectComposer({ onClose, onCreated }: ProjectComposerProps) {
                         onChange={(e) => setDescription(e.target.value)}
                         className="min-h-[100px]"
                     />
+
+                    {/* Looking For */}
+                    <div>
+                        <button
+                            type="button"
+                            onClick={() => setShowLookingFor(!showLookingFor)}
+                            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        >
+                            {showLookingFor ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            Looking for majors
+                            {lookingFor.length > 0 && (
+                                <span className="ml-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                                    {lookingFor.length} selected
+                                </span>
+                            )}
+                        </button>
+
+                        {showLookingFor && (
+                            <div className="mt-2 flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1">
+                                {MAJORS.map((major) => (
+                                    <button
+                                        key={major}
+                                        type="button"
+                                        onClick={() => toggleMajor(major)}
+                                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+                                            lookingFor.includes(major)
+                                                ? 'bg-purple-500/20 text-purple-400 border-purple-500/40'
+                                                : 'bg-secondary text-muted-foreground border-border hover:border-purple-500/30 hover:text-purple-400'
+                                        }`}
+                                    >
+                                        {major}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Image Upload */}
                     <div>
@@ -173,7 +219,7 @@ export function ProjectComposer({ onClose, onCreated }: ProjectComposerProps) {
                 </div>
 
                 {/* Footer */}
-                <div className="flex justify-end p-4 border-t border-border">
+                <div className="flex justify-end p-4 border-t border-border shrink-0">
                     <button
                         onClick={handleSubmit}
                         disabled={isPosting || !title.trim()}
