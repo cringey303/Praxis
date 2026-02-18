@@ -1,7 +1,7 @@
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use tower_sessions::Session;
+use axum::{extract::{State, Path}, http::StatusCode, response::IntoResponse,Json};
 
 #[derive(Serialize)]
 pub struct PostWithAuthor {
@@ -48,6 +48,36 @@ pub async fn list(
 
     Ok(Json(posts))
 }
+
+pub async fn list_by_user(
+    State(pool): State<PgPool>,
+    Path(username): Path<String>
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let posts = sqlx::query_as!(
+        PostWithAuthor,
+        r#"
+        SELECT
+            p.id,
+            p.content,
+            p.image_url,
+            p.created_at,
+            p.author_id,
+            u.display_name as author_name,
+            u.username as author_username,
+            u.avatar_url as author_avatar
+        FROM posts p
+        JOIN users u ON p.author_id = u.id
+        WHERE u.username = $1
+        ORDER BY p.created_at DESC
+        "#,
+        username
+    )
+    .fetch_all(&pool)
+    .await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(posts))
+}
+
 
 /// Create a new post (requires login)
 pub async fn create(

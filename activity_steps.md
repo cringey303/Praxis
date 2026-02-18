@@ -167,3 +167,4 @@ PRIMARY KEY (project_id, user_id)
 - Quick links for project assets or important links
 - Interview different majors or send out google form for infomration on embeds and features
 - Url format .../username/projectname
+- Projects can be sorted by major, if a certain project is looking for a CS major and the user is a CS major, they should see those projects before anything else

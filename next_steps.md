@@ -43,3 +43,12 @@ Based on the current project state (Next.js + Rust API, Auth & User Management i
 - Verify `schema.sql` (if it exists) is up to date.
 - Add `bio` field to `users` table for Profile Page.
 - Add `activity_log` table for Dashboard.
+
+## 7. Profile Overhaul
+**Why:** Profile Currently only displays posts, it should show more about the User
+**Implementation:**
+- Add experience section
+- University attended(or independent)
+- About section
+- Major(s) to connect with projects
+- Brainstorm other necessary features

@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar, MapPin, Link as LinkIcon, Share2, Edit3, MessageSquare, Grid, Activity } from 'lucide-react';
+import { Calendar, MapPin, Link as LinkIcon, Share2, Edit3, MessageSquare } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { useToast } from "@/components/ui/Toast";
 import { getProfileImageUrl } from '@/lib/utils';
+import { PostCard } from '@/components/dashboard/PostCard';
 
 
 interface PublicUserProfile {
@@ -28,6 +29,17 @@ interface CurrentUser {
     avatar_url?: string;
 }
 
+interface Post {
+    id: string;
+    content: string;
+    image_url: string | null;
+    created_at: string;
+    author_id: string;
+    author_name: string;
+    author_username: string;
+    author_avatar: string | null;
+}
+
 export default function PublicProfilePage() {
     const params = useParams();
     const username = params.username as string;
@@ -38,7 +50,8 @@ export default function PublicProfilePage() {
     const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [activeTab, setActiveTab] = useState('overview');
+    const [posts, setPosts] = useState<Post[]>([])
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -61,6 +74,14 @@ export default function PublicProfilePage() {
                 if (meRes.ok) {
                     const meData = await meRes.json();
                     setCurrentUser(meData);
+                }
+                const postRes = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL || 
+                        'http://localhost:8080'}/posts/user/${username}`
+                );
+                if (postRes.ok){
+                    const postsData = await postRes.json();
+                    setPosts(postsData);
                 }
             } catch (err) {
                 console.error(err);
@@ -256,77 +277,19 @@ export default function PublicProfilePage() {
                             </div>
                         </div>
 
-                        {/* Right Column: Content Tabs */}
+                        {/* Right Column: Posts */}
                         <div className="flex-1 w-full max-w-full">
-                            <div className="border-b border-border">
-                                <nav className="flex items-center gap-6">
-                                    <button
-                                        onClick={() => setActiveTab('overview')}
-                                        className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'overview'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                            }`}
-                                    >
-                                        Overview
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('posts')}
-                                        className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'posts'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                            }`}
-                                    >
-                                        Posts
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('activity')}
-                                        className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'activity'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                            }`}
-                                    >
-                                        Activity
-                                    </button>
-                                </nav>
-                            </div>
-
-                            <div className="mt-6">
-                                {activeTab === 'overview' && (
-                                    <div className="space-y-4">
-                                        {/* Empty State / Placeholder */}
-                                        <div className="rounded-xl border border-border border-dashed p-12 flex flex-col items-center justify-center text-center text-muted-foreground bg-secondary/20">
-                                            <Grid className="h-10 w-10 mb-3 opacity-50" />
-                                            <h3 className="text-lg font-medium text-foreground">No posts yet</h3>
-                                            <p className="text-sm max-w-sm mt-1">
-                                                {profile.display_name} hasn't published any content yet.
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                                {activeTab === 'posts' && (
-                                    <div className="space-y-4">
-                                        <div className="rounded-xl border border-border p-6 bg-card/50">
-                                            <div className="h-4 w-2/3 bg-muted rounded mb-3"></div>
-                                            <div className="h-4 w-full bg-muted rounded mb-2 opacity-60"></div>
-                                            <div className="h-4 w-1/2 bg-muted rounded opacity-60"></div>
-                                        </div>
-                                    </div>
-                                )}
-                                {activeTab === 'activity' && (
-                                    <div className="space-y-6">
-                                        <div className="flex gap-4">
-                                            <div className="relative h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                                <Activity className="h-5 w-5" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium">Joined Praxis</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {profile.created_at
-                                                        ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                                                        : 'Just now'}
-                                                </p>
-                                            </div>
-                                        </div>
+                            <div className="space-y-4">
+                                {posts.length > 0 ? (
+                                    posts.map((post) => (
+                                        <PostCard key={post.id} post={post} />
+                                    ))
+                                ) : (
+                                    <div className="rounded-xl border border-border border-dashed p-12 flex flex-col items-center justify-center text-center text-muted-foreground bg-secondary/20">
+                                        <h3 className="text-lg font-medium text-foreground">No posts yet</h3>
+                                        <p className="text-sm max-w-sm mt-1">
+                                            {profile.display_name} hasn't published any content yet.
+                                        </p>
                                     </div>
                                 )}
                             </div>
