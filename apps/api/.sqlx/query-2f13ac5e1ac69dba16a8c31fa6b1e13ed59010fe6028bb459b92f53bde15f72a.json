@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO oauth_connections (user_id, provider, provider_id, access_token, provider_email)\n           VALUES ($1, 'google', $2, $3, $4)\n           ON CONFLICT (provider, provider_id) DO UPDATE SET access_token = $3, provider_email = $4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2f13ac5e1ac69dba16a8c31fa6b1e13ed59010fe6028bb459b92f53bde15f72a"
+}

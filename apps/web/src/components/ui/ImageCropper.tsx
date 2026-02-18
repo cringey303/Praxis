@@ -127,7 +127,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
                                 {onUploadSelect && (
                                     <button
                                         onClick={onUploadSelect}
-                                        className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover:bg-secondary/80 transition-colors cursor-pointer"
+                                        className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-sm text-sm font-medium hover:bg-secondary/80 transition-colors cursor-pointer"
                                     >
                                         <Upload className="h-4 w-4" />
                                         <span className="hidden sm:inline">Upload New</span>
@@ -136,7 +136,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
                                 {onRemove && (
                                     <button
                                         onClick={onRemove}
-                                        className="flex items-center gap-2 px-3 py-2 bg-destructive/10 text-destructive rounded-md text-sm font-medium hover:bg-destructive/20 transition-colors cursor-pointer"
+                                        className="flex items-center gap-2 px-3 py-2 bg-destructive/10 text-destructive rounded-sm text-sm font-medium hover:bg-destructive/20 transition-colors cursor-pointer"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                         <span className="hidden sm:inline">Remove</span>
@@ -150,13 +150,13 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
                             <div className="flex justify-end gap-3">
                                 <button
                                     onClick={onCancel}
-                                    className="px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+                                    className="px-4 py-2 border border-input rounded-sm text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSave}
-                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer"
+                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-sm text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer"
                                 >
                                     Save
                                 </button>

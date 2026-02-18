@@ -1,4 +1,8 @@
 # Praxis
+_**Please submit an issue if you find a bug!!**_
+Check it out at [https://praxis-lemon.vercel.app](https://praxis-lemon.vercel.app)
+
+
 (WIP)
 
 A students-first social network where students discover and collaborate on projects; creating real work rather than focusing on connections.
@@ -116,21 +120,24 @@ Run Migrations: `cd apps/api && sqlx migrate run`
 
 Create Migration: `cd apps/api && sqlx migrate add name_of_change`
 
+## Production
+Make User Admin (from your machine):
+```bash
+DATABASE_URL="<production_postgres_url>" cargo run --bin make_admin -- <username>
+```
+Get the production DATABASE_URL from Railway → Postgres service → Variables tab.
+
 # TO-DO
 Not comprehensive.
-
+Submit an issue if you find a bug!
 ```
-Bugs:
-- adding website to profile
-- cropping images
+Known bugs:
 - 
 ```
 ```
 Other:
-- Create flowchart (Figma)
-- Create mockup UI (Excalidraw)
+- Modulize UI (make elements have a template)
 - Design home/landing page
-- Email verification (needs domain for SMTP)
 ```
 
 # Possible Domains

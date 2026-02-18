@@ -57,13 +57,15 @@ export default function Dashboard() {
             <main className="p-3">
                 <div className="w-full space-y-8">
 
-                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 items-stretch">
                         {/* Welcome Card */}
                         <WelcomeWidget user={user} />
 
-                        {/* User List Widget */}
-                        <div className="col-span-full md:col-span-1">
-                            <UserListWidget currentUser={user} />
+                        {/* User List Widget - positioned to match WelcomeWidget height */}
+                        <div className="col-span-full md:col-span-1 relative">
+                            <div className="absolute inset-0">
+                                <UserListWidget currentUser={user} />
+                            </div>
                         </div>
                     </div>
 

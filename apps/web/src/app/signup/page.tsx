@@ -187,7 +187,7 @@ export default function SignupPage() {
                 <div className="space-y-4">
                     {/* Google Login Button */}
                     <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/google/login`}
+                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/google`}
                         className="flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                     >
                         <svg className="h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -197,7 +197,7 @@ export default function SignupPage() {
                     </a>
 
                     <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/github/login`}
+                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/github`}
                         className="flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                     >
                         <svg className="h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="github" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

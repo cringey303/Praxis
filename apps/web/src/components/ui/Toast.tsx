@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -17,6 +17,10 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
+const MAX_VISIBLE_TOASTS = 2;
+const TOAST_DURATION = 2000;
+const EXIT_ANIMATION_DURATION = 300;
+
 export function useToast() {
     const context = useContext(ToastContext);
     if (!context) {
@@ -26,45 +30,95 @@ export function useToast() {
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-    const [toasts, setToasts] = useState<Toast[]>([]);
+    const [visibleToasts, setVisibleToasts] = useState<Toast[]>([]);
+    const queueRef = useRef<Toast[]>([]);
+    const processingRef = useRef(false);
 
     const removeToast = useCallback((id: number) => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
+        setVisibleToasts((prev) => prev.filter((t) => t.id !== id));
     }, []);
 
     const startExit = useCallback((id: number) => {
-        setToasts((prev) =>
+        setVisibleToasts((prev) =>
             prev.map((t) => (t.id === id ? { ...t, isExiting: true } : t))
         );
-        // Wait for animation to finish before actual removal
-        setTimeout(() => removeToast(id), 300);
+        setTimeout(() => removeToast(id), EXIT_ANIMATION_DURATION);
     }, [removeToast]);
 
-    const showToast = useCallback((message: string, type: ToastType = 'success') => {
-        setToasts((prev) => {
-            // Prevent duplicates: Check if same message exists and isn't already exiting
-            const isDuplicate = prev.some(
-                (t) => t.message === message && t.type === type && !t.isExiting
-            );
+    // Process queue - show next toast from queue if there's room
+    const processQueue = useCallback(() => {
+        if (processingRef.current) return;
+        processingRef.current = true;
 
-            if (isDuplicate) return prev;
+        setVisibleToasts((currentVisible) => {
+            const nonExitingCount = currentVisible.filter(t => !t.isExiting).length;
 
-            const id = Date.now();
+            if (nonExitingCount < MAX_VISIBLE_TOASTS && queueRef.current.length > 0) {
+                const nextToast = queueRef.current.shift()!;
 
-            // Auto-dismiss after 2 seconds
-            setTimeout(() => {
-                startExit(id);
-            }, 2000);
+                // Schedule exit for this toast
+                setTimeout(() => {
+                    startExit(nextToast.id);
+                }, TOAST_DURATION);
 
-            return [...prev, { id, message, type, isExiting: false }];
+                processingRef.current = false;
+                return [nextToast, ...currentVisible]; // Add new toast at top
+            }
+
+            processingRef.current = false;
+            return currentVisible;
         });
     }, [startExit]);
+
+    // When visible toasts change, try to process queue
+    useEffect(() => {
+        const nonExitingCount = visibleToasts.filter(t => !t.isExiting).length;
+        if (nonExitingCount < MAX_VISIBLE_TOASTS && queueRef.current.length > 0) {
+            // Small delay to allow state to settle
+            setTimeout(processQueue, 50);
+        }
+    }, [visibleToasts, processQueue]);
+
+    const showToast = useCallback((message: string, type: ToastType = 'success') => {
+        // Prevent duplicates in visible toasts
+        const isDuplicateVisible = visibleToasts.some(
+            (t) => t.message === message && t.type === type && !t.isExiting
+        );
+        // Prevent duplicates in queue
+        const isDuplicateQueued = queueRef.current.some(
+            (t) => t.message === message && t.type === type
+        );
+
+        if (isDuplicateVisible || isDuplicateQueued) return;
+
+        const newToast: Toast = {
+            id: Date.now() + Math.random(),
+            message,
+            type,
+            isExiting: false,
+        };
+
+        const nonExitingCount = visibleToasts.filter(t => !t.isExiting).length;
+
+        if (nonExitingCount < MAX_VISIBLE_TOASTS) {
+            // Add directly to visible
+            setVisibleToasts((prev) => [newToast, ...prev]); // Add at top
+
+            // Schedule exit
+            setTimeout(() => {
+                startExit(newToast.id);
+            }, TOAST_DURATION);
+        } else {
+            // Add to queue
+            queueRef.current.push(newToast);
+        }
+    }, [visibleToasts, startExit]);
 
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
             <div className="fixed top-6 left-1/2 z-50 flex flex-col gap-2 pointer-events-none">
-                {toasts.map((toast) => (
+                {visibleToasts.map((toast) => (
                     <div
                         key={toast.id}
                         onClick={() => startExit(toast.id)}

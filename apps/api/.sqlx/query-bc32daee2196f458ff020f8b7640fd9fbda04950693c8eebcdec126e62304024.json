@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO totp_secrets (user_id, secret, enabled)\n        VALUES ($1, $2, false)\n        ON CONFLICT (user_id) DO UPDATE SET secret = $2, enabled = false\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bc32daee2196f458ff020f8b7640fd9fbda04950693c8eebcdec126e62304024"
+}

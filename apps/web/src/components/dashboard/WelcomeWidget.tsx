@@ -113,7 +113,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
     };
 
     return (
-        <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm bg-card relative overflow-hidden">
+        <div className="col-span-full md:col-span-2 rounded-xl border border-border p-6 shadow-sm bg-card relative overflow-hidden min-h-[320px]">
             <div className="relative z-10">
                 <h2 className="text-xl mb-2 font-semibold">
                     Welcome Back{user ? `, ${user.display_name}` : ''}
@@ -200,7 +200,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                                 <button
                                     onClick={handlePost}
                                     disabled={isPosting || !newAnnouncement.trim()}
-                                    className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/80 px-4 py-2 rounded-sm text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isPosting ? 'Posting...' : 'Post'}
                                 </button>

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE totp_secrets SET enabled = true WHERE user_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "42c6893cae2acff04c9a65c5aa9dec2a9c7dae9b940e9471c6a376f1d335f2e2"
+}

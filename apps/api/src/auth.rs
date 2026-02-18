@@ -3,7 +3,7 @@ use argon2::{
     Argon2,
 };
 use axum::{
-    extract::{Query, State},
+    extract::{ConnectInfo, Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect},
     Json,
@@ -12,8 +12,9 @@ use oauth2::{
     basic::BasicClient, AuthUrl, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
     TokenResponse, TokenUrl,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use std::net::SocketAddr;
 use tower_sessions::Session;
 use uuid::Uuid;
 
@@ -57,6 +58,7 @@ pub struct LoginRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct GoogleUser {
+    pub sub: String,
     pub email: String,
     pub name: String,
     pub picture: String,
@@ -64,6 +66,7 @@ pub struct GoogleUser {
 
 #[derive(Debug, Deserialize)]
 pub struct GithubUser {
+    pub id: i64,
     pub email: Option<String>,
     pub name: Option<String>,
     pub login: String,
@@ -74,6 +77,48 @@ pub struct GithubUser {
 pub struct AuthRequest {
     pub code: String,
     pub state: String,
+}
+
+#[derive(Serialize)]
+struct ResendEmailRequest {
+    from: String,
+    to: Vec<String>,
+    subject: String,
+    html: String,
+}
+
+async fn send_email(to: &str, subject: &str, html_body: &str) -> Result<(), String> {
+    let api_key =
+        std::env::var("RESEND_API_KEY").map_err(|_| "RESEND_API_KEY not set".to_string())?;
+    // Optionally allow configuring the FROM address, default to team@joinpraxis.me
+    let from_email =
+        std::env::var("MAIL_FROM").unwrap_or_else(|_| "team@joinpraxis.me".to_string());
+
+    let client = reqwest::Client::new();
+    let body = ResendEmailRequest {
+        from: from_email,
+        to: vec![to.to_string()],
+        subject: subject.to_string(),
+        html: html_body.to_string(),
+    };
+
+    let res = client
+        .post("https://api.resend.com/emails")
+        .bearer_auth(api_key)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to send email request: {}", e))?;
+
+    if !res.status().is_success() {
+        let text = res
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unknown error".to_string());
+        return Err(format!("Resend API error: {}", text));
+    }
+
+    Ok(())
 }
 
 /*
@@ -90,6 +135,8 @@ pub struct AuthRequest {
 pub async fn signup(
     State(pool): State<PgPool>,
     session: Session,
+    headers: axum::http::HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(payload): Json<SignupRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // check if email already exists
@@ -165,21 +212,68 @@ pub async fn signup(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // Mock Email Sending (SMTP integration pending domain setup)
+    // Send Verification Email via Resend
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
-    println!("--------------------------------------------------");
-    println!("EMAIL SENT TO: {}", payload.email);
-    println!("SUBJECT: Verify your email");
-    println!("BODY: Please click this link to verify your email:");
-    println!("{}/verify-email?token={}", frontend_url, verification_token);
-    println!("--------------------------------------------------");
+
+    let verify_link = format!("{}/verify-email?token={}", frontend_url, verification_token);
+    let email_body = format!(
+        r#"
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Welcome to Praxis!</h2>
+            <p>Please verify your email address by clicking the button below:</p>
+            <a href="{}" style="display: inline-block; background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 20px 0;">Verify Email</a>
+            <p>Or copy and paste this link into your browser:</p>
+            <p><a href="{}">{}</a></p>
+        </div>
+        "#,
+        verify_link, verify_link, verify_link
+    );
+
+    // We spawn this so it doesn't block the response, or we can await it if we want to ensure it sent.
+    // Awaiting is safer for now to report errors, but might slow down signup.
+    // Logging error if it fails but not failing the signup is a good middle ground.
+    if let Err(e) = send_email(&payload.email, "Verify your email", &email_body).await {
+        tracing::error!(
+            "Failed to send verification email to {}: {}",
+            payload.email,
+            e
+        );
+        // Note: User is created but email failed. They can use "Resend Verification" later.
+    }
 
     // Log the user in
     session
         .insert("user_id", user_id)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Create Active Session
+    session
+        .save()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if let Some(session_id) = session.id() {
+        // Default expiry (e.g., 24h from now, or whatever session manager uses)
+        // ideally match session store config. For now using 24 hours.
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+
+        // This is async but not critical path for response success, but good to await
+        crate::session::create_session(
+            &pool,
+            user_id,
+            session_id.to_string(),
+            &headers,
+            Some(addr.ip().to_string()),
+            expires_at,
+        )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to track session: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+    }
 
     tracing::info!("Signup successful for user_id: {}", user_id);
 
@@ -254,13 +348,29 @@ pub async fn resend_verification(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-        // Mock Email Sending (SMTP integration pending domain setup)
+        // Send Email via Resend
         let frontend_url =
             std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
-        println!("--------------------------------------------------");
-        println!("RESEND: Verification email to: {}", payload.email);
-        println!("{}/verify-email?token={}", frontend_url, verification_token);
-        println!("--------------------------------------------------");
+
+        let verify_link = format!("{}/verify-email?token={}", frontend_url, verification_token);
+        let email_body = format!(
+            r#"
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>Verify your email</h2>
+                <p>You requested a new verification link. Click below to verify:</p>
+                <a href="{}" style="display: inline-block; background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 20px 0;">Verify Email</a>
+            </div>
+            "#,
+            verify_link
+        );
+
+        if let Err(e) = send_email(&payload.email, "Verify your email", &email_body).await {
+            tracing::error!("Failed to resend verification email: {}", e);
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to send email".to_string(),
+            ));
+        }
 
         Ok((StatusCode::OK, "Verification email sent".to_string()))
     } else {
@@ -276,6 +386,8 @@ pub async fn resend_verification(
 pub async fn login(
     State(pool): State<PgPool>,
     session: Session,
+    headers: axum::http::HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // find user by email
@@ -321,16 +433,59 @@ pub async fn login(
             )
         })?;
 
-    // Set Session
+    // Check if user has 2FA enabled
+    let has_2fa = crate::totp::has_2fa_enabled(&pool, user.user_id).await?;
+
+    if has_2fa {
+        // Store pending 2FA verification in session
+        session
+            .insert("pending_2fa_user_id", user.user_id)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        tracing::info!("2FA required for user_id: {}", user.user_id);
+
+        return Ok(Json(serde_json::json!({
+            "requires_2fa": true,
+            "message": "2FA verification required"
+        })));
+    }
+    // No 2FA - complete login directly
     session
         .insert("user_id", user.user_id)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    // Create Active Session
+    session
+        .save()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if let Some(session_id) = session.id() {
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+        crate::session::create_session(
+            &pool,
+            user.user_id,
+            session_id.to_string(),
+            &headers,
+            Some(addr.ip().to_string()),
+            expires_at,
+        )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to track session: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+    }
+
     tracing::info!("Login successful for user_id: {}", user.user_id);
 
     // return success
-    Ok((StatusCode::OK, "Login successful"))
+    Ok(Json(serde_json::json!({
+        "success": true,
+        "message": "Login successful"
+    })))
 }
 
 // google oauth handling
@@ -374,6 +529,8 @@ pub async fn google_login() -> impl IntoResponse {
 pub async fn google_callback(
     State(pool): State<PgPool>,
     session: Session,
+    headers: axum::http::HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Query(query): Query<AuthRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let client = oauth_client();
@@ -397,79 +554,147 @@ pub async fn google_callback(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // find user by email to see if they already exist
-    let user = sqlx::query!(
-        "SELECT user_id, password_hash FROM local_auths WHERE email = $1",
-        google_user.email
-    )
-    .fetch_optional(&pool)
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    let user_id = if let Some(u) = user {
-        // user exists, log them in
-        u.user_id
-    } else {
-        // if user not found, create new user
-        let mut tx = pool
-            .begin()
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        let new_user_id = sqlx::query!(
-            "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
-            google_user
-                .email
-                .split('@')
-                .next()
-                .unwrap_or("user")
-                .to_lowercase(),
-            google_user.name
-        )
-        .fetch_one(&mut *tx)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .id;
-
-        // insert into local_auths with dummy password (randomly generated)
-        let salt = SaltString::generate(&mut OsRng);
-        let dummy_pwd = Uuid::new_v4().to_string();
-        let dummy_hash = Argon2::default()
-            .hash_password(dummy_pwd.as_bytes(), &salt)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-            .to_string();
-
-        sqlx::query!(
-            "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
-            new_user_id,
-            google_user.email,
-            dummy_hash
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        tx.commit()
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        new_user_id
-    };
-
-    // Set Session
-    session
-        .insert("user_id", user_id)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
+    // Get frontend URL for redirects
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
     let frontend_url = frontend_url
         .split(',')
         .next()
         .unwrap_or("http://localhost:3000")
-        .trim();
-    Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
+        .trim()
+        .to_string();
+
+    // Check if user is already logged in (linking flow from settings page)
+    let existing_session_user: Option<Uuid> = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Check if this Google account is already linked to a user
+    let oauth_user = sqlx::query!(
+        "SELECT user_id FROM oauth_connections WHERE provider = 'google' AND provider_id = $1",
+        google_user.sub
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let is_linking = existing_session_user.is_some();
+
+    let user_id = if let Some(existing_user_id) = existing_session_user {
+        // Linking flow: user is already logged in
+        if let Some(ref ou) = oauth_user {
+            if ou.user_id != Some(existing_user_id) {
+                // This Google account is already linked to a different user
+                return Ok(Redirect::to(&format!(
+                    "{}/settings/security?error=already_linked",
+                    frontend_url
+                )));
+            }
+        }
+        existing_user_id
+    } else if let Some(ou) = oauth_user {
+        // Login flow: found user by oauth_connection
+        ou.user_id.ok_or((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Invalid oauth connection".to_string(),
+        ))?
+    } else {
+        // Check local_auths by email
+        let local_user = sqlx::query!(
+            "SELECT user_id FROM local_auths WHERE email = $1",
+            google_user.email
+        )
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        if let Some(lu) = local_user {
+            lu.user_id
+        } else {
+            // Create new user
+            let mut tx = pool
+                .begin()
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            let new_user_id = sqlx::query!(
+                "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
+                google_user
+                    .email
+                    .split('@')
+                    .next()
+                    .unwrap_or("user")
+                    .to_lowercase(),
+                google_user.name
+            )
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+            .id;
+
+            // No local_auth record for OAuth users - they can set a password later
+
+            tx.commit()
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            new_user_id
+        }
+    };
+
+    // Upsert oauth_connection
+    sqlx::query!(
+        r#"INSERT INTO oauth_connections (user_id, provider, provider_id, access_token, provider_email)
+           VALUES ($1, 'google', $2, $3, $4)
+           ON CONFLICT (provider, provider_id) DO UPDATE SET access_token = $3, provider_email = $4"#,
+        user_id,
+        google_user.sub,
+        token.access_token().secret(),
+        google_user.email
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to upsert oauth_connection: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    // Set session and create active session (only for login, not linking)
+    if !is_linking {
+        session
+            .insert("user_id", user_id)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        session
+            .save()
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        if let Some(session_id) = session.id() {
+            let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+            crate::session::create_session(
+                &pool,
+                user_id,
+                session_id.to_string(),
+                &headers,
+                Some(addr.ip().to_string()),
+                expires_at,
+            )
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to track session: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+            })?;
+        }
+    }
+
+    if is_linking {
+        Ok(Redirect::to(&format!("{}/settings/security", frontend_url)))
+    } else {
+        Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
+    }
 }
 
 // github oauth handling
@@ -511,6 +736,8 @@ pub async fn github_login() -> impl IntoResponse {
 pub async fn github_callback(
     State(pool): State<PgPool>,
     session: Session,
+    headers: axum::http::HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Query(query): Query<AuthRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let client = github_oauth_client();
@@ -599,78 +826,144 @@ pub async fn github_callback(
             ))?
     };
 
-    // find user by email to see if they already exist
-    let user = sqlx::query!(
-        "SELECT user_id, password_hash FROM local_auths WHERE email = $1",
-        email
-    )
-    .fetch_optional(&pool)
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    let user_id = if let Some(u) = user {
-        // user exists, log them in
-        u.user_id
-    } else {
-        // if user not found, create new user
-        let mut tx = pool
-            .begin()
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        let display_name = github_user
-            .name
-            .unwrap_or_else(|| github_user.login.clone());
-
-        let new_user_id = sqlx::query!(
-            "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
-            github_user.login.to_lowercase(), // use github username (lowercase)
-            display_name
-        )
-        .fetch_one(&mut *tx)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .id;
-
-        // insert into local_auths with dummy password (randomly generated)
-        let salt = SaltString::generate(&mut OsRng);
-        let dummy_pwd = Uuid::new_v4().to_string();
-        let dummy_hash = Argon2::default()
-            .hash_password(dummy_pwd.as_bytes(), &salt)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-            .to_string();
-
-        sqlx::query!(
-            "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
-            new_user_id,
-            email,
-            dummy_hash
-        )
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        tx.commit()
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        new_user_id
-    };
-
-    // Set Session
-    session
-        .insert("user_id", user_id)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
+    // Get frontend URL for redirects
     let frontend_url =
         std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
     let frontend_url = frontend_url
         .split(',')
         .next()
         .unwrap_or("http://localhost:3000")
-        .trim();
-    Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
+        .trim()
+        .to_string();
+
+    // Check if user is already logged in (linking flow from settings page)
+    let existing_session_user: Option<Uuid> = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Check if this GitHub account is already linked to a user
+    let github_provider_id = github_user.id.to_string();
+    let oauth_user = sqlx::query!(
+        "SELECT user_id FROM oauth_connections WHERE provider = 'github' AND provider_id = $1",
+        github_provider_id
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let is_linking = existing_session_user.is_some();
+
+    let user_id = if let Some(existing_user_id) = existing_session_user {
+        // Linking flow: user is already logged in
+        if let Some(ref ou) = oauth_user {
+            if ou.user_id != Some(existing_user_id) {
+                // This GitHub account is already linked to a different user
+                return Ok(Redirect::to(&format!(
+                    "{}/settings/security?error=already_linked",
+                    frontend_url
+                )));
+            }
+        }
+        existing_user_id
+    } else if let Some(ou) = oauth_user {
+        // Login flow: found user by oauth_connection
+        ou.user_id.ok_or((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Invalid oauth connection".to_string(),
+        ))?
+    } else {
+        // Check local_auths by email
+        let local_user = sqlx::query!("SELECT user_id FROM local_auths WHERE email = $1", email)
+            .fetch_optional(&pool)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        if let Some(lu) = local_user {
+            lu.user_id
+        } else {
+            // Create new user
+            let mut tx = pool
+                .begin()
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            let display_name = github_user
+                .name
+                .unwrap_or_else(|| github_user.login.clone());
+
+            let new_user_id = sqlx::query!(
+                "INSERT INTO users (username, display_name) VALUES ($1, $2) RETURNING id",
+                github_user.login.to_lowercase(),
+                display_name
+            )
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+            .id;
+
+            // No local_auth record for OAuth users - they can set a password later
+
+            tx.commit()
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            new_user_id
+        }
+    };
+
+    // Upsert oauth_connection
+    sqlx::query!(
+        r#"INSERT INTO oauth_connections (user_id, provider, provider_id, access_token, provider_email)
+           VALUES ($1, 'github', $2, $3, $4)
+           ON CONFLICT (provider, provider_id) DO UPDATE SET access_token = $3, provider_email = $4"#,
+        user_id,
+        github_provider_id,
+        token.access_token().secret(),
+        email
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to upsert oauth_connection: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    // Set session and create active session (only for login, not linking)
+    if !is_linking {
+        session
+            .insert("user_id", user_id)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        session
+            .save()
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        if let Some(session_id) = session.id() {
+            let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+            crate::session::create_session(
+                &pool,
+                user_id,
+                session_id.to_string(),
+                &headers,
+                Some(addr.ip().to_string()),
+                expires_at,
+            )
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to track session: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+            })?;
+        }
+    }
+
+    if is_linking {
+        Ok(Redirect::to(&format!("{}/settings/security", frontend_url)))
+    } else {
+        Ok(Redirect::to(&format!("{}/dashboard", frontend_url)))
+    }
 }
 
 pub async fn logout(session: Session) -> impl IntoResponse {
@@ -725,10 +1018,18 @@ pub async fn change_password(
         })?;
 
     // Validate new password (minimum length)
-    if payload.new_password.len() < 8 {
+    if payload.new_password.len() < 6 {
         return Err((
             StatusCode::BAD_REQUEST,
-            "New password must be at least 8 characters".to_string(),
+            "New password must be at least 6 characters".to_string(),
+        ));
+    }
+
+    // Check if new password is the same as current password
+    if payload.new_password == payload.current_password {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "New password cannot be the same as current password".to_string(),
         ));
     }
 
@@ -752,6 +1053,234 @@ pub async fn change_password(
     tracing::info!("Password changed for user_id: {}", user_id);
 
     Ok((StatusCode::OK, "Password changed successfully".to_string()))
+}
+
+#[derive(Deserialize)]
+pub struct ForgotPasswordRequest {
+    pub email: String,
+}
+
+pub async fn forgot_password(
+    State(pool): State<PgPool>,
+    Json(payload): Json<ForgotPasswordRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // Check if user exists
+    let user = sqlx::query!(
+        "SELECT user_id FROM local_auths WHERE email = $1",
+        payload.email
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if let Some(u) = user {
+        // Generate reset token and expiry (1 hour)
+        let reset_token = Uuid::new_v4().to_string();
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(1);
+
+        sqlx::query!(
+            "UPDATE local_auths SET password_reset_token = $1, password_reset_expires_at = $2 WHERE user_id = $3",
+            reset_token,
+            expires_at,
+            u.user_id
+        )
+        .execute(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        // Send Email
+        let frontend_url =
+            std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+
+        let reset_link = format!("{}/reset-password?token={}", frontend_url, reset_token);
+        let email_body = format!(
+            r#"
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>Reset Your Password</h2>
+                <p>We received a request to reset your password. Click the link below to verify it's you:</p>
+                <a href="{}" style="display: inline-block; background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
+                <p>If you didn't request this, you can safely ignore this email.</p>
+                <p>Link expires in 1 hour.</p>
+            </div>
+            "#,
+            reset_link
+        );
+
+        if let Err(e) = send_email(&payload.email, "Reset your password", &email_body).await {
+            tracing::error!("Failed to send reset password email: {}", e);
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to send email".to_string(),
+            ));
+        }
+    }
+
+    // Always return OK to prevent email enumeration
+    Ok((
+        StatusCode::OK,
+        "If an account exists with that email, a reset link has been sent.".to_string(),
+    ))
+}
+
+#[derive(Deserialize)]
+pub struct ResetPasswordRequest {
+    pub token: String,
+    pub new_password: String,
+}
+
+pub async fn reset_password(
+    State(pool): State<PgPool>,
+    Json(payload): Json<ResetPasswordRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // Find user by token and check expiry
+    let record = sqlx::query!(
+        "SELECT user_id, password_reset_expires_at FROM local_auths WHERE password_reset_token = $1",
+        payload.token
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let record = match record {
+        Some(r) => r,
+        None => {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "Invalid or expired reset token".to_string(),
+            ))
+        }
+    };
+
+    if let Some(expires_at) = record.password_reset_expires_at {
+        if chrono::Utc::now() > expires_at {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "Reset token has expired".to_string(),
+            ));
+        }
+    } else {
+        // Should not happen if token exists, but fail safe
+        return Err((StatusCode::BAD_REQUEST, "Invalid token state".to_string()));
+    }
+
+    // Validate new password
+    if payload.new_password.len() < 6 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Password must be at least 6 characters".to_string(),
+        ));
+    }
+
+    // Hash new password
+    let salt = SaltString::generate(&mut OsRng);
+    let password_hash = Argon2::default()
+        .hash_password(payload.new_password.as_bytes(), &salt)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .to_string();
+
+    // Update password and clear token
+    // Using a transaction to be safe
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    sqlx::query!(
+        "UPDATE local_auths SET password_hash = $1, password_reset_token = NULL, password_reset_expires_at = NULL WHERE user_id = $2",
+        password_hash,
+        record.user_id
+    )
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    tx.commit()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok((
+        StatusCode::OK,
+        "Password has been reset successfully. You can now login.".to_string(),
+    ))
+}
+
+#[derive(Deserialize)]
+pub struct SetPasswordRequest {
+    pub email: String,
+    pub new_password: String,
+}
+
+/// Set password for OAuth-only users (creates local_auth record)
+pub async fn set_password(
+    State(pool): State<PgPool>,
+    session: Session,
+    Json(payload): Json<SetPasswordRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // Get user_id from session
+    let user_id: Uuid = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::UNAUTHORIZED, "Not logged in".to_string()))?;
+
+    // Check if user already has a password
+    let existing = sqlx::query!(
+        "SELECT user_id FROM local_auths WHERE user_id = $1",
+        user_id
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if existing.is_some() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Password already set. Use change-password instead.".to_string(),
+        ));
+    }
+
+    // Check email isn't already used
+    let email_exists = sqlx::query!(
+        "SELECT user_id FROM local_auths WHERE email = $1",
+        payload.email
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if email_exists.is_some() {
+        return Err((StatusCode::BAD_REQUEST, "Email already in use".to_string()));
+    }
+
+    // Validate new password
+    if payload.new_password.len() < 6 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Password must be at least 6 characters".to_string(),
+        ));
+    }
+
+    // Hash new password
+    let salt = SaltString::generate(&mut OsRng);
+    let password_hash = Argon2::default()
+        .hash_password(payload.new_password.as_bytes(), &salt)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .to_string();
+
+    // Create local_auth record
+    sqlx::query!(
+        "INSERT INTO local_auths (user_id, email, password_hash) VALUES ($1, $2, $3)",
+        user_id,
+        payload.email,
+        password_hash
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    tracing::info!("Password set for OAuth user_id: {}", user_id);
+
+    Ok((StatusCode::OK, "Password set successfully".to_string()))
 }
 
 async fn async_http_client_logging(
@@ -791,4 +1320,110 @@ async fn async_http_client_logging(
         headers,
         body: body.to_vec(),
     })
+}
+
+// --- Linked Accounts ---
+
+#[derive(Serialize)]
+pub struct LinkedAccount {
+    pub provider: String,
+    pub provider_email: Option<String>,
+}
+
+pub async fn list_linked_accounts(
+    State(pool): State<PgPool>,
+    session: Session,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let user_id: Uuid = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::UNAUTHORIZED, "Not logged in".to_string()))?;
+
+    let accounts = sqlx::query!(
+        "SELECT provider, provider_email FROM oauth_connections WHERE user_id = $1",
+        user_id
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let result: Vec<LinkedAccount> = accounts
+        .into_iter()
+        .map(|a| LinkedAccount {
+            provider: a.provider,
+            provider_email: a.provider_email,
+        })
+        .collect();
+
+    Ok(Json(result))
+}
+
+pub async fn unlink_account(
+    State(pool): State<PgPool>,
+    session: Session,
+    Path(provider): Path<String>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let user_id: Uuid = session
+        .get("user_id")
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::UNAUTHORIZED, "Not logged in".to_string()))?;
+
+    // Safety check: user must have another auth method
+    let has_password = sqlx::query!(
+        "SELECT user_id FROM local_auths WHERE user_id = $1",
+        user_id
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .is_some();
+
+    let other_oauth_count = sqlx::query_scalar!(
+        "SELECT COUNT(*) FROM oauth_connections WHERE user_id = $1 AND provider != $2",
+        user_id,
+        provider
+    )
+    .fetch_one(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .unwrap_or(0);
+
+    let passkey_count = sqlx::query_scalar!(
+        "SELECT COUNT(*) FROM passkey_credentials WHERE user_id = $1",
+        user_id
+    )
+    .fetch_one(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .unwrap_or(0);
+
+    if !has_password && other_oauth_count == 0 && passkey_count == 0 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Cannot unlink your only sign-in method. Add a password or link another account first."
+                .to_string(),
+        ));
+    }
+
+    let result = sqlx::query!(
+        "DELETE FROM oauth_connections WHERE user_id = $1 AND provider = $2",
+        user_id,
+        provider
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if result.rows_affected() == 0 {
+        return Err((StatusCode::NOT_FOUND, "Account not linked".to_string()));
+    }
+
+    tracing::info!("User {} unlinked {} account", user_id, provider);
+
+    Ok((
+        StatusCode::OK,
+        format!("{} account unlinked successfully", provider),
+    ))
 }
