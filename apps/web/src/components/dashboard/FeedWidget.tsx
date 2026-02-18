@@ -14,6 +14,7 @@ interface FeedItem {
     description: string | null;
     image_url: string | null;
     status: string | null;
+    slug: string | null;
     created_at: string;
     author_id: string;
     author_name: string;
@@ -114,6 +115,7 @@ export function FeedWidget({ user }: FeedWidgetProps) {
                                 key={item.id}
                                 project={{
                                     id: item.id,
+                                    slug: item.slug || '',
                                     title: item.title || '',
                                     description: item.description,
                                     image_url: item.image_url,

@@ -7,6 +7,7 @@ import { Briefcase } from 'lucide-react';
 interface ProjectCardProps {
     project: {
         id: string;
+        slug: string;
         title: string;
         description: string | null;
         image_url: string | null;
@@ -55,7 +56,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
             </div>
 
             {/* Title */}
-            <h3 className="text-lg font-semibold mb-2">{project.title}</h3>
+            <h3 className="text-lg font-semibold mb-2">
+                <Link href={`/${project.owner_username}/${project.slug}`} className="hover:underline">
+                    {project.title}
+                </Link>
+            </h3>
 
             {/* Description */}
             {project.description && (
