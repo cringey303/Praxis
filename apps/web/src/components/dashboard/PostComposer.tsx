@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useToast } from '../ui/Toast';
 import { FloatingLabelTextarea } from '../ui/FloatingLabelTextarea';
-import { ImagePlus, X, Loader2 } from 'lucide-react';
+import { ImagePlus, X, Loader2, Briefcase } from 'lucide-react';
 import Image from 'next/image';
+import { ProjectComposer } from './ProjectComposer';
 
 interface PostComposerProps {
     onPostCreated: () => void;
@@ -15,6 +16,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [isPosting, setIsPosting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const { showToast } = useToast();
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,6 +94,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
     };
 
     return (
+        <>
         <div className="rounded-xl border border-border p-4 bg-card">
             <FloatingLabelTextarea
                 id="post-content"
@@ -123,6 +126,13 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
             {/* Actions */}
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setIsProjectModalOpen(true)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-secondary text-sm text-muted-foreground transition-colors cursor-pointer"
+                    >
+                        <Briefcase className="w-4 h-4" />
+                        New Project
+                    </button>
                     <label className="cursor-pointer p-2 rounded-lg hover:bg-secondary transition-colors">
                         <input
                             type="file"
@@ -148,5 +158,13 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
                 </button>
             </div>
         </div>
+
+        {isProjectModalOpen && (
+            <ProjectComposer
+                onClose={() => setIsProjectModalOpen(false)}
+                onCreated={onPostCreated}
+            />
+        )}
+        </>
     );
 }
