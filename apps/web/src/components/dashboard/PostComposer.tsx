@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useToast } from '../ui/Toast';
 import { FloatingLabelTextarea } from '../ui/FloatingLabelTextarea';
-import { ImagePlus, X, Loader2 } from 'lucide-react';
+import { ImagePlus, X, Loader2, Send } from 'lucide-react';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface PostComposerProps {
     onPostCreated: () => void;
@@ -92,7 +94,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
     };
 
     return (
-        <div className="rounded-xl border border-border p-4 bg-card">
+        <Card className="p-4">
             <FloatingLabelTextarea
                 id="post-content"
                 label="What's on your mind?"
@@ -109,44 +111,54 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
                         alt="Upload preview"
                         width={200}
                         height={150}
-                        className="rounded-lg object-cover"
+                        className="rounded-lg object-cover border border-border"
                     />
-                    <button
+                    <Button
+                        variant="destructive"
+                        size="icon"
                         onClick={() => setImageUrl(null)}
-                        className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md"
                     >
-                        <X className="w-4 h-4" />
-                    </button>
+                        <X className="w-3 h-3" />
+                    </Button>
                 </div>
             )}
 
             {/* Actions */}
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                 <div className="flex items-center gap-2">
-                    <label className="cursor-pointer p-2 rounded-lg hover:bg-secondary transition-colors">
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="hidden"
-                            disabled={isUploading}
-                        />
-                        {isUploading ? (
-                            <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
-                        ) : (
-                            <ImagePlus className="w-5 h-5 text-muted-foreground" />
-                        )}
-                    </label>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        asChild
+                        className="cursor-pointer"
+                        disabled={isUploading}
+                    >
+                        <label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                                disabled={isUploading}
+                            />
+                            {isUploading ? (
+                                <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                            ) : (
+                                <ImagePlus className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+                            )}
+                        </label>
+                    </Button>
                 </div>
 
-                <button
+                <Button
                     onClick={handleSubmit}
                     disabled={isPosting || !content.trim()}
-                    className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="min-w-[80px]"
                 >
-                    {isPosting ? 'Posting...' : 'Post'}
-                </button>
+                    {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Post'}
+                </Button>
             </div>
-        </div>
+        </Card>
     );
 }

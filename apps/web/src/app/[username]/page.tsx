@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { Calendar, MapPin, Link as LinkIcon, Share2, Edit3, MessageSquare, Grid, Activity } from 'lucide-react';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { useToast } from "@/components/ui/Toast";
-import { getProfileImageUrl } from '@/lib/utils';
-
+import { getProfileImageUrl, cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface PublicUserProfile {
     username: string;
@@ -114,7 +115,9 @@ export default function PublicProfilePage() {
                 <div className="flex-1 flex flex-col items-center justify-center space-y-4">
                     <h1 className="text-2xl font-bold">User not found</h1>
                     <p className="text-muted-foreground">The user @{username} does not exist.</p>
-                    <Link href="/dashboard" className="text-primary hover:underline">Return to Dashboard</Link>
+                    <Button asChild variant="link">
+                        <Link href="/dashboard">Return to Dashboard</Link>
+                    </Button>
                 </div>
             </div>
         );
@@ -163,29 +166,27 @@ export default function PublicProfilePage() {
 
                                 <div className="flex items-center gap-3">
                                     {isOwnProfile ? (
-                                        <Link
-                                            href="/settings/profile"
-                                            className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors font-medium text-sm"
-                                        >
-                                            <Edit3 className="h-4 w-4" />
-                                            Edit Profile
-                                        </Link>
+                                        <Button asChild variant="outline" className="rounded-full gap-2">
+                                            <Link href="/settings/profile">
+                                                <Edit3 className="h-4 w-4" />
+                                                Edit Profile
+                                            </Link>
+                                        </Button>
                                     ) : (
-                                        <button
-                                            onClick={() => { }}
-                                            className="cursor-not-allowed flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium text-sm"
-                                        >
+                                        <Button disabled className="rounded-full gap-2 opacity-50 cursor-not-allowed">
                                             <MessageSquare className="h-4 w-4" />
                                             Message
-                                        </button>
+                                        </Button>
                                     )}
-                                    <button
+                                    <Button
                                         onClick={handleShare}
-                                        className="p-2 rounded-full border border-border bg-card hover:bg-secondary hover:text-foreground transition-colors cursor-pointer text-muted-foreground"
+                                        variant="outline"
+                                        size="icon"
+                                        className="rounded-full"
                                         aria-label="Share profile"
                                     >
                                         <Share2 className="h-4 w-4" />
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
 
@@ -260,33 +261,20 @@ export default function PublicProfilePage() {
                         <div className="flex-1 w-full max-w-full">
                             <div className="border-b border-border">
                                 <nav className="flex items-center gap-6">
-                                    <button
-                                        onClick={() => setActiveTab('overview')}
-                                        className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'overview'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                            }`}
-                                    >
-                                        Overview
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('posts')}
-                                        className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'posts'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                            }`}
-                                    >
-                                        Posts
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('activity')}
-                                        className={`cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'activity'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                            }`}
-                                    >
-                                        Activity
-                                    </button>
+                                    {['overview', 'posts', 'activity'].map((tab) => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setActiveTab(tab)}
+                                            className={cn(
+                                                "cursor-pointer pb-3 text-sm font-medium border-b-2 transition-colors capitalize",
+                                                activeTab === tab
+                                                    ? "border-primary text-primary"
+                                                    : "border-transparent text-muted-foreground hover:text-foreground"
+                                            )}
+                                        >
+                                            {tab}
+                                        </button>
+                                    ))}
                                 </nav>
                             </div>
 

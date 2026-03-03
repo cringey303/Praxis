@@ -5,6 +5,7 @@ import { PostCard } from './PostCard';
 import { ProjectCard } from './ProjectCard';
 import { PostComposer } from './PostComposer';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface FeedItem {
     id: string;
@@ -68,17 +69,17 @@ export function FeedWidget({ user }: FeedWidgetProps) {
             {/* Filter Tabs */}
             <div className="flex gap-1 p-1 bg-secondary/50 rounded-lg w-fit">
                 {filterTabs.map((tab) => (
-                    <button
+                    <Button
                         key={tab.value}
+                        variant={filter === tab.value ? 'default' : 'ghost'}
                         onClick={() => setFilter(tab.value)}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                            filter === tab.value
-                                ? 'bg-background text-foreground shadow-sm'
+                        className={`px-4 py-2 h-9 text-sm font-medium ${filter === tab.value
+                                ? 'shadow-sm'
                                 : 'text-muted-foreground hover:text-foreground'
-                        }`}
+                            }`}
                     >
                         {tab.label}
-                    </button>
+                    </Button>
                 ))}
             </div>
 

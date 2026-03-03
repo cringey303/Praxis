@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { X, LayoutDashboard, Settings, User, Sun, Moon, LogOut, Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 import { useTheme } from 'next-themes';
 
@@ -38,7 +39,7 @@ export function Sidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: Sideb
         <div className="fixed inset-0 z-50 flex justify-end">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]"
+                className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]"
                 onClick={onClose}
             >
                 <style jsx>{`
@@ -104,19 +105,22 @@ export function Sidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: Sideb
                             </Link>
                         </nav>
 
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={onClose}
-                            className="relative cursor-pointer flex align-center items-center justify-center text-muted-foreground hover:text-foreground transition-colors after:absolute after:-inset-2 after:content-['']"
+                            className="relative flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors after:absolute after:-inset-2 after:content-['']"
                         >
                             <X className="h-5 w-5" />
-                        </button>
+                        </Button>
                     </div>
 
                     <div className="pt-6 border-t border-border mt-auto space-y-3">
                         {/* Theme Toggle */}
-                        <button
+                        <Button
+                            variant="secondary"
                             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                            className="cursor-pointer w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+                            className="w-full justify-center gap-2"
                         >
                             {theme === 'dark' ? (
                                 <>
@@ -129,12 +133,13 @@ export function Sidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: Sideb
                                     Dark Mode
                                 </>
                             )}
-                        </button>
+                        </Button>
 
-                        <button
+                        <Button
+                            variant="destructive"
                             onClick={onLogout}
                             disabled={isLoggingOut}
-                            className="cursor-pointer w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-50"
+                            className="w-full justify-center gap-2 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
                         >
                             {isLoggingOut ? (
                                 'Logging out...'
@@ -144,7 +149,7 @@ export function Sidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: Sideb
                                     Log Out
                                 </>
                             )}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

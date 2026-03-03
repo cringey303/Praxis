@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { FloatingLabelInput } from '@/components/ui/FloatingLabelInput';
 import { useToast } from "@/components/ui/Toast";
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -40,7 +42,7 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background text-foreground transition-colors duration-300">
-            <div className="w-full max-w-md space-y-4 bg-card p-8 rounded-xl border border-border shadow-lg">
+            <Card className="w-full max-w-md space-y-4 p-8 shadow-lg">
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl tracking-tight">Forgot password?</h1>
                     <p className="text-sm text-muted-foreground">
@@ -61,14 +63,14 @@ export default function ForgotPasswordPage() {
                             />
                         </div>
 
-                        <button
+                        <Button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-sm text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
+                            className="w-full"
                         >
                             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                             Send reset link
-                        </button>
+                        </Button>
                     </form>
                 ) : (
                     <div className="bg-green-500/10 border border-green-500/20 rounded-sm p-6 text-center">
@@ -78,12 +80,13 @@ export default function ForgotPasswordPage() {
                         </p>
                         <p className="text-xs text-muted-foreground mt-4">
                             Didn&apos;t receive the email? Check your spam folder or{' '}
-                            <button
+                            <Button
+                                variant="link"
                                 onClick={() => setSubmitted(false)}
-                                className="text-primary hover:underline cursor-pointer"
+                                className="text-primary hover:underline p-0 h-auto font-normal"
                             >
                                 try again
-                            </button>.
+                            </Button>.
                         </p>
                     </div>
                 )}
@@ -97,7 +100,7 @@ export default function ForgotPasswordPage() {
                         Back to login
                     </Link>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 }

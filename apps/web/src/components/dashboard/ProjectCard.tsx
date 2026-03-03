@@ -3,6 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Briefcase } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getProfileImageUrl } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
 
 interface ProjectCardProps {
     project: {
@@ -42,14 +46,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
     };
 
     return (
-        <div className="rounded-xl border border-border p-4 bg-card">
+        <Card className="p-4">
             {/* Project Badge */}
             <div className="flex items-center gap-2 mb-3">
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                <Badge variant="secondary" className="gap-1 pointer-events-none">
                     <Briefcase className="w-3 h-3" />
                     Project
-                </span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${statusColors[project.status] || statusColors.open}`}>
+                </Badge>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${statusColors[project.status] || statusColors.open}`}>
                     {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                 </span>
             </div>
@@ -78,27 +82,16 @@ export function ProjectCard({ project }: ProjectCardProps) {
             {/* Owner Footer */}
             <div className="flex items-center gap-2 pt-3 border-t border-border">
                 <Link href={`/${project.owner_username}`}>
-                    {project.owner_avatar ? (
-                        <Image
-                            src={project.owner_avatar}
-                            alt={project.owner_name}
-                            width={24}
-                            height={24}
-                            className="rounded-full"
-                        />
-                    ) : (
-                        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
-                            <span className="text-xs font-medium text-primary">
-                                {project.owner_name.charAt(0).toUpperCase()}
-                            </span>
-                        </div>
-                    )}
+                    <Avatar className="h-6 w-6">
+                        <AvatarImage src={getProfileImageUrl(project.owner_avatar)} alt={project.owner_name} />
+                        <AvatarFallback>{project.owner_name.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
                 </Link>
                 <Link href={`/${project.owner_username}`} className="text-sm hover:underline">
                     {project.owner_name}
                 </Link>
                 <span className="text-sm text-muted-foreground">· {formatDate(project.created_at)}</span>
             </div>
-        </div>
+        </Card>
     );
 }

@@ -11,8 +11,8 @@ import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTexta
 import { useToast } from "@/components/ui/Toast";
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { getProfileImageUrl } from '@/lib/utils';
-
+import { getProfileImageUrl, cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface UserProfile {
     id: string;
@@ -417,6 +417,7 @@ export default function ProfilePage() {
                     [type]: croppedUrl,
                     [cropXKey]: crop.x,
                     [cropYKey]: crop.y,
+                    [zoomKey]: crop.y,
                     [zoomKey]: zoom
                 };
                 if (originalUrl) {
@@ -589,34 +590,30 @@ export default function ProfilePage() {
                     {/* Sidebar Navigation */}
                     <aside className="md:col-span-3 space-y-4">
                         <nav className="flex flex-col gap-1">
-                            <Link
-                                href="/settings/profile"
-                                className="flex items-center gap-3 px-4 py-3 rounded-sm bg-primary/10 border border-primary/20 text-primary transition-all group"
-                            >
-                                <div className="h-5 w-5 flex items-center justify-center">
-                                    {/* User Icon */}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                                </div>
-                                <span className="text-sm font-medium">Profile</span>
-                            </Link>
+                            <Button asChild variant="ghost" className="w-full justify-start gap-3 px-4 py-3 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20">
+                                <Link href="/settings/profile">
+                                    <div className="h-5 w-5 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                    </div>
+                                    <span className="text-sm font-medium">Profile</span>
+                                </Link>
+                            </Button>
 
-                            <Link
-                                href="/settings/security"
-                                className="flex items-center gap-3 px-4 py-3 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group"
-                            >
-                                <div className="h-5 w-5 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-                                </div>
-                                <span className="text-sm font-medium">Security</span>
-                            </Link>
+                            <Button asChild variant="ghost" className="w-full justify-start gap-3 px-4 py-3 hover:bg-secondary/30">
+                                <Link href="/settings/security">
+                                    <div className="h-5 w-5 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                                    </div>
+                                    <span className="text-sm font-medium">Security</span>
+                                </Link>
+                            </Button>
 
-
-                            <button className="flex items-center gap-3 px-4 py-3 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary/30 border border-transparent transition-all group cursor-not-allowed opacity-60">
+                            <Button disabled variant="ghost" className="w-full justify-start gap-3 px-4 py-3 opacity-60 cursor-not-allowed hover:bg-transparent">
                                 <div className="h-5 w-5 flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
                                 </div>
                                 <span className="text-sm font-medium">Notifications</span>
-                            </button>
+                            </Button>
                         </nav>
                     </aside>
 
@@ -703,7 +700,7 @@ export default function ProfilePage() {
                                                         value={formData.location}
                                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                                         onBlur={handleBlur}
-                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50"
+                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50 cursor-pointer focus:cursor-text"
                                                         placeholder="Add location"
                                                         maxLength={30}
                                                         onClick={(e) => e.stopPropagation()}
@@ -718,7 +715,7 @@ export default function ProfilePage() {
                                                         value={formData.website}
                                                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                                                         onBlur={handleBlur}
-                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50"
+                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50 cursor-pointer focus:cursor-text"
                                                         placeholder="Add website"
                                                         maxLength={30}
                                                         onClick={(e) => e.stopPropagation()}
@@ -749,7 +746,7 @@ export default function ProfilePage() {
                                                         value={formData.pronouns}
                                                         onChange={(e) => setFormData({ ...formData, pronouns: e.target.value })}
                                                         onBlur={handleBlur}
-                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50"
+                                                        className="bg-transparent border-none hover:bg-secondary/30 focus:bg-secondary/30 rounded px-1.5 py-0.5 -ml-1.5 focus:ring-0 w-full placeholder-muted-foreground/50 cursor-pointer focus:cursor-text"
                                                         placeholder="Add pronouns"
                                                         maxLength={10}
                                                         onClick={(e) => e.stopPropagation()}
@@ -798,47 +795,45 @@ export default function ProfilePage() {
                                                     onBlur={handleBlur}
                                                     maxLength={200}
                                                     className="h-full leading-relaxed"
-                                                    wrapperClassName="flex-1 h-full"
                                                 />
                                             </div>
-
 
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </main>
                 </div>
             </div>
 
-            {/* Hidden Inputs moved here to prevent bubbling loops */}
-            <input
-                type="file"
-                id="banner_upload_hidden"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => handleImageUpload(e, 'banner_url')}
-            />
+            {/* Hidden File Inputs for Cropper Trigger */}
             <input
                 type="file"
                 id="avatar_upload_hidden"
                 accept="image/*"
                 className="hidden"
                 onChange={(e) => handleImageUpload(e, 'avatar_url')}
+                onClick={(e) => (e.currentTarget.value = '')}
+            />
+            <input
+                type="file"
+                id="banner_upload_hidden"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleImageUpload(e, 'banner_url')}
+                onClick={(e) => (e.currentTarget.value = '')}
             />
 
-            {imageSrc && (
+            {/* Image Cropper Modal */}
+            {imageSrc && cropType && (
                 <ImageCropper
                     image={imageSrc}
                     aspect={cropAspect}
                     onCropComplete={handleCropSave}
                     onCancel={handleCropCancel}
-                    onRemove={handleRemoveImage}
                     onUploadSelect={handleTriggerUpload}
-                    initialCrop={initialCrop}
-                    initialZoom={initialZoom}
+                    onRemove={handleRemoveImage}
                 />
             )}
         </div>

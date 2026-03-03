@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { getProfileImageUrl } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 
 interface User {
@@ -56,19 +57,21 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
     return (
         <>
             {user && user.verified === false && (
-                <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400">
+                <div className="bg-primary/10 border-b border-primary/20 px-4 py-2 text-sm text-primary">
                     <div className="flex items-center justify-center gap-2">
                         <span>Please verify your email address to access all features.</span>
-                        <button
+                        <Button
+                            variant="link"
+                            size="sm"
                             onClick={handleResendEmail}
                             disabled={resendStatus === 'sending' || resendStatus === 'sent'}
-                            className="cursor-pointer underline hover:no-underline font-medium disabled:opacity-50"
+                            className="p-0 text-primary underline hover:no-underline font-medium h-auto"
                         >
                             {resendStatus === 'sending' ? 'Sending...' :
                                 resendStatus === 'sent' ? 'Email Sent!' :
                                     resendStatus === 'error' ? 'Error (Try Again)' :
                                         'Resend Email'}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}
@@ -143,16 +146,18 @@ export function NavBar({ user, isLoading = false, onLogout, isLoggingOut }: NavB
                                     <span className="text-sm font-medium leading-none">{user.display_name}</span>
                                     <span className="text-xs text-muted-foreground mt-1">@{user.username}</span>
                                 </div>
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => setSidebarOpen(true)}
-                                    className="relative h-10 w-10 rounded-full flex items-center justify-center transition-all cursor-pointer ring-offset-background hover:ring-2 hover:ring-ring hover:ring-offset-2 focus:outline-none"
+                                    className="relative h-10 w-10 rounded-full border border-border bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-ring hover:ring-offset-2 transition-all p-0"
                                     aria-label="Open profile menu"
                                 >
-                                    <Avatar>
-                                        <AvatarImage src={getProfileImageUrl(user.avatar_url)} alt={user.username} />
+                                    <Avatar className="h-full w-full">
+                                        <AvatarImage src={getProfileImageUrl(user.avatar_url)} alt={user.username} className="object-cover" />
                                         <AvatarFallback>{user.display_name?.[0]?.toUpperCase() || '?'}</AvatarFallback>
                                     </Avatar>
-                                </button>
+                                </Button>
                             </div>
                         ) : (
                             // Guest state

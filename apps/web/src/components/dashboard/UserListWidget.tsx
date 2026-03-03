@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '../ui/Toast';
 import { getProfileImageUrl } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card } from '@/components/ui/card';
+import { Trash2, UserPlus } from 'lucide-react';
 
 interface User {
     id: string;
@@ -84,7 +88,7 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
 
     if (loading) {
         return (
-            <div className="rounded-xl border border-border bg-card shadow-sm h-full animate-pulse">
+            <div className="rounded-xl border border-border bg-card shadow-sm h-full animate-pulse p-6">
                 <div className="h-6 w-32 bg-muted rounded mb-4"></div>
                 <div className="space-y-3">
                     {[...Array(5)].map((_, i) => (
@@ -102,37 +106,37 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
     }
 
     return (
-        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full">
+        <Card className="flex flex-col h-full overflow-hidden">
             <div className="flex items-center justify-between p-6">
-                <h2 className="text-lg tracking-tight">Users</h2>
+                <h2 className="text-lg font-semibold tracking-tight">Users</h2>
                 {currentUser?.role === 'admin' && (
-                    <button
+                    <Button
                         onClick={handleAddTestUser}
-                        className="cursor-pointer text-xs px-2 py-1 flex items-center gap-2 rounded-full border border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors font-medium"
+                        size="sm"
+                        variant="outline"
+                        className="gap-2 h-7 rounded-full text-xs"
                     >
-                        + Test User
-                    </button>
+                        <UserPlus className="h-3 w-3" />
+                        Test User
+                    </Button>
                 )}
             </div>
 
-            <div className="overflow-y-auto space-y-4 flex-1">
+            <div className="overflow-y-auto space-y-1 flex-1 px-2 pb-2">
                 {users.length === 0 ? (
-                    <p className="text-muted-foreground text-sm">No users found.</p>
+                    <p className="text-muted-foreground text-sm text-center py-4">No users found.</p>
                 ) : (
                     users.map((user) => (
-                        <div key={user.id} className="group relative flex items-center justify-between pl-6 pr-4 py-2 hover:bg-secondary/50 transition-colors">
+                        <div key={user.id} className="group relative flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                             {/* Overlay Link */}
                             <Link href={`/${user.username}`} className="absolute inset-0 z-0" aria-label={`View profile of ${user.display_name || user.username}`} />
 
                             {/* Content */}
                             <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none z-10 relative">
-                                <div className="relative h-10 w-10 shrink-0 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden text-sm font-bold text-foreground">
-                                    {user.avatar_url ? (
-                                        <img src={getProfileImageUrl(user.avatar_url)} alt={user.username} className="h-full w-full object-cover" />
-                                    ) : (
-                                        <span>{user.display_name?.[0] || user.username?.[0] || '?'}</span>
-                                    )}
-                                </div>
+                                <Avatar className="h-9 w-9 border border-border">
+                                    <AvatarImage src={getProfileImageUrl(user.avatar_url)} alt={user.username} className="object-cover" />
+                                    <AvatarFallback>{user.display_name?.[0] || user.username?.[0] || '?'}</AvatarFallback>
+                                </Avatar>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-sm font-medium text-foreground truncate">
                                         {user.display_name || user.username}
@@ -144,26 +148,24 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
                             </div>
 
                             {currentUser?.role === 'admin' && (
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
                                         handleDelete(user.id);
                                     }}
-                                    className="relative z-20 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-2 text-muted-foreground hover:text-destructive cursor-pointer"
+                                    className="relative z-20 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity h-8 w-8 text-muted-foreground hover:text-destructive"
                                     title="Delete User"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M3 6h18"></path>
-                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                                    </svg>
-                                </button>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
                             )}
                         </div>
                     ))
                 )}
             </div>
-        </div>
+        </Card>
     );
 }
