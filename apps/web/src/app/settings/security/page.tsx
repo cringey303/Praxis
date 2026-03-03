@@ -50,6 +50,7 @@ export default function SecurityPage() {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    const [resettingPassword, setResettingPassword] = useState(false);
     const { showToast } = useToast();
 
     // Password form state
@@ -432,6 +433,32 @@ export default function SecurityPage() {
             }
         } finally {
             setUpdating(false);
+        }
+    };
+
+    const handleForgotPassword = async () => {
+        if (!user?.email) return;
+
+        setResettingPassword(true);
+        try {
+            const res = await fetch(`${API_URL}/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ email: user.email }),
+            });
+
+            if (res.ok) {
+                showToast('Password reset email sent!', 'success');
+            } else {
+                const text = await res.text();
+                showToast(text || 'Failed to send reset email', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('An error occurred', 'error');
+        } finally {
+            setResettingPassword(false);
         }
     };
 
@@ -915,10 +942,18 @@ export default function SecurityPage() {
                                                 <Button
                                                     type="button"
                                                     variant="link"
-                                                    disabled
+                                                    onClick={handleForgotPassword}
+                                                    disabled={resettingPassword}
                                                     className="px-0 text-foreground decoration-muted-foreground/30 h-auto"
                                                 >
-                                                    I forgot my password
+                                                    {resettingPassword ? (
+                                                        <>
+                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                            Sending...
+                                                        </>
+                                                    ) : (
+                                                        'I forgot my password'
+                                                    )}
                                                 </Button>
                                             )}
                                         </div>
