@@ -162,10 +162,10 @@ function ResetPasswordContent() {
                 </Button>
             </form>
 
-            <div className="text-center text-sm">
+            <div className="text-center text-sm text-muted-foreground underline">
                 <Link
                     href="/login"
-                    className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                    className="inline-flex items-center hover:text-foreground transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to login

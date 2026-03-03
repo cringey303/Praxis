@@ -271,7 +271,7 @@ export default function LoginPage() {
                             <div className="flex justify-end mt-1">
                                 <Link
                                     href="/forgot-password"
-                                    className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+                                    className="text-sm text-muted-foreground underline hover:text-foreground"
                                 >
                                     Forgot password?
                                 </Link>
@@ -336,9 +336,9 @@ export default function LoginPage() {
                     </Button>
                 </div>
 
-                <div className="text-center text-sm text-brand">
+                <div className="text-center text-sm text-muted-foreground underline">
                     Don't have an account?{' '}
-                    <Link href="/signup" className="underline underline-offset-4 hover:text-primary/90">
+                    <Link href="/signup" className="hover:text-primary/90">
                         Sign up
                     </Link>
                 </div>

@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
                             <Button
                                 variant="link"
                                 onClick={() => setSubmitted(false)}
-                                className="text-primary hover:underline p-0 h-auto font-normal"
+                                className="text-muted-foreground underline hover:text-foreground p-0 h-auto font-normal"
                             >
                                 try again
                             </Button>.
@@ -91,10 +91,10 @@ export default function ForgotPasswordPage() {
                     </div>
                 )}
 
-                <div className="text-center text-sm">
+                <div className="text-center text-sm text-muted-foreground underline">
                     <Link
                         href="/login"
-                        className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                        className="inline-flex items-center hover:text-foreground transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to login

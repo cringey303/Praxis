@@ -209,9 +209,9 @@ export default function SignupPage() {
                     </Button>
                 </div>
 
-                <div className="text-center text-sm text-brand">
+                <div className="text-center text-sm text-muted-foreground underline">
                     Already have an account?{' '}
-                    <Link href="/login" className="underline underline-offset-4 hover:text-primary/90">
+                    <Link href="/login" className="hover:text-primary/90">
                         Sign in
                     </Link>
                 </div>
