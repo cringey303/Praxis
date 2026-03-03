@@ -836,12 +836,12 @@ export default function SecurityPage() {
                                     Password
                                 </h2>
                                 {user?.has_password && (
-                                    <button
+                                    <Button
+                                        variant="outline"
                                         onClick={() => setIsPasswordFormOpen(!isPasswordFormOpen)}
-                                        className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                     >
                                         {isPasswordFormOpen ? 'Hide' : 'Change password'}
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
 
@@ -903,29 +903,23 @@ export default function SecurityPage() {
                                         </div>
 
                                         <div className="flex items-center gap-4">
-                                            <button
+                                            <Button
                                                 type="submit"
                                                 disabled={updating}
-                                                className="cursor-pointer py-1.5 px-3 border border-primary text-foreground bg-transparent rounded-sm text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                             >
-                                                {updating ? (
-                                                    <>
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                        {user?.has_password ? 'Changing password...' : 'Setting password...'}
-                                                    </>
-                                                ) : (
-                                                    user?.has_password ? 'Update password' : 'Set password'
-                                                )}
-                                            </button>
+                                                {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                {user?.has_password ? 'Update password' : 'Set password'}
+                                            </Button>
 
                                             {user?.has_password && (
-                                                <button
+                                                <Button
                                                     type="button"
+                                                    variant="link"
                                                     disabled
-                                                    className="text-sm text-foreground underline decoration-muted-foreground/30 underline-offset-4 opacity-50 cursor-not-allowed"
+                                                    className="px-0 text-foreground decoration-muted-foreground/30 h-auto"
                                                 >
                                                     I forgot my password
-                                                </button>
+                                                </Button>
                                             )}
                                         </div>
                                     </form>
