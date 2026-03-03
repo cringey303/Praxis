@@ -13,6 +13,7 @@ use tower_sessions_sqlx_store::PostgresStore;
 
 mod admin;
 mod announcements;
+mod applications;
 mod auth;
 mod feed;
 mod geoip;
@@ -150,7 +151,11 @@ async fn main() {
         .route("/announcements/recent", get(announcements::get_recent))
         .route("/announcements", get(announcements::get_all))
         .route("/posts", get(posts::list).post(posts::create))
+        .route("/posts/user/:username", get(posts::list_by_user))
+        .route("/projects/user/:username/:slug", get(projects::get_by_slug))
         .route("/projects", get(projects::list).post(projects::create))
+        .route("/projects/:id/apply", post(applications::apply))
+        .route("/user/:username/projects", get(user::list_projects))
         .route("/feed", get(feed::get_feed))
         // Passkeys
         .route(

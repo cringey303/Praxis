@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { useToast } from '../ui/Toast';
 import { FloatingLabelTextarea } from '../ui/FloatingLabelTextarea';
-import { ImagePlus, X, Loader2, Send } from 'lucide-react';
+import { ImagePlus, X, Loader2, Send, Briefcase } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ProjectComposer } from './ProjectComposer';
 
 interface PostComposerProps {
     onPostCreated: () => void;
@@ -17,6 +18,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [isPosting, setIsPosting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const { showToast } = useToast();
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,47 +96,48 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
     };
 
     return (
-        <Card className="p-4">
-            <FloatingLabelTextarea
-                id="post-content"
-                label="What's on your mind?"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="min-h-[100px]"
-            />
+        <>
+            <Card className="p-4 bg-card">
+                <FloatingLabelTextarea
+                    id="post-content"
+                    label="What's on your mind?"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="min-h-[100px]"
+                />
 
-            {/* Image Preview */}
-            {imageUrl && (
-                <div className="relative mt-3 inline-block">
-                    <Image
-                        src={imageUrl}
-                        alt="Upload preview"
-                        width={200}
-                        height={150}
-                        className="rounded-lg object-cover border border-border"
-                    />
-                    <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => setImageUrl(null)}
-                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md"
-                    >
-                        <X className="w-3 h-3" />
-                    </Button>
-                </div>
-            )}
+                {/* Image Preview */}
+                {imageUrl && (
+                    <div className="relative mt-3 inline-block">
+                        <Image
+                            src={imageUrl}
+                            alt="Upload preview"
+                            width={200}
+                            height={150}
+                            className="rounded-lg object-cover border border-border"
+                        />
+                        <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => setImageUrl(null)}
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md"
+                        >
+                            <X className="w-3 h-3" />
+                        </Button>
+                    </div>
+                )}
 
-            {/* Actions */}
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        className="cursor-pointer"
-                        disabled={isUploading}
-                    >
-                        <label>
+                {/* Actions */}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsProjectModalOpen(true)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-secondary text-sm text-muted-foreground transition-colors cursor-pointer"
+                        >
+                            <Briefcase className="w-4 h-4" />
+                            New Project
+                        </button>
+                        <label className="cursor-pointer p-2 rounded-lg hover:bg-secondary transition-colors">
                             <input
                                 type="file"
                                 accept="image/*"
@@ -145,20 +148,27 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
                             {isUploading ? (
                                 <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
                             ) : (
-                                <ImagePlus className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+                                <ImagePlus className="w-5 h-5 text-muted-foreground" />
                             )}
                         </label>
+                    </div>
+
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={isPosting || !content.trim()}
+                        className="min-w-[80px]"
+                    >
+                        {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Post'}
                     </Button>
                 </div>
+            </Card>
 
-                <Button
-                    onClick={handleSubmit}
-                    disabled={isPosting || !content.trim()}
-                    className="min-w-[80px]"
-                >
-                    {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Post'}
-                </Button>
-            </div>
-        </Card>
+            {isProjectModalOpen && (
+                <ProjectComposer
+                    onClose={() => setIsProjectModalOpen(false)}
+                    onCreated={onPostCreated}
+                />
+            )}
+        </>
     );
 }

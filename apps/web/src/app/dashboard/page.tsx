@@ -12,7 +12,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(false);
     const [userLoading, setUserLoading] = useState(true);
 
-    const [user, setUser] = useState<{ display_name: string; username: string; role: string } | null>(null);
+    const [user, setUser] = useState<{ id: string; display_name: string; username: string; role: string; major?: string } | null>(null);
 
     // fetch user data
     useEffect(() => {
