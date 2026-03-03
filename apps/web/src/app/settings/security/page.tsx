@@ -834,12 +834,9 @@ export default function SecurityPage() {
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                            <Key className="h-5 w-5" />
-                                        </div>
                                         <div>
                                             <h2 className="text-lg font-semibold">Passkeys</h2>
-                                            <p className="text-sm text-muted-foreground">Sign in securely with TouchID, FaceID, or your device password.</p>
+                                            <p className="text-sm text-muted-foreground">Sign in securely without a password.</p>
                                         </div>
                                     </div>
                                     <Button
@@ -847,8 +844,7 @@ export default function SecurityPage() {
                                         disabled={registeringPasskey}
                                     >
                                         {registeringPasskey && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Passkey
+                                        + Add Passkey
                                     </Button>
                                 </div>
 
@@ -893,11 +889,8 @@ export default function SecurityPage() {
                         {/* Password Section */}
                         <div className="max-w-[700px] border border-border rounded-xl bg-card overflow-hidden">
                             <div className="p-6">
-                                <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                            <div className="font-bold text-lg">***</div>
-                                        </div>
                                         <div>
                                             <h2 className="text-lg font-semibold">Password</h2>
                                             <p className="text-sm text-muted-foreground">Manage your password login.</p>
@@ -978,11 +971,8 @@ export default function SecurityPage() {
                         {/* Two-Factor Authentication Section */}
                         <div className="max-w-[700px] border border-border rounded-xl bg-card overflow-hidden">
                             <div className="p-6">
-                                <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                            <Shield className="h-5 w-5" />
-                                        </div>
                                         <div>
                                             <div className="flex items-center gap-3">
                                                 <h2 className="text-lg font-semibold">Two-Factor Authentication</h2>
@@ -1000,7 +990,7 @@ export default function SecurityPage() {
                                         isDisableTotpOpen ? (
                                             <Button variant="ghost" size="sm" onClick={() => setIsDisableTotpOpen(false)}>Cancel</Button>
                                         ) : (
-                                            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20" onClick={() => setIsDisableTotpOpen(true)}>Disable 2FA</Button>
+                                            <Button variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/30 border-destructive" onClick={() => setIsDisableTotpOpen(true)}>Disable 2FA</Button>
                                         )
                                     ) : (
                                         <Button size="sm" onClick={handleSetupTotp} disabled={settingUpTotp}>
@@ -1082,9 +1072,6 @@ export default function SecurityPage() {
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                            <Monitor className="h-5 w-5" />
-                                        </div>
                                         <div>
                                             <h2 className="text-lg font-semibold">Active Sessions</h2>
                                             <p className="text-sm text-muted-foreground">Manage devices where you're logged in.</p>
@@ -1165,9 +1152,6 @@ export default function SecurityPage() {
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                            <Globe className="h-5 w-5" />
-                                        </div>
                                         <div>
                                             <h2 className="text-lg font-semibold">Linked Accounts</h2>
                                             <p className="text-sm text-muted-foreground">Manage external accounts used for sign-in.</p>
