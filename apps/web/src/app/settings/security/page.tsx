@@ -944,7 +944,7 @@ export default function SecurityPage() {
                                                     variant="link"
                                                     onClick={handleForgotPassword}
                                                     disabled={resettingPassword}
-                                                    className="px-0 text-muted-foreground underline h-auto hover:text-muted-foreground"
+                                                    className="px-0 text-muted-foreground underline h-auto hover:text-primary/90"
                                                 >
                                                     {resettingPassword ? (
                                                         <>

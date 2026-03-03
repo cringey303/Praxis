@@ -255,8 +255,6 @@ export default function LoginPage() {
                                 className="mb-4"
                             />
 
-
-
                             <FloatingLabelInput
                                 id="password"
                                 name="password"
@@ -336,9 +334,9 @@ export default function LoginPage() {
                     </Button>
                 </div>
 
-                <div className="text-center text-sm text-muted-foreground underline">
+                <div className="text-center text-sm text-muted-foreground">
                     Don't have an account?{' '}
-                    <Link href="/signup" className="hover:text-primary/90">
+                    <Link href="/signup" className="underline hover:text-primary/90">
                         Sign up
                     </Link>
                 </div>
