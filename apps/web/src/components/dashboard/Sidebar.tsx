@@ -105,14 +105,12 @@ export function Sidebar({ user, isOpen, onClose, onLogout, isLoggingOut }: Sideb
                             </Link>
                         </nav>
 
-                        <Button
-                            variant="ghost"
-                            size="icon"
+                        <button
                             onClick={onClose}
-                            className="relative flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors after:absolute after:-inset-2 after:content-['']"
+                            className="relative cursor-pointer flex align-center items-center justify-center text-muted-foreground hover:text-foreground transition-colors after:absolute after:-inset-2 after:content-['']"
                         >
                             <X className="h-5 w-5" />
-                        </Button>
+                        </button>
                     </div>
 
                     <div className="pt-6 border-t border-border mt-auto space-y-3">
