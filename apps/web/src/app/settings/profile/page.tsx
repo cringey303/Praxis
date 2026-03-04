@@ -618,7 +618,7 @@ export default function ProfilePage() {
                     </aside>
 
                     {/* Main Content */}
-                    <main className="md:col-span-9 bg-card">
+                    <main className="md:col-span-9 bg-background">
                         <div className="space-y-6">
                             <div className="max-w-[700px] flex items-end justify-between mb-4">
                                 <h1 className="text-3xl font-semibold tracking-tight">Public Profile</h1>
