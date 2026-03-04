@@ -347,7 +347,6 @@ pub async fn get_all(
 
     let profiles = users
         .into_iter()
-<<<<<<< HEAD
         .map(|u| {
             let has_pw = u.email.is_some();
             UserProfile {
