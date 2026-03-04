@@ -5,32 +5,29 @@ interface FloatingLabelInputProps extends InputHTMLAttributes<HTMLInputElement> 
     label: string;
     error?: string;
     wrapperClassName?: string;
-    isPassword?: boolean;
-    showPassword?: boolean;
-    setShowPassword?: (show: boolean) => void;
 }
 
 export const FloatingLabelInput = React.forwardRef<HTMLInputElement, FloatingLabelInputProps>(
-    ({ label, className, wrapperClassName, error, maxLength, value, id, isPassword, showPassword, setShowPassword, ...props }, ref) => {
+    ({ label, className, wrapperClassName, error, maxLength, value, id, type, ...props }, ref) => {
+        const [showPassword, setShowPassword] = React.useState(false);
+        const isPassword = type === 'password';
         const currentLength = typeof value === 'string' ? value.length : 0;
         // Generate a unique ID if not provided, to link label and input
         const inputId = id || `floating-input-${label.replace(/\s+/g, '-').toLowerCase()}-${Math.random().toString(36).substr(2, 9)}`;
 
         const togglePassword = () => {
-            if (setShowPassword) {
-                setShowPassword(!showPassword);
-            }
+            setShowPassword((prev) => !prev);
         };
 
         return (
-            <div className={cn("w-full", wrapperClassName)}>
+            <div className={cn("w-full mb-6", wrapperClassName)}>
                 <div className="relative h-10 w-full">
                     <input
                         {...props}
                         id={inputId}
                         ref={ref}
                         value={value}
-                        type={isPassword ? (showPassword ? 'text' : 'password') : props.type}
+                        type={isPassword ? (showPassword ? 'text' : 'password') : type}
                         maxLength={maxLength}
                         placeholder=" " // Important for :placeholder-shown to work
                         className={cn(

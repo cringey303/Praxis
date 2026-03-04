@@ -1322,7 +1322,6 @@ export default function SecurityPage() {
                             label="Password"
                             value={passkeyPassword}
                             onChange={(e) => setPasskeyPassword(e.target.value)}
-                            isPassword
                             autoFocus
                         />
                         <div className="flex justify-end gap-3 mt-6">
