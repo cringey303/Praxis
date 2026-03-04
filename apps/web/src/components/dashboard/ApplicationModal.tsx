@@ -100,7 +100,7 @@ export function ApplicationModal({ projectId, applicantMajor, onClose }: Applica
                     {/* Major chip */}
                     <div>
                         {applicantMajor ? (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-500/10 text-purple-400 border border-purple-500/30">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/30">
                                 {applicantMajor}
                             </span>
                         ) : (

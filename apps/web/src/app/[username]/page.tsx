@@ -356,7 +356,7 @@ export default function PublicProfilePage() {
                                                         {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                                                     </span>
                                                     {project.looking_for.slice(0, 2).map((major) => (
-                                                        <span key={major} className="px-2 py-0.5 rounded-full text-xs font-medium border bg-purple-500/10 text-purple-400 border-purple-500/30">
+                                                        <span key={major} className="px-2 py-0.5 rounded-full text-xs font-medium border bg-primary/10 text-primary border-primary/30">
                                                             {major}
                                                         </span>
                                                     ))}

@@ -167,11 +167,10 @@ export function ProjectComposer({ onClose, onCreated }: ProjectComposerProps) {
                                         key={major}
                                         type="button"
                                         onClick={() => toggleMajor(major)}
-                                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-                                            lookingFor.includes(major)
-                                                ? 'bg-purple-500/20 text-purple-400 border-purple-500/40'
-                                                : 'bg-secondary text-muted-foreground border-border hover:border-purple-500/30 hover:text-purple-400'
-                                        }`}
+                                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${lookingFor.includes(major)
+                                                ? 'bg-primary/20 text-primary border-primary/40'
+                                                : 'bg-secondary text-muted-foreground border-border hover:border-primary/30 hover:text-primary'
+                                            }`}
                                     >
                                         {major}
                                     </button>

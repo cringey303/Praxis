@@ -68,7 +68,7 @@ export function ProjectCard({ project, currentUser }: ProjectCardProps) {
                     </span>
                     {project.looking_for && project.looking_for.length > 0 && (
                         project.looking_for.map((major) => (
-                            <span key={major} className="px-2 py-0.5 rounded-full text-xs font-medium border bg-purple-500/10 text-purple-400 border-purple-500/30">
+                            <span key={major} className="px-2 py-0.5 rounded-full text-xs font-medium border bg-primary/10 text-primary border-primary/30">
                                 {major}
                             </span>
                         ))
