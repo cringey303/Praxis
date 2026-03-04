@@ -140,6 +140,7 @@ function ResetPasswordContent() {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         required
+                        labelBg="bg-card"
                     />
 
                     <FloatingLabelInput
@@ -149,6 +150,7 @@ function ResetPasswordContent() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
+                        labelBg="bg-card"
                     />
                 </div>
 

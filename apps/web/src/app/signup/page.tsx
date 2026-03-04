@@ -130,6 +130,7 @@ export default function SignupPage() {
                                 onBlur={handleBlur}
                                 error={errors.username}
                                 maxLength={20}
+                                labelBg="bg-card"
                             />
                             <FloatingLabelInput
                                 id="display_name"
@@ -142,6 +143,7 @@ export default function SignupPage() {
                                 onBlur={handleBlur}
                                 error={errors.display_name}
                                 maxLength={20}
+                                labelBg="bg-card"
                             />
                             <FloatingLabelInput
                                 id="email"
@@ -153,6 +155,7 @@ export default function SignupPage() {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 error={errors.email}
+                                labelBg="bg-card"
                             />
                             <FloatingLabelInput
                                 id="password"
@@ -164,6 +167,7 @@ export default function SignupPage() {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 error={errors.password}
+                                labelBg="bg-card"
                             />
                         </div>
                     </div>

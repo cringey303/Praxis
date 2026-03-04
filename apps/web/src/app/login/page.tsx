@@ -253,6 +253,7 @@ export default function LoginPage() {
                                 onBlur={handleBlur}
                                 error={errors.email}
                                 className="mb-4"
+                                labelBg="bg-card"
                             />
 
                             <FloatingLabelInput
@@ -265,6 +266,7 @@ export default function LoginPage() {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 error={errors.password}
+                                labelBg="bg-card"
                             />
                             <div className="flex justify-end mt-1">
                                 <Link

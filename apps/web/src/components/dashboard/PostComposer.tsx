@@ -104,6 +104,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     className="min-h-[100px]"
+                    labelBg="bg-card"
                 />
 
                 {/* Image Preview */}

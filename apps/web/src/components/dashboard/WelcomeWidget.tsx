@@ -198,6 +198,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                                 value={newAnnouncement}
                                 onChange={(e) => setNewAnnouncement(e.target.value)}
                                 className="min-h-[100px] pr-24"
+                                labelBg="bg-card"
                             />
                             <div className="absolute bottom-2 right-2">
                                 <Button

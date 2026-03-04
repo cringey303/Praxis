@@ -890,6 +890,7 @@ export default function SecurityPage() {
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
                                                     error={errors.email}
+                                                    labelBg="bg-card"
                                                 />
                                             </div>
                                         )}
@@ -903,6 +904,7 @@ export default function SecurityPage() {
                                                     value={currentPassword}
                                                     onChange={(e) => setCurrentPassword(e.target.value)}
                                                     error={errors.currentPassword}
+                                                    labelBg="bg-card"
                                                 />
                                             </div>
                                         )}
@@ -915,6 +917,7 @@ export default function SecurityPage() {
                                                 value={newPassword}
                                                 onChange={(e) => setNewPassword(e.target.value)}
                                                 error={errors.newPassword}
+                                                labelBg="bg-card"
                                             />
                                         </div>
 
@@ -926,6 +929,7 @@ export default function SecurityPage() {
                                                 value={confirmPassword}
                                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                                 error={errors.confirmPassword}
+                                                labelBg="bg-card"
                                             />
                                         </div>
 

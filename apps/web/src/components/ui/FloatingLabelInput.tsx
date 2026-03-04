@@ -5,10 +5,11 @@ interface FloatingLabelInputProps extends InputHTMLAttributes<HTMLInputElement> 
     label: string;
     error?: string;
     wrapperClassName?: string;
+    labelBg?: string;
 }
 
 export const FloatingLabelInput = React.forwardRef<HTMLInputElement, FloatingLabelInputProps>(
-    ({ label, className, wrapperClassName, error, maxLength, value, id, type, ...props }, ref) => {
+    ({ label, className, wrapperClassName, labelBg = 'bg-card', error, maxLength, value, id, type, ...props }, ref) => {
         const [showPassword, setShowPassword] = React.useState(false);
         const isPassword = type === 'password';
         const currentLength = typeof value === 'string' ? value.length : 0;
@@ -43,7 +44,7 @@ export const FloatingLabelInput = React.forwardRef<HTMLInputElement, FloatingLab
                     <label
                         htmlFor={inputId}
                         className={cn(
-                            "absolute left-2 top-2 z-10 origin-left -translate-y-5 scale-75 transform bg-background px-2 text-sm duration-300 cursor-text",
+                            `absolute left-2 top-2 z-10 origin-left -translate-y-5 scale-75 transform px-2 text-sm duration-300 cursor-text ${labelBg}`,
                             "peer-placeholder-shown:top-2 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100",
                             "peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:px-2",
                             error
