@@ -78,8 +78,8 @@ export function FeedWidget({ user }: FeedWidgetProps) {
                         variant={filter === tab.value ? 'default' : 'ghost'}
                         onClick={() => setFilter(tab.value)}
                         className={`px-4 py-2 h-9 text-sm font-medium ${filter === tab.value
-                                ? 'shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
+                            ? 'shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
                             }`}
                     >
                         {tab.label}
@@ -88,55 +88,57 @@ export function FeedWidget({ user }: FeedWidgetProps) {
             </div>
 
             {/* Feed Items */}
-            {isLoading ? (
-                <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-                </div>
-            ) : feed.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                    <p>No {filter === 'all' ? 'posts or projects' : filter} yet.</p>
-                    {user && <p className="text-sm mt-1">Be the first to share something!</p>}
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {feed.map((item) =>
-                        item.type === 'post' ? (
-                            <PostCard
-                                key={item.id}
-                                post={{
-                                    id: item.id,
-                                    content: item.content || '',
-                                    image_url: item.image_url,
-                                    created_at: item.created_at,
-                                    author_id: item.author_id,
-                                    author_name: item.author_name,
-                                    author_username: item.author_username,
-                                    author_avatar: item.author_avatar,
-                                }}
-                            />
-                        ) : (
-                            <ProjectCard
-                                key={item.id}
-                                project={{
-                                    id: item.id,
-                                    slug: item.slug || '',
-                                    title: item.title || '',
-                                    description: item.description,
-                                    image_url: item.image_url,
-                                    status: item.status || 'open',
-                                    looking_for: item.looking_for,
-                                    created_at: item.created_at,
-                                    owner_id: item.author_id,
-                                    owner_name: item.author_name,
-                                    owner_username: item.author_username,
-                                    owner_avatar: item.author_avatar,
-                                }}
-                                currentUser={currentUser}
-                            />
-                        )
-                    )}
-                </div>
-            )}
+            <div className="min-h-[500px]">
+                {isLoading ? (
+                    <div className="flex justify-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : feed.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                        <p>No {filter === 'all' ? 'posts or projects' : filter} yet.</p>
+                        {user && <p className="text-sm mt-1">Be the first to share something!</p>}
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {feed.map((item) =>
+                            item.type === 'post' ? (
+                                <PostCard
+                                    key={item.id}
+                                    post={{
+                                        id: item.id,
+                                        content: item.content || '',
+                                        image_url: item.image_url,
+                                        created_at: item.created_at,
+                                        author_id: item.author_id,
+                                        author_name: item.author_name,
+                                        author_username: item.author_username,
+                                        author_avatar: item.author_avatar,
+                                    }}
+                                />
+                            ) : (
+                                <ProjectCard
+                                    key={item.id}
+                                    project={{
+                                        id: item.id,
+                                        slug: item.slug || '',
+                                        title: item.title || '',
+                                        description: item.description,
+                                        image_url: item.image_url,
+                                        status: item.status || 'open',
+                                        looking_for: item.looking_for,
+                                        created_at: item.created_at,
+                                        owner_id: item.author_id,
+                                        owner_name: item.author_name,
+                                        owner_username: item.author_username,
+                                        owner_avatar: item.author_avatar,
+                                    }}
+                                    currentUser={currentUser}
+                                />
+                            )
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
