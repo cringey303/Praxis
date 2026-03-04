@@ -157,7 +157,6 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
                     <Button
                         onClick={handleSubmit}
                         disabled={isPosting || !content.trim()}
-                        className="min-w-[80px]"
                     >
                         {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Post'}
                     </Button>
