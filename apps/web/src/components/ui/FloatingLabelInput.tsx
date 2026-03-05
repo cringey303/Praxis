@@ -45,8 +45,8 @@ export const FloatingLabelInput = React.forwardRef<HTMLInputElement, FloatingLab
                         htmlFor={inputId}
                         className={cn(
                             `absolute left-2 top-2 z-10 origin-left -translate-y-5 scale-75 transform px-2 text-sm duration-300 cursor-text ${labelBg}`,
-                            "peer-placeholder-shown:top-2 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100",
-                            "peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:px-2",
+                            "peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100",
+                            "peer-focus:top-2 peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:px-2",
                             error
                                 ? "text-destructive peer-focus:text-destructive"
                                 : "text-muted-foreground peer-focus:text-primary"

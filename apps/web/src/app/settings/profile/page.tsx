@@ -620,7 +620,7 @@ export default function ProfilePage() {
                     {/* Main Content */}
                     <main className="md:col-span-9 bg-background">
                         <div className="space-y-6">
-                            <div className="max-w-[700px] flex items-end justify-between mb-4">
+                            <div className="max-w-[700px] flex items-end justify-between mb-2">
                                 <h1 className="text-3xl font-semibold tracking-tight">Public Profile</h1>
                                 <div className="text-sm text-muted-foreground">
                                     {updating ? (
@@ -634,7 +634,7 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            <div className="w-full max-w-[700px] border border-border rounded-xl shadow-sm overflow-hidden bg-background">
+                            <div className="w-full max-w-[700px] border border-border rounded-xl shadow-sm overflow-hidden bg-card">
 
                                 {/* Banner Area (Preview Style) */}
                                 <div
