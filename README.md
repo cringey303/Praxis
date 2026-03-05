@@ -132,7 +132,7 @@ Not comprehensive.
 Submit an issue if you find a bug!
 ```
 Known bugs:
-- 
+- User list not visible when screen width is too small
 ```
 ```
 Other:
