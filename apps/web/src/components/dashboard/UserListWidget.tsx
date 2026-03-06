@@ -106,7 +106,7 @@ export function UserListWidget({ currentUser }: UserListWidgetProps) {
     }
 
     return (
-        <Card className="flex flex-col h-full overflow-hidden">
+        <Card className="flex flex-col h-full max-h-[390px] overflow-hidden">
             <div className="flex items-center justify-between p-6">
                 <h2 className="text-lg font-semibold tracking-tight">Users</h2>
                 {currentUser?.role === 'admin' && (

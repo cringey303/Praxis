@@ -88,7 +88,7 @@ export function FeedWidget({ user }: FeedWidgetProps) {
             </div>
 
             {/* Feed Items */}
-            <div className="min-h-[500px]">
+            <div className="min-h-[700px]">
                 {isLoading ? (
                     <div className="flex justify-center py-12">
                         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
