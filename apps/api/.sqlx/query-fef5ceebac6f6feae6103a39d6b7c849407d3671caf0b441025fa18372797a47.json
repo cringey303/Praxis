@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        INSERT INTO projects (owner_id, title, description, image_url)\n        VALUES ($1, $2, $3, $4)\n        RETURNING id, created_at\n        ",
+  "query": "\n        INSERT INTO applications (project_id, applicant_id, message, links)\n        VALUES ($1, $2, $3, $4)\n        RETURNING id, created_at\n        ",
   "describe": {
     "columns": [
       {
@@ -17,9 +17,9 @@
     "parameters": {
       "Left": [
         "Uuid",
+        "Uuid",
         "Text",
-        "Text",
-        "Text"
+        "TextArray"
       ]
     },
     "nullable": [
@@ -27,5 +27,5 @@
       false
     ]
   },
-  "hash": "09e509445dae84b2c6519619b4a372f4e692a17148c1f7395833531563b432d2"
+  "hash": "fef5ceebac6f6feae6103a39d6b7c849407d3671caf0b441025fa18372797a47"
 }

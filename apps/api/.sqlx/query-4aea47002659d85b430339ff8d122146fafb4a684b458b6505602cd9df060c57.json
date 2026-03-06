@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM active_sessions\n        WHERE user_id = $1\n          AND COALESCE(user_agent, '') = COALESCE($2, '')\n          AND COALESCE(ip_address, '') = COALESCE($3, '')\n          AND session_id != $4\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4aea47002659d85b430339ff8d122146fafb4a684b458b6505602cd9df060c57"
+}
