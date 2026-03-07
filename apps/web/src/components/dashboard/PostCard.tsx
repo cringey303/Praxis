@@ -2,6 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getProfileImageUrl } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
 
 interface PostCardProps {
     post: {
@@ -33,25 +36,14 @@ export function PostCard({ post }: PostCardProps) {
     };
 
     return (
-        <div className="rounded-xl border border-border p-4 bg-card">
+        <Card className="p-4">
             {/* Author Header */}
             <div className="flex items-center gap-3 mb-3">
                 <Link href={`/${post.author_username}`}>
-                    {post.author_avatar ? (
-                        <Image
-                            src={post.author_avatar}
-                            alt={post.author_name}
-                            width={40}
-                            height={40}
-                            className="rounded-full"
-                        />
-                    ) : (
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                            <span className="text-sm font-medium text-primary">
-                                {post.author_name.charAt(0).toUpperCase()}
-                            </span>
-                        </div>
-                    )}
+                    <Avatar>
+                        <AvatarImage src={getProfileImageUrl(post.author_avatar)} alt={post.author_name} />
+                        <AvatarFallback>{post.author_name.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
                 </Link>
                 <div className="flex-1 min-w-0">
                     <Link href={`/${post.author_username}`} className="font-medium hover:underline truncate block">
@@ -78,6 +70,6 @@ export function PostCard({ post }: PostCardProps) {
                     />
                 </div>
             )}
-        </div>
+        </Card>
     );
 }

@@ -53,6 +53,30 @@ pub async fn create_session(
         user_agent
     );
 
+    // Delete existing sessions from the exact same physical browser/IP to prevent duplication
+    sqlx::query!(
+        r#"
+        DELETE FROM active_sessions
+        WHERE user_id = $1
+          AND COALESCE(user_agent, '') = COALESCE($2, '')
+          AND COALESCE(ip_address, '') = COALESCE($3, '')
+          AND session_id != $4
+        "#,
+        user_id,
+        user_agent,
+        ip_address,
+        session_id
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| {
+        tracing::error!(
+            "Failed to clean up old active_sessions duplicated entries: {}",
+            e
+        );
+        e.to_string()
+    })?;
+
     sqlx::query!(
         r#"
         INSERT INTO active_sessions (user_id, session_id, user_agent, ip_address, expires_at)

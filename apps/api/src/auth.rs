@@ -164,6 +164,19 @@ pub async fn signup(
         return Err((StatusCode::BAD_REQUEST, "Username is reserved".to_string()));
     }
 
+    // check if username already exists
+    let username_exists = sqlx::query!("SELECT id FROM users WHERE username = $1", safe_username)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if username_exists.is_some() {
+        return Err((
+            StatusCode::CONFLICT,
+            "That username is already taken".to_string(),
+        ));
+    }
+
     // create random salt string
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();

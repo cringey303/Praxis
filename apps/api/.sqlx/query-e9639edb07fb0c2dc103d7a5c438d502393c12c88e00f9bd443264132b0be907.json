@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            p.id,\n            p.slug,\n            p.title,\n            p.description,\n            p.image_url,\n            p.status,\n            p.looking_for as \"looking_for!: Vec<String>\",\n            p.created_at,\n            p.owner_id,\n            u.display_name as owner_name,\n            u.username as owner_username,\n            u.avatar_url as owner_avatar\n        FROM projects p\n        JOIN users u ON p.owner_id = u.id\n        WHERE u.username = $1 AND p.slug = $2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "looking_for!: Vec<String>",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "owner_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "owner_username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "owner_avatar",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "e9639edb07fb0c2dc103d7a5c438d502393c12c88e00f9bd443264132b0be907"
+}

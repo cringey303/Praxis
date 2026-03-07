@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { useToast } from '../ui/Toast';
 import { FloatingLabelTextarea } from '../ui/FloatingLabelTextarea';
-import { ImagePlus, X, Loader2 } from 'lucide-react';
+import { ImagePlus, X, Loader2, Send, Briefcase } from 'lucide-react';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { ProjectComposer } from './ProjectComposer';
 
 interface PostComposerProps {
     onPostCreated: () => void;
@@ -15,6 +18,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [isPosting, setIsPosting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const { showToast } = useToast();
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,61 +96,79 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
     };
 
     return (
-        <div className="rounded-xl border border-border p-4 bg-card">
-            <FloatingLabelTextarea
-                id="post-content"
-                label="What's on your mind?"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="min-h-[100px]"
-            />
+        <>
+            <Card className="p-4 bg-card">
+                <FloatingLabelTextarea
+                    id="post-content"
+                    label="What's on your mind?"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="min-h-[100px]"
+                    labelBg="bg-card"
+                />
 
-            {/* Image Preview */}
-            {imageUrl && (
-                <div className="relative mt-3 inline-block">
-                    <Image
-                        src={imageUrl}
-                        alt="Upload preview"
-                        width={200}
-                        height={150}
-                        className="rounded-lg object-cover"
-                    />
-                    <button
-                        onClick={() => setImageUrl(null)}
-                        className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                <div className="flex items-center gap-2">
-                    <label className="cursor-pointer p-2 rounded-lg hover:bg-secondary transition-colors">
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="hidden"
-                            disabled={isUploading}
+                {/* Image Preview */}
+                {imageUrl && (
+                    <div className="relative mt-3 inline-block">
+                        <Image
+                            src={imageUrl}
+                            alt="Upload preview"
+                            width={200}
+                            height={150}
+                            className="rounded-lg object-cover border border-border"
                         />
-                        {isUploading ? (
-                            <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
-                        ) : (
-                            <ImagePlus className="w-5 h-5 text-muted-foreground" />
-                        )}
-                    </label>
-                </div>
+                        <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => setImageUrl(null)}
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md"
+                        >
+                            <X className="w-3 h-3" />
+                        </Button>
+                    </div>
+                )}
 
-                <button
-                    onClick={handleSubmit}
-                    disabled={isPosting || !content.trim()}
-                    className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {isPosting ? 'Posting...' : 'Post'}
-                </button>
-            </div>
-        </div>
+                {/* Actions */}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsProjectModalOpen(true)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-secondary text-sm text-muted-foreground transition-colors cursor-pointer"
+                        >
+                            <Briefcase className="w-4 h-4" />
+                            New Project
+                        </button>
+                        <label className="cursor-pointer p-2 rounded-lg hover:bg-secondary transition-colors">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                                disabled={isUploading}
+                            />
+                            {isUploading ? (
+                                <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                            ) : (
+                                <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                            )}
+                        </label>
+                    </div>
+
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={isPosting || !content.trim()}
+                    >
+                        {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Post'}
+                    </Button>
+                </div>
+            </Card>
+
+            {isProjectModalOpen && (
+                <ProjectComposer
+                    onClose={() => setIsProjectModalOpen(false)}
+                    onCreated={onPostCreated}
+                />
+            )}
+        </>
     );
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            p.id,\n            'project' as \"item_type!\",\n            NULL::text as content,\n            p.title,\n            p.description,\n            p.image_url,\n            p.status,\n            p.created_at,\n            p.owner_id as author_id,\n            u.display_name as author_name,\n            u.username as author_username,\n            u.avatar_url as author_avatar\n        FROM projects p\n        JOIN users u ON p.owner_id = u.id\n        ORDER BY p.created_at DESC\n        ",
+  "query": "\n        SELECT\n            p.id,\n            'post' as \"item_type!\",\n            p.content,\n            NULL::text as title,\n            NULL::text as description,\n            p.image_url,\n            NULL::text as status,\n            NULL::text as slug,\n            '{}'::text[] as \"looking_for!: Vec<String>\",\n            p.created_at,\n            p.author_id,\n            u.display_name as author_name,\n            u.username as author_username,\n            u.avatar_url as author_avatar\n        FROM posts p\n        JOIN users u ON p.author_id = u.id\n        ORDER BY p.created_at DESC\n        ",
   "describe": {
     "columns": [
       {
@@ -40,26 +40,36 @@
       },
       {
         "ordinal": 7,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "looking_for!: Vec<String>",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 8,
+        "ordinal": 10,
         "name": "author_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 9,
+        "ordinal": 11,
         "name": "author_name",
         "type_info": "Text"
       },
       {
-        "ordinal": 10,
+        "ordinal": 12,
         "name": "author_username",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 13,
         "name": "author_avatar",
         "type_info": "Text"
       }
@@ -70,11 +80,13 @@
     "nullable": [
       false,
       null,
+      false,
       null,
-      false,
+      null,
       true,
-      true,
-      false,
+      null,
+      null,
+      null,
       false,
       false,
       false,
@@ -82,5 +94,5 @@
       true
     ]
   },
-  "hash": "c793fbb758f343221b9b2ca9caad91982da6f39a79723a7010e5a44b8ea23394"
+  "hash": "2876f838edfe5f6aa2ae0afcd5caac2092c56f3604ca5b680d99c45ae2dab36a"
 }

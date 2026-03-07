@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Megaphone, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 
 interface UserProfile {
     id: string;
@@ -92,13 +93,12 @@ export default function AnnouncementsPage() {
             <div className="max-w-3xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="mb-8">
-                    <Link
-                        href="/dashboard"
-                        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Dashboard
-                    </Link>
+                    <Button asChild variant="link" className="px-0 text-muted-foreground hover:text-foreground mb-4">
+                        <Link href="/dashboard" className="gap-2">
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to Dashboard
+                        </Link>
+                    </Button>
                     <h1 className="text-3xl font-bold flex items-center gap-3">
                         <Megaphone className="w-8 h-8 text-primary" />
                         All Announcements
@@ -119,8 +119,8 @@ export default function AnnouncementsPage() {
                             <div
                                 key={ann.id}
                                 className={`p-5 rounded-xl border ${index === 0
-                                        ? 'bg-primary/5 border-primary/20'
-                                        : 'bg-card border-border'
+                                    ? 'bg-primary/5 border-primary/20'
+                                    : 'bg-card border-border'
                                     }`}
                             >
                                 <div className="flex items-center gap-3 mb-3">

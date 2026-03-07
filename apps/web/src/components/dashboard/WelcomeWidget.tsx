@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '../ui/Toast';
 import { FloatingLabelTextarea } from '../ui/FloatingLabelTextarea';
 import { Megaphone, ChevronDown, ChevronUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -133,13 +134,15 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                 </div>
 
                 {/* Past Announcements Toggle */}
-                <button
+                <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setShowPast(!showPast)}
-                    className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer h-auto py-1 px-2"
                 >
                     {showPast ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     {showPast ? 'Hide' : 'View'} Past Announcements
-                </button>
+                </Button>
 
                 {/* Past Announcements List */}
                 {showPast && (
@@ -195,15 +198,16 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                                 value={newAnnouncement}
                                 onChange={(e) => setNewAnnouncement(e.target.value)}
                                 className="min-h-[100px] pr-24"
+                                labelBg="bg-card"
                             />
                             <div className="absolute bottom-2 right-2">
-                                <button
+                                <Button
                                     onClick={handlePost}
                                     disabled={isPosting || !newAnnouncement.trim()}
-                                    className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/80 px-4 py-2 rounded-sm text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="bg-primary text-primary-foreground hover:bg-primary/80"
                                 >
                                     {isPosting ? 'Posting...' : 'Post'}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -215,4 +219,3 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
         </div>
     );
 }
-

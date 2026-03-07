@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 function VerifyEmailContent() {
     const searchParams = useSearchParams();
@@ -21,7 +22,7 @@ function VerifyEmailContent() {
 
         const verify = async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token }),
@@ -63,9 +64,11 @@ function VerifyEmailContent() {
                         <h1 className="text-2xl font-bold">Email Verified!</h1>
                         <p className="text-muted-foreground">Your email has been successfully verified.</p>
                         <p className="text-sm">Redirecting to dashboard...</p>
-                        <Link href="/dashboard" className="text-primary hover:underline">
-                            Click here if you are not redirected
-                        </Link>
+                        <Button asChild variant="link">
+                            <Link href="/dashboard">
+                                Click here if you are not redirected
+                            </Link>
+                        </Button>
                     </div>
                 )}
 
@@ -74,12 +77,11 @@ function VerifyEmailContent() {
                         <XCircle className="h-12 w-12 text-destructive" />
                         <h1 className="text-2xl font-bold">Verification Failed</h1>
                         <p className="text-muted-foreground">{message}</p>
-                        <Link
-                            href="/dashboard"
-                            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                        >
-                            Return to Dashboard
-                        </Link>
+                        <Button asChild>
+                            <Link href="/dashboard">
+                                Return to Dashboard
+                            </Link>
+                        </Button>
                     </div>
                 )}
             </div>

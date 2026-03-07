@@ -12,7 +12,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(false);
     const [userLoading, setUserLoading] = useState(true);
 
-    const [user, setUser] = useState<{ display_name: string; username: string; role: string } | null>(null);
+    const [user, setUser] = useState<{ id: string; display_name: string; username: string; role: string; major?: string } | null>(null);
 
     // fetch user data
     useEffect(() => {
@@ -61,11 +61,9 @@ export default function Dashboard() {
                         {/* Welcome Card */}
                         <WelcomeWidget user={user} />
 
-                        {/* User List Widget - positioned to match WelcomeWidget height */}
-                        <div className="col-span-full md:col-span-1 relative">
-                            <div className="absolute inset-0">
-                                <UserListWidget currentUser={user} />
-                            </div>
+                        {/* User List Widget */}
+                        <div className="col-span-full md:col-span-1 h-full">
+                            <UserListWidget currentUser={user} />
                         </div>
                     </div>
 

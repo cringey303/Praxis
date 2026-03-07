@@ -7,6 +7,9 @@ import { useToast } from "@/components/ui/Toast";
 import { getProfileImageUrl } from '@/lib/utils';
 import { Loader2, Search, RotateCcw, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDebounce } from 'use-debounce';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -194,12 +197,12 @@ export default function AdminPage() {
                         </h2>
                         <div className="relative w-full sm:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <input
+                            <Input
                                 type="text"
                                 placeholder="Search by name, username, email..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 bg-transparent border border-border rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                className="w-full pl-9"
                             />
                         </div>
                     </div>
@@ -253,7 +256,7 @@ export default function AdminPage() {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${u.role === 'admin'
-                                                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                                                    ? 'bg-primary/10 text-primary border border-primary/20'
                                                     : 'bg-secondary text-foreground'
                                                     }`}>
                                                     {u.role}
@@ -266,23 +269,26 @@ export default function AdminPage() {
                                                 {formatDate(u.created_at)}
                                             </td>
                                             <td className="px-4 py-3 text-right">
-                                                <button
+                                                <Button
                                                     onClick={() => openResetDialog(u)}
-                                                    className="px-3 py-1.5 text-xs font-medium bg-secondary hover:bg-secondary/80 text-foreground rounded-sm transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    className="h-7 text-xs"
                                                 >
-                                                    <RotateCcw className="h-3 w-3" />
-                                                    Reset
-                                                </button>
-                                            </td>
-                                        </tr>
+                                                    <RotateCcw className="h-3 w-3 mr-1" />
+                                                    Reset Password
+                                                </Button>
+                                            </td >
+                                        </tr >
                                     ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                )
+                                }
+                            </tbody >
+                        </table >
+                    </div >
 
                     {/* Pagination Controls */}
-                    <div className="p-4 border-t border-border flex items-center justify-between">
+                    < div className="p-4 border-t border-border flex items-center justify-between" >
                         <span className="text-xs text-muted-foreground">
                             Page {page + 1}
                         </span>
@@ -304,56 +310,57 @@ export default function AdminPage() {
                                 <ChevronRight className="h-3 w-3" />
                             </button>
                         </div>
-                    </div>
-                </div>
-            </div>
+                    </div >
+                </div >
+            </div >
 
             {/* Reset Password Dialog */}
-            {showResetDialog && selectedUser && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-card w-full max-w-md rounded-xl border border-border p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
-                        <h3 className="text-lg font-semibold mb-2">Reset Password</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            Set a new password for <span className="font-medium text-foreground">@{selectedUser.username}</span>.
-                            They will be able to log in with this password immediately.
-                        </p>
+            {
+                showResetDialog && selectedUser && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <Card className="w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
+                            <h3 className="text-lg font-semibold mb-2">Reset Password</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                                Set a new password for <span className="font-medium text-foreground">@{selectedUser.username}</span>.
+                                They will be able to log in with this password immediately.
+                            </p>
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1.5">New Password</label>
-                                <input
-                                    type="password"
-                                    className="w-full px-3 py-2 bg-transparent border border-border rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                    placeholder="Enter new password"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    autoFocus
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Must be at least 6 characters.
-                                </p>
-                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5">New Password</label>
+                                    <Input
+                                        type="password"
+                                        placeholder="Enter new password"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Must be at least 6 characters.
+                                    </p>
+                                </div>
 
-                            <div className="flex gap-3 justify-end mt-6">
-                                <button
-                                    onClick={() => setShowResetDialog(false)}
-                                    className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-white hover:bg-transparent rounded-sm transition-colors cursor-pointer"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleResetPassword}
-                                    disabled={!newPassword || newPassword.length < 6 || resettingId === selectedUser.id}
-                                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
-                                >
-                                    {resettingId === selectedUser.id && <Loader2 className="h-4 w-4 animate-spin" />}
-                                    Reset Password
-                                </button>
+                                <div className="flex gap-3 justify-end mt-6">
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => setShowResetDialog(false)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={handleResetPassword}
+                                        disabled={!newPassword || newPassword.length < 6 || resettingId === selectedUser.id}
+                                        className="gap-2"
+                                    >
+                                        {resettingId === selectedUser.id && <Loader2 className="h-4 w-4 animate-spin" />}
+                                        Reset Password
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
+                        </Card>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

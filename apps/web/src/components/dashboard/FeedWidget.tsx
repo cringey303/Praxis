@@ -5,6 +5,7 @@ import { PostCard } from './PostCard';
 import { ProjectCard } from './ProjectCard';
 import { PostComposer } from './PostComposer';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface FeedItem {
     id: string;
@@ -14,6 +15,8 @@ interface FeedItem {
     description: string | null;
     image_url: string | null;
     status: string | null;
+    slug: string | null;
+    looking_for?: string[];
     created_at: string;
     author_id: string;
     author_name: string;
@@ -22,7 +25,7 @@ interface FeedItem {
 }
 
 interface FeedWidgetProps {
-    user: { display_name: string; username: string } | null;
+    user: { id?: string; display_name: string; username: string; major?: string } | null;
 }
 
 type FilterType = 'all' | 'posts' | 'projects';
@@ -60,6 +63,8 @@ export function FeedWidget({ user }: FeedWidgetProps) {
         { label: 'Projects', value: 'projects' },
     ];
 
+    const currentUser = user?.id ? { id: user.id, major: user.major } : null;
+
     return (
         <div className="space-y-4">
             {/* Post Composer - only show if logged in */}
@@ -68,67 +73,72 @@ export function FeedWidget({ user }: FeedWidgetProps) {
             {/* Filter Tabs */}
             <div className="flex gap-1 p-1 bg-secondary/50 rounded-lg w-fit">
                 {filterTabs.map((tab) => (
-                    <button
+                    <Button
                         key={tab.value}
+                        variant={filter === tab.value ? 'default' : 'ghost'}
                         onClick={() => setFilter(tab.value)}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                            filter === tab.value
-                                ? 'bg-background text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                        }`}
+                        className={`px-4 py-2 h-9 text-sm font-medium ${filter === tab.value
+                            ? 'shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
                     >
                         {tab.label}
-                    </button>
+                    </Button>
                 ))}
             </div>
 
             {/* Feed Items */}
-            {isLoading ? (
-                <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-                </div>
-            ) : feed.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                    <p>No {filter === 'all' ? 'posts or projects' : filter} yet.</p>
-                    {user && <p className="text-sm mt-1">Be the first to share something!</p>}
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {feed.map((item) =>
-                        item.type === 'post' ? (
-                            <PostCard
-                                key={item.id}
-                                post={{
-                                    id: item.id,
-                                    content: item.content || '',
-                                    image_url: item.image_url,
-                                    created_at: item.created_at,
-                                    author_id: item.author_id,
-                                    author_name: item.author_name,
-                                    author_username: item.author_username,
-                                    author_avatar: item.author_avatar,
-                                }}
-                            />
-                        ) : (
-                            <ProjectCard
-                                key={item.id}
-                                project={{
-                                    id: item.id,
-                                    title: item.title || '',
-                                    description: item.description,
-                                    image_url: item.image_url,
-                                    status: item.status || 'open',
-                                    created_at: item.created_at,
-                                    owner_id: item.author_id,
-                                    owner_name: item.author_name,
-                                    owner_username: item.author_username,
-                                    owner_avatar: item.author_avatar,
-                                }}
-                            />
-                        )
-                    )}
-                </div>
-            )}
+            <div className="min-h-[700px]">
+                {isLoading ? (
+                    <div className="flex justify-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : feed.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                        <p>No {filter === 'all' ? 'posts or projects' : filter} yet.</p>
+                        {user && <p className="text-sm mt-1">Be the first to share something!</p>}
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {feed.map((item) =>
+                            item.type === 'post' ? (
+                                <PostCard
+                                    key={item.id}
+                                    post={{
+                                        id: item.id,
+                                        content: item.content || '',
+                                        image_url: item.image_url,
+                                        created_at: item.created_at,
+                                        author_id: item.author_id,
+                                        author_name: item.author_name,
+                                        author_username: item.author_username,
+                                        author_avatar: item.author_avatar,
+                                    }}
+                                />
+                            ) : (
+                                <ProjectCard
+                                    key={item.id}
+                                    project={{
+                                        id: item.id,
+                                        slug: item.slug || '',
+                                        title: item.title || '',
+                                        description: item.description,
+                                        image_url: item.image_url,
+                                        status: item.status || 'open',
+                                        looking_for: item.looking_for,
+                                        created_at: item.created_at,
+                                        owner_id: item.author_id,
+                                        owner_name: item.author_name,
+                                        owner_username: item.author_username,
+                                        owner_avatar: item.author_avatar,
+                                    }}
+                                    currentUser={currentUser}
+                                />
+                            )
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

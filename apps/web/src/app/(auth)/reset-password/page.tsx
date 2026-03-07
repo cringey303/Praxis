@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Loader2, ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { FloatingLabelInput } from '@/components/ui/FloatingLabelInput';
 import { useToast } from "@/components/ui/Toast";
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -23,18 +25,19 @@ function ResetPasswordContent() {
 
     if (!token) {
         return (
-            <div className="flex flex-col items-center justify-center text-center space-y-4">
-                <XCircle className="w-12 h-12 text-red-500" />
+            <div className="flex flex-col items-center justify-center text-center space-y-4 p-4">
+                <XCircle className="w-12 h-12 text-destructive" />
                 <h2 className="text-xl font-semibold">Invalid Link</h2>
                 <p className="text-muted-foreground">
                     This password reset link is invalid or missing a token.
                 </p>
-                <Link
-                    href="/forgot-password"
-                    className="text-primary hover:underline"
-                >
-                    Request a new link
-                </Link>
+                <Button asChild variant="link">
+                    <Link
+                        href="/forgot-password"
+                    >
+                        Request a new link
+                    </Link>
+                </Button>
             </div>
         );
     }
@@ -97,12 +100,11 @@ function ResetPasswordContent() {
                         Your password has been securely updated.
                     </p>
                 </div>
-                <Link
-                    href="/login"
-                    className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors"
-                >
-                    Proceed to Login
-                </Link>
+                <Button asChild className="w-full">
+                    <Link href="/login">
+                        Proceed to Login
+                    </Link>
+                </Button>
                 <p className="text-xs text-muted-foreground">
                     Redirecting automatically in a few seconds...
                 </p>
@@ -120,9 +122,9 @@ function ResetPasswordContent() {
             </div>
 
             {status === 'error' && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-md p-4 flex items-start gap-3">
-                    <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                    <div className="text-sm text-red-600">
+                <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4 flex items-start gap-3">
+                    <XCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                    <div className="text-sm text-destructive">
                         <p className="font-medium">Reset failed</p>
                         <p>{errorMessage}</p>
                     </div>
@@ -138,6 +140,7 @@ function ResetPasswordContent() {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         required
+                        labelBg="bg-card"
                     />
 
                     <FloatingLabelInput
@@ -147,23 +150,24 @@ function ResetPasswordContent() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
+                        labelBg="bg-card"
                     />
                 </div>
 
-                <button
+                <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                    className="w-full"
                 >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                     Reset Password
-                </button>
+                </Button>
             </form>
 
-            <div className="text-center text-sm">
+            <div className="text-center text-sm text-muted-foreground underline">
                 <Link
                     href="/login"
-                    className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                    className="inline-flex items-center hover:text-foreground transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to login
@@ -176,7 +180,7 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
     return (
         <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background text-foreground transition-colors duration-300">
-            <div className="w-full max-w-md bg-card p-8 rounded-xl border border-border shadow-lg">
+            <Card className="w-full max-w-md p-8 shadow-lg">
                 <Suspense fallback={
                     <div className="flex justify-center py-12">
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -184,7 +188,7 @@ export default function ResetPasswordPage() {
                 }>
                     <ResetPasswordContent />
                 </Suspense>
-            </div>
+            </Card>
         </div>
     );
 }
