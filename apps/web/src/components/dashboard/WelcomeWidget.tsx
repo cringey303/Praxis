@@ -147,7 +147,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                 {/* Past Announcements List */}
                 {showPast && (
                     <div className="mt-3 space-y-3">
-                        {pastAnnouncements.slice(1).map((ann) => (
+                        {pastAnnouncements.slice(1,4).map((ann) => (
                             <div key={ann.id} className="p-3 rounded-lg bg-secondary/30 border border-border/30">
                                 <div className="flex items-center gap-2 mb-2">
                                     {ann.author_avatar ? (
@@ -189,7 +189,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
 
                 {/* Admin Input Area */}
                 {user?.role === 'admin' && (
-                    <div className="mt-6 pt-4 border-t border-border">
+                    <div className="mt-4 pt-4 border-t border-border">
                         <label className="text-sm font-medium mb-2 block">Post New Announcement</label>
                         <div className="relative">
                             <FloatingLabelTextarea

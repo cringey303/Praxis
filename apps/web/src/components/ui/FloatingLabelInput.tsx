@@ -21,7 +21,7 @@ export const FloatingLabelInput = React.forwardRef<HTMLInputElement, FloatingLab
         };
 
         return (
-            <div className={cn("w-full mb-6", wrapperClassName)}>
+            <div className={cn("w-full", wrapperClassName)}>
                 <div className="relative h-10 w-full">
                     <input
                         {...props}

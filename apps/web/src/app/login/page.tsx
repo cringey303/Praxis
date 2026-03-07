@@ -237,11 +237,12 @@ export default function LoginPage() {
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-4">
+                <form onSubmit={handleSubmit}
+                    className="space-y-4"
+                >
+                    <div className="space-y-1">
 
-
-                        <div className="">
+                        <div className="space-y-4">
                             <FloatingLabelInput
                                 id="email"
                                 name="email"
@@ -252,7 +253,6 @@ export default function LoginPage() {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 error={errors.email}
-                                className="mb-4"
                                 labelBg="bg-card"
                             />
 
@@ -268,14 +268,15 @@ export default function LoginPage() {
                                 error={errors.password}
                                 labelBg="bg-card"
                             />
-                            <div className="flex justify-end mt-1">
-                                <Link
-                                    href="/forgot-password"
-                                    className="text-sm text-muted-foreground underline hover:text-foreground"
-                                >
-                                    Forgot password?
+
+                        </div>
+                        <div className="flex justify-end">
+                            <Link
+                                href="/forgot-password"
+                                className="text-sm text-muted-foreground underline hover:text-foreground"
+                            >
+                                Forgot password?
                                 </Link>
-                            </div>
                         </div>
                     </div>
 
