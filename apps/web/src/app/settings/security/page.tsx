@@ -979,6 +979,7 @@ export default function SecurityPage() {
                                     <Button
                                         onClick={initiatePasskeyRegistration}
                                         disabled={registeringPasskey}
+                                        className="text-muted-foreground hover:text-destructive hover:border-destructive hover:bg-destructive/10"
                                     >
                                         {registeringPasskey && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         + Add Passkey
@@ -1223,9 +1224,15 @@ export default function SecurityPage() {
                                     </div>
                                 ) : (
                                     <div className="space-y-0 divide-y divide-border">
-                                        {sessions.map((session) => {
+                                        {[...sessions].sort((a, b) => {
+                                            if (a.is_current) return -1;
+                                            if (b.is_current) return 1;
+                                            return new Date(b.last_active_at).getTime() - new Date(a.last_active_at).getTime();
+                                        }).map((session) => {
                                             const { browser, os, isMobile } = parseUserAgent(session.user_agent);
                                             const location = sessionLocations[session.ip_address];
+                                            const isActiveNow = session.is_current || (new Date().getTime() - new Date(session.last_active_at).getTime() < 5 * 60000);
+
 
                                             return (
                                                 <div key={session.id} className={`flex items-center justify-between ${session.is_current ? 'p-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10 my-2' : 'py-4 first:pt-0 last:pb-0'}`}>
@@ -1241,7 +1248,7 @@ export default function SecurityPage() {
                                                                 {location ? `${location} • ` : ''}{session.ip_address}
                                                             </div>
                                                             <div className="flex items-center gap-1.5 text-xs mt-1">
-                                                                {session.is_current ? (
+                                                                {isActiveNow ? (
                                                                     <>
                                                                         <span className="relative flex h-2 w-2 ml-0.5">
                                                                             <span
