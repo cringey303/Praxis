@@ -1045,7 +1045,7 @@ export default function SecurityPage() {
                                         isDisableTotpOpen ? (
                                             <Button variant="ghost" size="sm" onClick={() => setIsDisableTotpOpen(false)}>Cancel</Button>
                                         ) : (
-                                            <Button variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/30 border-destructive" onClick={() => setIsDisableTotpOpen(true)}>Disable 2FA</Button>
+                                            <Button variant="outline" className="text-muted-foreground hover:text-destructive hover:border-destructive hover:bg-destructive/10" onClick={() => setIsDisableTotpOpen(true)}>Disable 2FA</Button>
                                         )
                                     ) : (
                                         <Button size="sm" onClick={handleSetupTotp} disabled={settingUpTotp}>
@@ -1168,11 +1168,11 @@ export default function SecurityPage() {
 
                                                     {linked ? (
                                                         <Button
-                                                            variant="outline"
+                                                            variant="ghost"
                                                             size="sm"
                                                             disabled={unlinkingProvider === provider || (linkedAccounts.length === 1 && !user?.has_password)}
                                                             onClick={() => handleUnlinkAccount(provider)}
-                                                            className={unlinkingProvider === provider ? 'opacity-70' : ''}
+                                                            className={`text-muted-foreground hover:text-destructive hover:bg-destructive/10 ${unlinkingProvider === provider ? 'opacity-70' : ''}`}
                                                         >
                                                             {unlinkingProvider === provider ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
                                                             Disconnect
@@ -1209,7 +1209,7 @@ export default function SecurityPage() {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="text-muted-foreground hover:text-foreground"
+                                            className="text-muted-foreground hover:text-destructive hover:border-destructive hover:bg-destructive/10"
                                             onClick={handleRevokeAllOtherSessions}
                                         >
                                             Log out all other devices
