@@ -1228,7 +1228,7 @@ export default function SecurityPage() {
                                             const location = sessionLocations[session.ip_address];
 
                                             return (
-                                                <div key={session.id} className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
+                                                <div key={session.id} className={`flex items-center justify-between ${session.is_current ? 'p-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10 my-2' : 'py-4 first:pt-0 last:pb-0'}`}>
                                                     <div className="flex items-center gap-4">
                                                         <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
                                                             {isMobile ? <Smartphone className="h-5 w-5 text-muted-foreground" /> : <Monitor className="h-5 w-5 text-muted-foreground" />}
@@ -1236,11 +1236,6 @@ export default function SecurityPage() {
                                                         <div>
                                                             <div className="flex items-center gap-2">
                                                                 <p className="text-sm font-medium">{browser} on {os}</p>
-                                                                {session.is_current && (
-                                                                    <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-1.5 py-0.5 rounded-sm">
-                                                                        Current Device
-                                                                    </span>
-                                                                )}
                                                             </div>
                                                             <div className="text-xs text-muted-foreground mt-0.5">
                                                                 {location ? `${location} • ` : ''}{session.ip_address}
@@ -1249,7 +1244,10 @@ export default function SecurityPage() {
                                                                 {session.is_current ? (
                                                                     <>
                                                                         <span className="relative flex h-2 w-2 ml-0.5">
-                                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                                                                            <span
+                                                                                className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"
+                                                                                style={{ animationDuration: '2s' }}
+                                                                            ></span>
                                                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                                                         </span>
                                                                         <span className="text-emerald-500 font-medium">Active now</span>
