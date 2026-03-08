@@ -149,6 +149,7 @@ async fn main() {
         .route("/announcement", get(announcements::get_latest))
         .route("/announcement", post(announcements::create))
         .route("/announcements/recent", get(announcements::get_recent))
+        .route("/announcements/count", get(announcements::get_count))
         .route("/announcements", get(announcements::get_all))
         .route("/posts", get(posts::list).post(posts::create))
         .route("/posts/user/:username", get(posts::list_by_user))

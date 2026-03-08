@@ -32,6 +32,7 @@ interface AnnouncementWithAuthor {
 export function WelcomeWidget({ user }: WelcomeWidgetProps) {
     const [announcement, setAnnouncement] = useState<Announcement | null>(null);
     const [pastAnnouncements, setPastAnnouncements] = useState<AnnouncementWithAuthor[]>([]);
+    const [totalAnnouncements, setTotalAnnouncements] = useState<number>(0);
     const [showPast, setShowPast] = useState(false);
     const [newAnnouncement, setNewAnnouncement] = useState('');
     const [isPosting, setIsPosting] = useState(false);
@@ -60,13 +61,21 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
 
         const fetchPast = async () => {
             try {
+                // Fetch recent announcements
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/announcements/recent`);
                 if (res.ok) {
                     const data = await res.json();
                     setPastAnnouncements(data);
                 }
+
+                // Fetch total count of announcements
+                const countRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/announcements/count`);
+                if (countRes.ok) {
+                    const countData = await countRes.json();
+                    setTotalAnnouncements(countData.total);
+                }
             } catch (error) {
-                console.error('Failed to fetch past announcements');
+                console.error('Failed to fetch past announcements or count');
             }
         };
 
@@ -100,6 +109,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
             });
             // Clear past to force refetch
             setPastAnnouncements([]);
+            setTotalAnnouncements(prev => prev + 1);
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : 'Failed to post announcement';
             showToast(message, 'error');
@@ -147,7 +157,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                 {/* Past Announcements List */}
                 {showPast && (
                     <div className="mt-3 space-y-3">
-                        {pastAnnouncements.slice(1,4).map((ann) => (
+                        {pastAnnouncements.slice(1, 4).map((ann) => (
                             <div key={ann.id} className="p-3 rounded-lg bg-secondary/30 border border-border/30">
                                 <div className="flex items-center gap-2 mb-2">
                                     {ann.author_avatar ? (
@@ -177,7 +187,7 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                                 href="/announcements"
                                 className="block text-center text-sm text-primary hover:text-primary/80 transition-colors py-2"
                             >
-                                View All Announcements →
+                                View All Announcements {totalAnnouncements > 0 && `(${totalAnnouncements})`} →
                             </Link>
                         )}
 

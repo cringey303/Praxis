@@ -95,6 +95,18 @@ pub async fn get_all(
     Ok(Json(announcements))
 }
 
+/// Get total count of announcements
+pub async fn get_count(
+    State(pool): State<PgPool>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let count: Option<i64> = sqlx::query_scalar!(r#"SELECT count(*) FROM announcements"#)
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(serde_json::json!({ "total": count.unwrap_or(0) })))
+}
+
 pub async fn create(
     State(pool): State<PgPool>,
     session: Session,
