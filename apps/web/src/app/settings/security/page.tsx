@@ -865,6 +865,7 @@ export default function SecurityPage() {
                                 {user?.has_password && (
                                     <Button
                                         variant="outline"
+                                        className="text-muted-foreground hover:text-foreground"
                                         onClick={() => setIsPasswordFormOpen(!isPasswordFormOpen)}
                                     >
                                         {isPasswordFormOpen ? 'Hide' : 'Change password'}
@@ -979,7 +980,6 @@ export default function SecurityPage() {
                                     <Button
                                         onClick={initiatePasskeyRegistration}
                                         disabled={registeringPasskey}
-                                        className="text-muted-foreground hover:text-destructive hover:border-destructive hover:bg-destructive/10"
                                     >
                                         {registeringPasskey && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         + Add Passkey
