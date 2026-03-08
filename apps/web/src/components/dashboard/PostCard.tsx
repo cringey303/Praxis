@@ -56,7 +56,9 @@ export function PostCard({ post }: PostCardProps) {
             </div>
 
             {/* Content */}
-            <p className="text-foreground whitespace-pre-wrap mb-3">{post.content}</p>
+            <p className={`text-foreground whitespace-pre-wrap ${post.image_url ? 'mb-3' : ''}`}>
+                {post.content}
+            </p>
 
             {/* Image */}
             {post.image_url && (
