@@ -9,7 +9,7 @@ use axum::{
     Json,
 };
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+use sqlx::{PgPool, Row};
 use tower_sessions::Session;
 use uuid::Uuid;
 
@@ -73,17 +73,23 @@ async fn session_context(
         return Ok((None, None));
     };
 
-    let row = sqlx::query!(
-        "SELECT ip_address, user_agent FROM active_sessions WHERE session_id = $1",
-        session_id
-    )
+    let row = sqlx::query("SELECT ip_address, user_agent FROM active_sessions WHERE session_id = $1")
+    .bind(session_id)
     .fetch_optional(pool)
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    Ok(row
-        .map(|r| (r.ip_address, r.user_agent))
-        .unwrap_or((None, None)))
+    if let Some(r) = row {
+        let ip_address: Option<String> = r
+            .try_get("ip_address")
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        let user_agent: Option<String> = r
+            .try_get("user_agent")
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        Ok((ip_address, user_agent))
+    } else {
+        Ok((None, None))
+    }
 }
 
 async fn insert_audit_log(
