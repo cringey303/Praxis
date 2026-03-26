@@ -2,10 +2,8 @@
 
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Image from 'next/image';
 import { Loader2, Camera, MapPin, Link as LinkIcon, Edit3 } from 'lucide-react';
-import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { FloatingLabelTextarea } from '../../../components/ui/FloatingLabelTextarea';
 import { useToast } from "@/components/ui/Toast";
@@ -126,21 +124,6 @@ export default function ProfilePage() {
 
         fetchUser();
     }, [router]);
-
-    const handleLogout = async () => {
-        setLoading(true);
-        try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/auth/logout`, {
-                method: 'POST',
-                credentials: 'include',
-            });
-            // Redirect to home page
-            router.push('/');
-        } catch (error) {
-            console.error('Logout failed:', error);
-            setLoading(false);
-        }
-    };
 
     const validateField = (name: string, value: string) => {
         if (name === 'username') {
@@ -469,37 +452,11 @@ export default function ProfilePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-background text-foreground">
-                <NavBar user={null} onLogout={handleLogout} isLoggingOut={false} />
-
-                <div className="p-3">
-                    <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-3">
-
-                        {/* Sidebar Skeleton */}
-                        <aside className="md:col-span-3 space-y-4">
-                            <nav className="flex flex-col gap-1">
-                                <div className="flex items-center gap-3 px-4 py-3 rounded-sm bg-primary/5 border border-primary/10">
-                                    <Skeleton className="h-5 w-5 rounded-full" />
-                                    <Skeleton className="h-4 w-24" />
-                                </div>
-                                <div className="flex items-center gap-3 px-4 py-3">
-                                    <Skeleton className="h-5 w-5 rounded-full" />
-                                    <Skeleton className="h-4 w-20" />
-                                </div>
-                                <div className="flex items-center gap-3 px-4 py-3">
-                                    <Skeleton className="h-5 w-5 rounded-full" />
-                                    <Skeleton className="h-4 w-24" />
-                                </div>
-                            </nav>
-                        </aside>
-
-                        {/* Main Content Skeleton */}
-                        <main className="md:col-span-9 bg-card">
-                            <div className="space-y-6">
-                                <div className="max-w-[700px] flex items-end justify-between mb-4">
-                                    <Skeleton className="h-9 w-48" />
-                                    <Skeleton className="h-5 w-32" />
-                                </div>
+            <div className="space-y-6">
+                <div className="max-w-[700px] flex items-end justify-between mb-4">
+                    <Skeleton className="h-9 w-48" />
+                    <Skeleton className="h-5 w-32" />
+                </div>
 
                                 <div className="w-full max-w-[700px] border border-border rounded-xl shadow-sm overflow-hidden bg-background">
 
@@ -558,22 +515,17 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
 
-                                {/* Account Settings Skeleton */}
-                                <div className="pt-6">
-                                    <Skeleton className="h-6 w-32 mb-4" />
-                                    <div className="max-w-[700px] p-6 rounded-xl border border-border bg-card/50">
-                                        <div className="max-w-md space-y-4">
-                                            <div className="space-y-2">
-                                                <Skeleton className="h-4 w-24" />
-                                                <Skeleton className="h-12 w-full rounded-md" />
-                                                <Skeleton className="h-3 w-48 mt-1" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
+                {/* Account Settings Skeleton */}
+                <div className="pt-6">
+                    <Skeleton className="h-6 w-32 mb-4" />
+                    <div className="max-w-[700px] p-6 rounded-xl border border-border bg-card/50">
+                        <div className="max-w-md space-y-4">
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-12 w-full rounded-md" />
+                                <Skeleton className="h-3 w-48 mt-1" />
                             </div>
-                        </main>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -581,45 +533,8 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            <NavBar user={user} onLogout={handleLogout} isLoggingOut={loading} />
-
-            <div className="p-3">
-                <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-3">
-
-                    {/* Sidebar Navigation */}
-                    <aside className="md:col-span-3 space-y-4">
-                        <nav className="flex flex-col gap-1">
-                            <Button asChild variant="ghost" className="w-full justify-start gap-3 px-4 py-3 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20">
-                                <Link href="/settings/profile">
-                                    <div className="h-5 w-5 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                                    </div>
-                                    <span className="text-sm font-medium">Profile</span>
-                                </Link>
-                            </Button>
-
-                            <Button asChild variant="ghost" className="w-full justify-start gap-3 px-4 py-3 hover:bg-secondary/30">
-                                <Link href="/settings/security">
-                                    <div className="h-5 w-5 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-                                    </div>
-                                    <span className="text-sm font-medium">Security</span>
-                                </Link>
-                            </Button>
-
-                            <Button disabled variant="ghost" className="w-full justify-start gap-3 px-4 py-3 opacity-60 cursor-not-allowed hover:bg-transparent">
-                                <div className="h-5 w-5 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-                                </div>
-                                <span className="text-sm font-medium">Notifications</span>
-                            </Button>
-                        </nav>
-                    </aside>
-
-                    {/* Main Content */}
-                    <main className="md:col-span-9 bg-background">
-                        <div className="space-y-6">
+        <>
+            <div className="space-y-6">
                             <div className="max-w-[700px] flex items-end justify-between mb-2">
                                 <h1 className="text-3xl font-semibold tracking-tight">Public Profile</h1>
                                 <div className="text-sm text-muted-foreground">
@@ -802,9 +717,6 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </main>
-                </div>
             </div>
 
             {/* Hidden File Inputs for Cropper Trigger */}
@@ -836,6 +748,6 @@ export default function ProfilePage() {
                     onRemove={handleRemoveImage}
                 />
             )}
-        </div>
+        </>
     );
 }

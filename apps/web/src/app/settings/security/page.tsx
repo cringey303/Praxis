@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Loader2, Smartphone, Key, Trash2, Plus, Copy, Check, Monitor, LogOut, Globe, Shield } from 'lucide-react';
-import { NavBar } from '@/components/dashboard/NavBar';
 import { FloatingLabelInput } from '../../../components/ui/FloatingLabelInput';
 import { useToast } from "@/components/ui/Toast";
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
@@ -226,20 +224,6 @@ export default function SecurityPage() {
         fetchSessions();
         fetchLinkedAccounts();
     }, [fetchUser, fetchPasskeys, fetchTotpStatus, fetchSessions, fetchLinkedAccounts]);
-
-    const handleLogout = async () => {
-        setLoading(true);
-        try {
-            await fetch(`${API_URL}/auth/logout`, {
-                method: 'POST',
-                credentials: 'include',
-            });
-            router.push('/');
-        } catch (error) {
-            console.error('Logout failed:', error);
-            setLoading(false);
-        }
-    };
 
     // Handle OAuth redirect errors
     useEffect(() => {
@@ -817,44 +801,8 @@ export default function SecurityPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            <NavBar user={user} onLogout={handleLogout} isLoggingOut={loading} />
-
-            <div className="p-3">
-                <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-3">
-
-                    {/* Sidebar Navigation */}
-                    <aside className="md:col-span-3 space-y-4">
-                        <nav className="flex flex-col gap-1">
-                            <Button asChild variant="ghost" className="w-full justify-start gap-3 px-4 py-3 hover:bg-secondary/30">
-                                <Link href="/settings/profile">
-                                    <div className="h-5 w-5 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                                    </div>
-                                    <span className="text-sm font-medium">Profile</span>
-                                </Link>
-                            </Button>
-
-                            <Button asChild variant="ghost" className="w-full justify-start gap-3 px-4 py-3 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20">
-                                <Link href="/settings/security">
-                                    <div className="h-5 w-5 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-                                    </div>
-                                    <span className="text-sm font-medium">Security</span>
-                                </Link>
-                            </Button>
-
-                            <Button disabled variant="ghost" className="w-full justify-start gap-3 px-4 py-3 opacity-60 cursor-not-allowed hover:bg-transparent">
-                                <div className="h-5 w-5 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-                                </div>
-                                <span className="text-sm font-medium">Notifications</span>
-                            </Button>
-                        </nav>
-                    </aside>
-
-                    {/* Main Content */}
-                    <main className="md:col-span-9 space-y-6">
+        <>
+            <div className="space-y-6">
 
                         {/* Password Section */}
                         <div className="max-w-[700px] border border-border rounded-xl p-6 bg-card">
@@ -1284,8 +1232,6 @@ export default function SecurityPage() {
                             </div>
                         </div>
 
-                    </main>
-                </div>
             </div>
 
             {/* Passkey Name Dialog */}
@@ -1405,6 +1351,6 @@ export default function SecurityPage() {
             {/* Using Shield icon for module requirement if needed elsewhere, 
                 already imported but highlighting usage */}
             <div className="hidden"><Shield /></div>
-        </div>
+        </>
     );
 }

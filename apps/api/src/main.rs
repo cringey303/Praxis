@@ -132,6 +132,11 @@ async fn main() {
             "/admin/users/:id/reset-password",
             post(admin::reset_user_password),
         )
+        .route("/admin/audit-logs", get(admin::list_audit_logs))
+        .route(
+            "/admin/security-analytics",
+            get(admin::get_security_analytics),
+        )
         // Session Management
         .route(
             "/auth/sessions",

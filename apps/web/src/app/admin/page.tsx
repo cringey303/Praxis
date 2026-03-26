@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { NavBar } from '@/components/dashboard/NavBar';
 import { useToast } from "@/components/ui/Toast";
 import { getProfileImageUrl } from '@/lib/utils';
-import { Loader2, Search, RotateCcw, Shield } from 'lucide-react';
+import { Loader2, Search, RotateCcw, Shield, Users, ClipboardList, BarChart3, Globe, Lock, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -24,6 +24,30 @@ interface UserProfile {
     has_password: boolean;
 }
 
+interface AuditLogEntry {
+    id: string;
+    action: string;
+    details: string | null;
+    actor_user_id: string | null;
+    actor_username: string | null;
+    target_user_id: string | null;
+    target_username: string | null;
+    ip_address: string | null;
+    user_agent: string | null;
+    created_at: string;
+}
+
+interface SecurityAnalytics {
+    total_users: number;
+    admin_users: number;
+    users_with_password: number;
+    active_sessions_24h: number;
+    unique_active_ips_24h: number;
+    password_resets_7d: number;
+}
+
+type AdminTab = 'users' | 'log' | 'analytics';
+
 export default function AdminPage() {
     const router = useRouter();
     const { showToast } = useToast();
@@ -32,6 +56,11 @@ export default function AdminPage() {
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState<AdminTab>('users');
+    const [logs, setLogs] = useState<AuditLogEntry[]>([]);
+    const [loadingLogs, setLoadingLogs] = useState(false);
+    const [analytics, setAnalytics] = useState<SecurityAnalytics | null>(null);
+    const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
     // Reset Password State
     const [resettingId, setResettingId] = useState<string | null>(null);
@@ -58,6 +87,8 @@ export default function AdminPage() {
                 }
                 setUser(data);
                 fetchUsers();
+                fetchAuditLogs();
+                fetchAnalytics();
             } catch (err) {
                 console.error(err);
                 router.push('/login');
@@ -89,6 +120,46 @@ export default function AdminPage() {
         }
     };
 
+    const fetchAuditLogs = async () => {
+        setLoadingLogs(true);
+        try {
+            const res = await fetch(`${API_URL}/admin/audit-logs?limit=150`, {
+                credentials: 'include',
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setLogs(data);
+            } else {
+                showToast('Failed to load audit log', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load audit log', 'error');
+        } finally {
+            setLoadingLogs(false);
+        }
+    };
+
+    const fetchAnalytics = async () => {
+        setLoadingAnalytics(true);
+        try {
+            const res = await fetch(`${API_URL}/admin/security-analytics`, {
+                credentials: 'include',
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setAnalytics(data);
+            } else {
+                showToast('Failed to load security analytics', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to load security analytics', 'error');
+        } finally {
+            setLoadingAnalytics(false);
+        }
+    };
+
     const handleResetPassword = async () => {
         if (!selectedUser || !newPassword) return;
         if (newPassword.length < 6) {
@@ -114,7 +185,9 @@ export default function AdminPage() {
             setShowResetDialog(false);
             setNewPassword('');
             setSelectedUser(null);
-            fetchUsers(); // Refresh to potentially update state if we added tracking later
+            fetchUsers();
+            fetchAuditLogs();
+            fetchAnalytics();
         } catch (err: unknown) {
             console.error(err);
             let msg = 'Failed to reset password';
@@ -134,6 +207,11 @@ export default function AdminPage() {
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleDateString();
+    };
+
+    const formatDateTime = (dateString?: string) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleString();
     };
 
     const filteredUsers = users.filter(u =>
@@ -166,104 +244,280 @@ export default function AdminPage() {
         <div className="min-h-screen bg-background text-foreground">
             <NavBar user={user} onLogout={handleLogout} isLoggingOut={false} />
 
-            <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            <div className="p-3">
+                <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <aside className="md:col-span-3 space-y-4">
+                        <nav className="flex flex-col gap-1">
+                            <Button
+                                variant="ghost"
+                                className={`w-full justify-start gap-3 px-4 py-3 ${activeTab === 'users'
+                                        ? 'bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20'
+                                        : 'hover:bg-secondary/30'
+                                    }`}
+                                onClick={() => setActiveTab('users')}
+                            >
+                                <div className="h-5 w-5 flex items-center justify-center">
+                                    <Users className="h-5 w-5" />
+                                </div>
+                                <span className="text-sm font-medium">Users</span>
+                            </Button>
 
-                <div className="border border-border rounded-xl bg-card overflow-hidden">
-                    <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 items-center justify-between">
-                        <h2 className="text-lg font-medium flex items-center gap-2">
-                            <Shield className="h-5 w-5 text-primary" />
-                            Users ({users.length})
-                        </h2>
-                        <div className="relative w-full sm:w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                type="text"
-                                placeholder="Search users..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9"
-                            />
+                            <Button
+                                variant="ghost"
+                                className={`w-full justify-start gap-3 px-4 py-3 ${activeTab === 'log'
+                                        ? 'bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20'
+                                        : 'hover:bg-secondary/30'
+                                    }`}
+                                onClick={() => {
+                                    setActiveTab('log');
+                                    if (logs.length === 0) fetchAuditLogs();
+                                }}
+                            >
+                                <div className="h-5 w-5 flex items-center justify-center">
+                                    <ClipboardList className="h-5 w-5" />
+                                </div>
+                                <span className="text-sm font-medium">Log</span>
+                            </Button>
+
+                            <Button
+                                variant="ghost"
+                                className={`w-full justify-start gap-3 px-4 py-3 ${activeTab === 'analytics'
+                                        ? 'bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20'
+                                        : 'hover:bg-secondary/30'
+                                    }`}
+                                onClick={() => {
+                                    setActiveTab('analytics');
+                                    if (!analytics) fetchAnalytics();
+                                }}
+                            >
+                                <div className="h-5 w-5 flex items-center justify-center">
+                                    <BarChart3 className="h-5 w-5" />
+                                </div>
+                                <span className="text-sm font-medium">Analytics</span>
+                            </Button>
+                        </nav>
+                    </aside>
+
+                    <main className="md:col-span-9 space-y-6 overflow-x-auto">
+                        <div>
+                            <h1 className="text-xl font-semibold flex items-center gap-2">
+                                <Shield className="h-5 w-5 text-primary" />
+                                Security Center
+                            </h1>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Manage users, review audit trails, and monitor security analytics.
+                            </p>
                         </div>
-                    </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-background text-muted-foreground font-medium border-b border-border">
-                                <tr>
-                                    <th className="px-4 py-3 w-[30%]">User</th>
-                                    <th className="px-4 py-3 w-[10%]">Role</th>
-                                    <th className="px-4 py-3 w-[25%]">Email</th>
-                                    <th className="px-4 py-3 w-[15%]">Created</th>
-                                    <th className="px-4 py-3 w-[20%] text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {loadingUsers ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                            {activeTab === 'users' && (
+                                <div>
+                                    <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                                        <h2 className="text-lg font-medium">Users ({users.length})</h2>
+                                        <div className="relative w-full sm:w-72">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                type="text"
+                                                placeholder="Search users..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="w-full pl-9"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <table className="w-full min-w-[760px] text-sm text-left">
+                                        <thead className="bg-background text-muted-foreground font-medium border-b border-border">
+                                            <tr>
+                                                <th className="px-4 py-3 w-[30%]">User</th>
+                                                <th className="px-4 py-3 w-[10%]">Role</th>
+                                                <th className="px-4 py-3 w-[25%]">Email</th>
+                                                <th className="px-4 py-3 w-[15%]">Created</th>
+                                                <th className="px-4 py-3 w-[20%] text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border">
+                                            {loadingUsers ? (
+                                                <tr>
+                                                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                                                        <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                                                        Loading users...
+                                                    </td>
+                                                </tr>
+                                            ) : filteredUsers.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                                                        No users found matching "{searchTerm}"
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                filteredUsers.map((u) => (
+                                                    <tr key={u.id} className="hover:bg-secondary/20 transition-colors">
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium uppercase overflow-hidden">
+                                                                    {u.avatar_url ? (
+                                                                        <img
+                                                                            src={getProfileImageUrl(u.avatar_url)}
+                                                                            alt={u.username}
+                                                                            className="h-full w-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        u.username[0]
+                                                                    )}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-medium text-foreground">{u.display_name}</div>
+                                                                    <div className="text-xs text-muted-foreground">@{u.username}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${u.role === 'admin'
+                                                                    ? 'bg-primary/10 text-primary border border-primary/20'
+                                                                    : 'bg-secondary text-foreground'
+                                                                }`}>
+                                                                {u.role}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-muted-foreground">
+                                                            {u.email || '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-muted-foreground">
+                                                            {formatDate(u.created_at)}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <Button
+                                                                onClick={() => openResetDialog(u)}
+                                                                variant="secondary"
+                                                                size="sm"
+                                                                className="cursor-pointer h-7 text-xs"
+                                                            >
+                                                                <RotateCcw className="h-3 w-3 mr-1" />
+                                                                Reset Password
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            {activeTab === 'log' && (
+                                <div>
+                                    <div className="mb-4 flex items-center justify-between gap-3">
+                                        <h2 className="text-lg font-medium">Audit Log</h2>
+                                        <Button variant="outline" size="sm" className="cursor-pointer" onClick={fetchAuditLogs}>
+                                            Refresh
+                                        </Button>
+                                    </div>
+
+                                    <table className="w-full min-w-[900px] text-sm text-left">
+                                        <thead className="bg-background text-muted-foreground font-medium border-b border-border">
+                                            <tr>
+                                                <th className="px-4 py-3">Time</th>
+                                                <th className="px-4 py-3">Action</th>
+                                                <th className="px-4 py-3">Actor</th>
+                                                <th className="px-4 py-3">Target</th>
+                                                <th className="px-4 py-3">IP</th>
+                                                <th className="px-4 py-3">Details</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border">
+                                            {loadingLogs ? (
+                                                <tr>
+                                                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                                                        <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                                                        Loading audit log...
+                                                    </td>
+                                                </tr>
+                                            ) : logs.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                                                        No audit log entries yet.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                logs.map((entry) => (
+                                                    <tr key={entry.id} className="hover:bg-secondary/20 transition-colors">
+                                                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDateTime(entry.created_at)}</td>
+                                                        <td className="px-4 py-3 font-medium">{entry.action}</td>
+                                                        <td className="px-4 py-3">{entry.actor_username ? `@${entry.actor_username}` : '-'}</td>
+                                                        <td className="px-4 py-3">{entry.target_username ? `@${entry.target_username}` : '-'}</td>
+                                                        <td className="px-4 py-3 text-muted-foreground">{entry.ip_address || '-'}</td>
+                                                        <td className="px-4 py-3 text-muted-foreground max-w-[320px] truncate" title={entry.details || ''}>
+                                                            {entry.details || '-'}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            {activeTab === 'analytics' && (
+                                <div>
+                                    <div className="mb-4 flex items-center justify-between gap-3">
+                                        <h2 className="text-lg font-medium">Security Analytics</h2>
+                                        <Button variant="outline" size="sm" className="cursor-pointer" onClick={fetchAnalytics}>
+                                            Refresh
+                                        </Button>
+                                    </div>
+
+                                    {loadingAnalytics ? (
+                                        <div className="py-8 text-center text-muted-foreground">
                                             <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                                            Loading users...
-                                        </td>
-                                    </tr>
-                                ) : filteredUsers.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                                            No users found matching "{searchTerm}"
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredUsers.map((u) => (
-                                        <tr key={u.id} className="hover:bg-secondary/20 transition-colors">
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium uppercase overflow-hidden">
-                                                        {u.avatar_url ? (
-                                                            <img
-                                                                src={getProfileImageUrl(u.avatar_url)}
-                                                                alt={u.username}
-                                                                className="h-full w-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            u.username[0]
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-medium text-foreground">{u.display_name}</div>
-                                                        <div className="text-xs text-muted-foreground">@{u.username}</div>
-                                                    </div>
+                                            Loading security analytics...
+                                        </div>
+                                    ) : !analytics ? (
+                                        <div className="py-8 text-center text-muted-foreground">
+                                            No analytics data available.
+                                        </div>
+                                    ) : (
+                                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                            <Card className="p-4">
+                                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                                    <Users className="h-4 w-4" /> Total Users
                                                 </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${u.role === 'admin'
-                                                    ? 'bg-primary/10 text-primary border border-primary/20'
-                                                    : 'bg-secondary text-foreground'
-                                                    }`}>
-                                                    {u.role}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-muted-foreground">
-                                                {u.email || '-'}
-                                            </td>
-                                            <td className="px-4 py-3 text-muted-foreground">
-                                                {formatDate(u.created_at)}
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
-                                                <Button
-                                                    onClick={() => openResetDialog(u)}
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    className="h-7 text-xs"
-                                                >
-                                                    <RotateCcw className="h-3 w-3 mr-1" />
-                                                    Reset Password
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                                <p className="text-2xl font-semibold mt-2">{analytics.total_users}</p>
+                                            </Card>
+                                            <Card className="p-4">
+                                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                                    <Shield className="h-4 w-4" /> Admin Users
+                                                </div>
+                                                <p className="text-2xl font-semibold mt-2">{analytics.admin_users}</p>
+                                            </Card>
+                                            <Card className="p-4">
+                                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                                    <Lock className="h-4 w-4" /> Users With Password
+                                                </div>
+                                                <p className="text-2xl font-semibold mt-2">{analytics.users_with_password}</p>
+                                            </Card>
+                                            <Card className="p-4">
+                                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                                    <Activity className="h-4 w-4" /> Active Sessions (24h)
+                                                </div>
+                                                <p className="text-2xl font-semibold mt-2">{analytics.active_sessions_24h}</p>
+                                            </Card>
+                                            <Card className="p-4">
+                                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                                    <Globe className="h-4 w-4" /> Unique Active IPs (24h)
+                                                </div>
+                                                <p className="text-2xl font-semibold mt-2">{analytics.unique_active_ips_24h}</p>
+                                            </Card>
+                                            <Card className="p-4">
+                                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                                    <RotateCcw className="h-4 w-4" /> Password Resets (7d)
+                                                </div>
+                                                <p className="text-2xl font-semibold mt-2">{analytics.password_resets_7d}</p>
+                                            </Card>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                    </main>
                 </div>
             </div>
 

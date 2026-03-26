@@ -9,26 +9,26 @@ Based on the current project state (Next.js + Rust API, Auth & User Management i
 - ~~Fetch user public info (display name, avatar, bio - *need to add bio field*).~~
 - ~~reuse [Sidebar](file:///Users/lucasroot/projects/praxis/apps/web/src/components/dashboard/Sidebar.tsx#23-131) / [NavBar](file:///Users/lucasroot/projects/praxis/apps/web/src/components/dashboard/NavBar.tsx#19-84) or decided if public pages are layout-free.~~
 
-## 2. Activity Feed / Dashboard Widgets
-**Why:** The dashboard currently only shows a "Welcome" card and a "User List". It feels empty.
-**Implementation:**
-- **System Activity**: "User X joined", "User Y updated their profile".
-- **My Activity**: "You logged in from Chrome on Mac".
-- Create `ActivityFeedWidget.tsx` and backend endpoint `/activity/recent`.
+## ~~2. Activity Feed / Dashboard Widgets~~
+~~**Why:** The dashboard currently only shows a "Welcome" card and a "User List". It feels empty.~~
+**~~Implementation:~~**
+- ~~**System Activity**: "User X joined", "User Y updated their profile".~~
+- ~~**My Activity**: "You logged in from Chrome on Mac".~~
+- ~~Create `ActivityFeedWidget.tsx` and backend endpoint `/activity/recent`.~~
 
-## 3. Security Settings
-**Why:** generic `signup` route exists, implying local password auth, but there is no way to change a password.
-**Implementation:**
-- Create `apps/web/src/app/settings/security/page.tsx`.
-- Add "Change Password" form (Current PW, New PW, Confirm PW).
-- Add "Active Sessions" list (using `tower_sessions` data if accessible, or explicit session tracking).
+## ~~3. Security Settings~~
+~~**Why:** generic `signup` route exists, implying local password auth, but there is no way to change a password.~~
+**~~Implementation:~~**
+- ~~Create `apps/web/src/app/settings/security/page.tsx`.~~
+- ~~Add "Change Password" form (Current PW, New PW, Confirm PW).~~
+- ~~Add "Active Sessions" list (using `tower_sessions` data if accessible, or explicit session tracking).~~
 
 ## 4. Admin Enhancements
-**Why:** You have basic "Delete User" in the widget for admins. Real apps need more control.
+~~**Why:** You have basic "Delete User" in the widget for admins. Real apps need more control.~~
 **Implementation:**
 - **Role Management**: Allow admins to promote/demote other users.
-- **User Search/Filter**: The list will grow; add search by username/email.
-- **Admin Layout**: Maybe a specific `/admin` route or just conditionally render more widgets on `/dashboard`.
+- ~~**User Search/Filter**: The list will grow; add search by username/email.~~
+- ~~**Admin Layout**: Maybe a specific `/admin` route or just conditionally render more widgets on `/dashboard`.~~
 
 ## 5. Notification System
 **Why:** You have a "Notifications" tab in settings that is disabled.
@@ -40,15 +40,15 @@ Based on the current project state (Next.js + Rust API, Auth & User Management i
 ## 6. Database Schema Migration & Type Safety
 **Why:** Ensure `sqlx` models match the code.
 **Implementation:**
-- Verify `schema.sql` (if it exists) is up to date.
-- Add `bio` field to `users` table for Profile Page.
+- ~~Verify `schema.sql` (if it exists) is up to date.~~
+- ~~Add `bio` field to `users` table for Profile Page.~~
 - Add `activity_log` table for Dashboard.
 
 ## 7. Profile Overhaul
-**Why:** Profile Currently only displays posts, it should show more about the User
+~~**Why:** Profile Currently only displays posts, it should show more about the User~~
 **Implementation:**
 - Add experience section
 - University attended(or independent)
-- About section
-- Major(s) to connect with projects
+- ~~About section~~
+- ~~Major(s) to connect with projects~~
 - Brainstorm other necessary features
