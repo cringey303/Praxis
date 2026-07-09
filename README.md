@@ -3,7 +3,6 @@ _**Please submit an issue if you find a bug!!**_
 Check it out at [https://praxis-lemon.vercel.app](https://praxis-lemon.vercel.app)
 ***Currently down because I didn't want to pay Railway fees***
 
-
 (WIP)
 
 A students-first social network where students discover and collaborate on projects; creating real work rather than focusing on connections.
@@ -11,7 +10,7 @@ A students-first social network where students discover and collaborate on proje
 Created by Lucas Root, Luke Coffman and Owen Abbott.
 
 Here is the 
-[figma](https://www.figma.com/design/z9Tf6F6dxn4S84Cd3mWeif/Praxis-Flowchart?node-id=0-1&m=dev&t=drysAnHQDYuItSh1-1)
+[figma](https://www.figma.com/design/z9Tf6F6dxn4S84Cd3mWeif/Praxis-Flowchart?node-id=0-1&m=dev&t=drysAnHQDYuItSh1-1) (old)
 
 [stitch with google](https://stitch.withgoogle.com/projects/2144734098224224255)
 
