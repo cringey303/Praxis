@@ -1,7 +1,8 @@
 # Praxis
 _**Please submit an issue if you find a bug!!**_
-Check it out at [https://praxis-lemon.vercel.app](https://praxis-lemon.vercel.app)
-***Currently down because I didn't want to pay Railway fees***
+Check it out at [https://praxis-lemon.vercel.app](https://joinpraxis.me)
+
+***Main page currently down because I didn't want to pay Railway fees***
 
 (WIP)
 
